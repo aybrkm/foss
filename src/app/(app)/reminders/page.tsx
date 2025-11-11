@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import prisma from "@/lib/prisma";
 
 const ranges = [
@@ -16,6 +17,32 @@ type ReminderCard = {
   related: string | null;
   daysLeft: number;
 };
+
+async function createReminder(formData: FormData) {
+  "use server";
+  const title = formData.get("title")?.toString().trim();
+  const dueAt = formData.get("dueAt")?.toString();
+  const description = formData.get("description")?.toString().trim() || null;
+  const relatedObligationId = formData.get("related")?.toString() || null;
+  const isVeryImportant = formData.get("isVeryImportant") === "on";
+
+  if (!title || !dueAt) {
+    throw new Error("Eksik hatırlatma bilgisi");
+  }
+
+  await prisma.reminder.create({
+    data: {
+      title,
+      dueAt: new Date(dueAt),
+      description,
+      relatedObligationId: relatedObligationId || null,
+      isVeryImportant,
+    },
+  });
+
+  revalidatePath("/reminders");
+  revalidatePath("/dashboard");
+}
 
 export default async function RemindersPage() {
   const [reminders, obligations] = await Promise.all([
@@ -60,9 +87,54 @@ export default async function RemindersPage() {
         </h2>
         <p className="max-w-2xl text-slate-300">
           reminders tablosu: start_at, due_at, is_very_important, related_obligation_id
-          ile dashboard’daki ÇOK ÖNEMLİ kartlarını besler.
+          ile dashboard’daki “ÇOK ÖNEMLİ” kartlarını besler.
         </p>
       </header>
+
+      <form
+        action={createReminder}
+        className="grid gap-3 rounded-3xl border border-white/10 bg-slate-900/60 p-5 md:grid-cols-3"
+      >
+        <input
+          name="title"
+          placeholder="Başlık"
+          className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white placeholder:text-slate-500"
+          required
+        />
+        <input
+          type="datetime-local"
+          name="dueAt"
+          className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white"
+          required
+        />
+        <label className="flex items-center gap-2 text-sm text-slate-300">
+          <input type="checkbox" name="isVeryImportant" className="size-4 accent-amber-500" />
+          Çok önemli
+        </label>
+        <input
+          name="description"
+          placeholder="Açıklama (opsiyonel)"
+          className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white placeholder:text-slate-500 md:col-span-2"
+        />
+        <select
+          name="related"
+          className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white"
+          defaultValue=""
+        >
+          <option value="">Obligation bağlantısı (opsiyonel)</option>
+          {obligations.map((obligation) => (
+            <option key={obligation.id} value={obligation.id}>
+              {obligation.name}
+            </option>
+          ))}
+        </select>
+        <button
+          type="submit"
+          className="rounded-xl bg-amber-500 px-4 py-3 text-sm font-semibold text-black transition hover:bg-amber-400"
+        >
+          Hatırlatma ekle
+        </button>
+      </form>
 
       <div className="grid gap-6 md:grid-cols-3">
         {grouped.map((bucket) => (

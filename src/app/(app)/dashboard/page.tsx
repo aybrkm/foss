@@ -35,7 +35,6 @@ export default async function DashboardPage() {
   ]);
   const now = new Date();
   const nowMs = now.getTime();
-
   const totalAssetValue = assetRows.reduce(
     (sum: number, asset: { currentValue: any; }) => sum + Number(asset.currentValue),
     0,
@@ -75,7 +74,7 @@ export default async function DashboardPage() {
         new Date(a.nextDue ?? 0).getTime() - new Date(b.nextDue ?? 0).getTime(),
     );
 
-  const summaryObligations = upcomingObligations.map((obligation: { id: any; name: any; category: any; frequency: any; amount: any; currency: any; nextDue: { toISOString: () => any; }; notes: any; }) => ({
+  const summaryObligations = upcomingObligations.map((obligation: { id: any; name: any; category: any; frequency: any; amount: any; currency: any; nextDue: { toISOString: () => any; }; notes: any; isRecurring: boolean; recurrenceUnit: string | null; recurrenceInterval: number | null; }) => ({
     id: obligation.id,
     name: obligation.name,
     category: obligation.category,
@@ -84,6 +83,19 @@ export default async function DashboardPage() {
     currency: obligation.currency,
     nextDue: obligation.nextDue ? obligation.nextDue.toISOString() : null,
     notes: obligation.notes,
+    isRecurring: obligation.isRecurring,
+    recurrenceUnit: obligation.recurrenceUnit,
+    recurrenceInterval: obligation.recurrenceInterval,
+  }));
+
+  const assetDetails = assetRows.map((asset: { id: any; name: any; assetType: any; isLiquid: any; currentValue: any; currency: any; updatedAt: Date; }) => ({
+    id: asset.id,
+    name: asset.name,
+    assetType: asset.assetType,
+    isLiquid: asset.isLiquid,
+    value: Number(asset.currentValue),
+    currency: asset.currency,
+    updatedAt: asset.updatedAt.toISOString(),
   }));
 
   const assetsForWidgets = assetRows.slice(0, 3).map((asset: { id: any; name: any; assetType: any; isLiquid: any; currentValue: any; currency: any; }) => ({
@@ -142,6 +154,7 @@ export default async function DashboardPage() {
       <SummaryKpis
         totalAssetValue={totalAssetValue}
         liquidAssetValue={liquidAssetValue}
+        assets={assetDetails}
         upcomingObligations={summaryObligations}
         importantReminders={importantReminders.map((reminder: { id: any; title: any; description: any; dueAt: any; related: any; }) => ({
           id: reminder.id,

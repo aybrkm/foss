@@ -7,15 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum AssetType {
-  cash
-  investment
-  gold
-  real_estate
-  land
-  other
-}
-
 enum ObligationCategory {
   payment
   legal
@@ -28,6 +19,11 @@ enum ObligationFrequency {
   quarterly
   yearly
   custom
+}
+
+enum RecurrenceUnit {
+  week
+  month
 }
 
 model User {
@@ -47,7 +43,7 @@ model Asset {
   id              String    @id @default(uuid())
   userId          String?
   name            String
-  assetType       AssetType
+  assetType       String
   isLiquid        Boolean
   currentValue    Decimal   @db.Decimal(18, 2)
   currency        String    @default("TRY") @db.Char(3)
@@ -68,7 +64,10 @@ model Obligation {
   amount      Decimal?            @db.Decimal(18, 2)
   currency    String?             @db.Char(3)
   frequency   ObligationFrequency @default(once)
-  nextDueDate DateTime?           @db.Date
+  isRecurring Boolean             @default(false)
+  recurrenceInterval Int?
+  recurrenceUnit    RecurrenceUnit?
+  nextDue     DateTime?           @db.Date
   endDate     DateTime?           @db.Date
   notes       String?
   isActive    Boolean             @default(true)

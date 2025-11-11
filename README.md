@@ -10,7 +10,7 @@ cp .env.example .env.local           # set DATABASE_URL
 
 npm run prisma:generate
 npm run db:push                      # or: npm run db:migrate -- --name init
-npm run db:seed                      # loads the sample FOSS workspace
+npm run db:seed                      # clears the database for a blank workspace
 
 npm run dev
 ```
@@ -55,4 +55,4 @@ prisma/
  └─ seed.ts                # Demo workspace seeder
 ```
 
-Use the seed data as a template to import your own workspace; once `DATABASE_URL` points to a live Postgres instance, the UI is ready to operate with production data.
+Running the seed script now simply wipes every table so you can start from scratch; once `DATABASE_URL` points to a live Postgres instance, the UI is ready for your own data.

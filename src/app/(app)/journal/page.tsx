@@ -1,4 +1,26 @@
+import { revalidatePath } from "next/cache";
 import prisma from "@/lib/prisma";
+
+async function createEntry(formData: FormData) {
+  "use server";
+  const title = formData.get("title")?.toString().trim() || null;
+  const body = formData.get("body")?.toString().trim();
+  const entryDate = formData.get("entryDate")?.toString();
+
+  if (!body) {
+    throw new Error("Günlük metni gerekli");
+  }
+
+  await prisma.journalEntry.create({
+    data: {
+      title,
+      body,
+      entryDate: entryDate ? new Date(entryDate) : undefined,
+    },
+  });
+
+  revalidatePath("/journal");
+}
 
 export default async function JournalPage() {
   const entries = await prisma.journalEntry.findMany({
@@ -18,6 +40,35 @@ export default async function JournalPage() {
         </p>
       </header>
 
+      <form
+        action={createEntry}
+        className="grid gap-3 rounded-3xl border border-white/10 bg-slate-900/60 p-5 md:grid-cols-2"
+      >
+        <input
+          name="title"
+          placeholder="Başlık (opsiyonel)"
+          className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white placeholder:text-slate-500"
+        />
+        <input
+          type="date"
+          name="entryDate"
+          className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white"
+        />
+        <textarea
+          name="body"
+          placeholder="Notunu yaz..."
+          className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white placeholder:text-slate-500 md:col-span-2"
+          rows={4}
+          required
+        />
+        <button
+          type="submit"
+          className="rounded-xl bg-sky-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-sky-400 md:col-span-2"
+        >
+          Günlük kaydet
+        </button>
+      </form>
+
       <div className="grid gap-5 md:grid-cols-2">
         {entries.map((entry) => (
           <article
@@ -30,9 +81,7 @@ export default async function JournalPage() {
             <h3 className="mt-2 text-xl font-semibold text-white">
               {entry.title ?? "Not"}
             </h3>
-            <p className="mt-3 text-sm text-slate-300 whitespace-pre-wrap">
-              {entry.body}
-            </p>
+            <p className="mt-3 whitespace-pre-wrap text-sm text-slate-300">{entry.body}</p>
             {(entry.relatedAssetId || entry.relatedObligationId) && (
               <p className="mt-3 text-xs text-slate-400">
                 Linked: {entry.relatedAssetId ?? entry.relatedObligationId}
