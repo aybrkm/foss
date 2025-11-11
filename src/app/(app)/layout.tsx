@@ -1,7 +1,21 @@
 import { ReactNode } from "react";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { MainNav } from "@/components/nav/MainNav";
+import { SignOutButton } from "@/components/auth/SignOutButton";
 
-export default function AppLayout({ children }: { children: ReactNode }) {
+export default async function AppLayout({ children }: { children: ReactNode }) {
+  const cookieStore = await cookies();
+  const supabase = createServerComponentClient({ cookies: () => cookieStore });
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session) {
+    redirect("/login");
+  }
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
       <header className="border-b border-white/10 bg-slate-950/60">
@@ -14,7 +28,10 @@ export default function AppLayout({ children }: { children: ReactNode }) {
               Personal Finance OS
             </h1>
           </div>
-          <MainNav />
+          <div className="flex flex-col items-start gap-3 text-sm text-white lg:flex-row lg:items-center">
+            <MainNav />
+            <SignOutButton />
+          </div>
         </div>
       </header>
       <main className="mx-auto w-full max-w-6xl px-6 py-12 pb-24 lg:px-10">

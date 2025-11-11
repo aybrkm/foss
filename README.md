@@ -17,6 +17,17 @@ npm run dev
 
 Visit `http://localhost:3000` for the dashboard. `npm run db:studio` opens Prisma Studio for CRUD.
 
+### Supabase Auth setup
+
+1. Create a Supabase project and enable Email/Password auth.
+2. Add the following environment variables to `.env` (and `.env.local` if needed):
+   ```
+   NEXT_PUBLIC_SUPABASE_URL="https://your-project.supabase.co"
+   NEXT_PUBLIC_SUPABASE_ANON_KEY="public-anon-key"
+   ```
+3. Create at least one user via Supabase Auth → Users.
+4. Start the dev server and sign in at `/login`. All application routes are now protected by Supabase auth middleware.
+
 ## Data model highlights
 
 | Table | Purpose | Notes |
