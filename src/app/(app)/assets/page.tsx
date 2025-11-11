@@ -39,6 +39,7 @@ export default async function AssetsPage() {
   const assets = await prisma.asset.findMany({
     orderBy: { updatedAt: "desc" },
   });
+  type AssetRow = typeof assets[number];
 
   return (
     <div className="space-y-6">
@@ -65,7 +66,7 @@ export default async function AssetsPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
-            {assets.map((asset) => (
+            {assets.map((asset: AssetRow) => (
               <tr key={asset.id} className="hover:bg-white/5">
                 <td className="px-5 py-4">
                   <p className="font-semibold text-white">{asset.name}</p>

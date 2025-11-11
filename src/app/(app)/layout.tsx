@@ -6,7 +6,7 @@ import { MainNav } from "@/components/nav/MainNav";
 import { SignOutButton } from "@/components/auth/SignOutButton";
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
-  const cookieStore = await cookies();
+  const cookieStore = cookies();
   const supabase = createServerComponentClient({ cookies: () => cookieStore });
   const {
     data: { session },

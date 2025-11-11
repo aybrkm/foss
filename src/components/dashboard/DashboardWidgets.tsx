@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition, useEffect, useState } from "react";
+import { JSX, startTransition, useEffect, useState } from "react";
 import Link from "next/link";
 import { formatCurrency, daysUntil } from "@/lib/format";
 

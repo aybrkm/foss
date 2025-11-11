@@ -10,7 +10,7 @@ type Props = {
 };
 
 export default async function LoginPage({ searchParams }: Props) {
-  const cookieStore = await cookies();
+  const cookieStore = cookies();
   const supabase = createServerComponentClient({ cookies: () => cookieStore });
   const {
     data: { session },

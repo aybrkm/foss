@@ -15,8 +15,10 @@ export async function GET() {
 
   let updated = 0;
 
+  type ObligationRecord = (typeof obligations)[number];
+
   await Promise.all(
-    obligations.map(async (obligation) => {
+    obligations.map(async (obligation: ObligationRecord) => {
       const nextDue = computeNextDue({
         baseDate: obligation.nextDue,
         recurrenceUnit: obligation.recurrenceUnit as "week" | "month" | null,

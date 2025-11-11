@@ -63,7 +63,7 @@ export default async function DashboardPage() {
   );
 
   const upcomingObligations = obligationRows
-    .filter((obligation: { nextDue: string | number | Date; }) => {
+    .filter((obligation) => {
       if (!obligation.nextDue) {
         return false;
       }
@@ -74,7 +74,7 @@ export default async function DashboardPage() {
         new Date(a.nextDue ?? 0).getTime() - new Date(b.nextDue ?? 0).getTime(),
     );
 
-  const summaryObligations = upcomingObligations.map((obligation: { id: any; name: any; category: any; frequency: any; amount: any; currency: any; nextDue: { toISOString: () => any; }; notes: any; isRecurring: boolean; recurrenceUnit: string | null; recurrenceInterval: number | null; }) => ({
+  const summaryObligations = upcomingObligations.map((obligation) => ({
     id: obligation.id,
     name: obligation.name,
     category: obligation.category,
@@ -107,7 +107,7 @@ export default async function DashboardPage() {
     currency: asset.currency,
   }));
 
-  const obligationsForWidgets = upcomingObligations.slice(0, 2).map((obligation: { id: any; name: any; category: any; isActive: any; amount: any; currency: any; nextDue: { toISOString: () => any; }; }) => ({
+  const obligationsForWidgets = upcomingObligations.slice(0, 2).map((obligation) => ({
     id: obligation.id,
     name: obligation.name,
     category: obligation.category,
@@ -139,8 +139,8 @@ export default async function DashboardPage() {
       kind: "REMINDER" as const,
     })),
     obligationRows
-      .filter((obligation: { nextDue: any; }) => obligation.nextDue)
-      .map((obligation: { id: any; name: any; nextDue: any; }) => ({
+      .filter((obligation) => obligation.nextDue)
+      .map((obligation) => ({
         id: obligation.id,
         title: obligation.name,
         dueDate: obligation.nextDue!.toISOString(),
