@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
+import { createRouteHandlerSupabaseClient } from "@/lib/supabase/route-handler-client";
 
 export async function GET(request: Request) {
-  const cookieStore = cookies();
-  const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+  const supabase = await createRouteHandlerSupabaseClient();
 
   const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");

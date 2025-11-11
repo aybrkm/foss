@@ -4,6 +4,7 @@ export default async function LayoutsPage() {
   const layouts = await prisma.pageLayout.findMany({
     orderBy: { pageKey: "asc" },
   });
+  type LayoutRow = (typeof layouts)[number];
 
   return (
     <div className="space-y-6">
@@ -24,7 +25,7 @@ export default async function LayoutsPage() {
         <p className="text-sm text-slate-400">Henüz kayıtlı bir layout yok.</p>
       )}
 
-      {layouts.map((layout) => (
+      {layouts.map((layout: LayoutRow) => (
         <section
           key={layout.id}
           className="space-y-2 rounded-3xl border border-white/10 bg-slate-900/70 p-5"

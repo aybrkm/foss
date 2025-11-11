@@ -49,11 +49,13 @@ export default async function RemindersPage() {
     prisma.reminder.findMany({ orderBy: { dueAt: "asc" } }),
     prisma.obligation.findMany({ select: { id: true, name: true } }),
   ]);
+  type ReminderRow = (typeof reminders)[number];
+  type ObligationOption = (typeof obligations)[number];
 
-  const obligationMap = new Map(obligations.map((obligation) => [obligation.id, obligation.name]));
+  const obligationMap = new Map(obligations.map((obligation: ObligationOption) => [obligation.id, obligation.name]));
   const referenceMs = new Date().getTime();
 
-  const reminderCards: ReminderCard[] = reminders.map((reminder) => {
+  const reminderCards: ReminderCard[] = reminders.map((reminder: ReminderRow) => {
     const dueAt = reminder.dueAt.toISOString();
     const daysLeft = Math.ceil((new Date(dueAt).getTime() - referenceMs) / DAY_MS);
     return {
@@ -122,7 +124,7 @@ export default async function RemindersPage() {
           defaultValue=""
         >
           <option value="">Obligation bağlantısı (opsiyonel)</option>
-          {obligations.map((obligation) => (
+          {obligations.map((obligation: ObligationOption) => (
             <option key={obligation.id} value={obligation.id}>
               {obligation.name}
             </option>

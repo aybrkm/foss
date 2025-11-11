@@ -33,6 +33,10 @@ export default async function DashboardPage() {
       take: 4,
     }),
   ]);
+  type ObligationRow = (typeof obligationRows)[number];
+  type ReminderRow = (typeof reminderRows)[number];
+  type AssetRow = (typeof assetRows)[number];
+  type JournalRow = (typeof journalRows)[number];
   const now = new Date();
   const nowMs = now.getTime();
   const totalAssetValue = assetRows.reduce(
@@ -47,23 +51,25 @@ export default async function DashboardPage() {
     obligationRows.map((obligation: { id: any; name: any; }) => [obligation.id, obligation.name]),
   );
 
-  const reminderDetails = reminderRows.map((reminder: { id: any; title: any; description: any; dueAt: { toISOString: () => any; }; isVeryImportant: any; relatedObligationId: unknown; }) => ({
-    id: reminder.id,
-    title: reminder.title,
-    description: reminder.description,
-    dueAt: reminder.dueAt.toISOString(),
+const reminderDetails = reminderRows.map((reminder: ReminderRow) => ({
+  id: reminder.id,
+  title: reminder.title,
+  description: reminder.description,
+  dueAt: reminder.dueAt.toISOString(),
     isVeryImportant: reminder.isVeryImportant,
     related: reminder.relatedObligationId
       ? obligationNameMap.get(reminder.relatedObligationId) ?? null
       : null,
   }));
 
-  const importantReminders = reminderDetails.filter(
-    (reminder: { isVeryImportant: any; }) => reminder.isVeryImportant,
-  );
+type ReminderDetail = (typeof reminderDetails)[number];
+
+const importantReminders = reminderDetails.filter(
+  (reminder: ReminderDetail) => reminder.isVeryImportant,
+);
 
   const upcomingObligations = obligationRows
-    .filter((obligation) => {
+    .filter((obligation: ObligationRow) => {
       if (!obligation.nextDue) {
         return false;
       }
@@ -74,7 +80,7 @@ export default async function DashboardPage() {
         new Date(a.nextDue ?? 0).getTime() - new Date(b.nextDue ?? 0).getTime(),
     );
 
-  const summaryObligations = upcomingObligations.map((obligation) => ({
+  const summaryObligations = upcomingObligations.map((obligation: ObligationRow) => ({
     id: obligation.id,
     name: obligation.name,
     category: obligation.category,
@@ -88,7 +94,7 @@ export default async function DashboardPage() {
     recurrenceInterval: obligation.recurrenceInterval,
   }));
 
-  const assetDetails = assetRows.map((asset: { id: any; name: any; assetType: any; isLiquid: any; currentValue: any; currency: any; updatedAt: Date; }) => ({
+  const assetDetails = assetRows.map((asset: AssetRow) => ({
     id: asset.id,
     name: asset.name,
     assetType: asset.assetType,
@@ -98,7 +104,7 @@ export default async function DashboardPage() {
     updatedAt: asset.updatedAt.toISOString(),
   }));
 
-  const assetsForWidgets = assetRows.slice(0, 3).map((asset: { id: any; name: any; assetType: any; isLiquid: any; currentValue: any; currency: any; }) => ({
+  const assetsForWidgets = assetRows.slice(0, 3).map((asset: AssetRow) => ({
     id: asset.id,
     name: asset.name,
     assetType: asset.assetType,
@@ -107,7 +113,7 @@ export default async function DashboardPage() {
     currency: asset.currency,
   }));
 
-  const obligationsForWidgets = upcomingObligations.slice(0, 2).map((obligation) => ({
+  const obligationsForWidgets = upcomingObligations.slice(0, 2).map((obligation: ObligationRow) => ({
     id: obligation.id,
     name: obligation.name,
     category: obligation.category,
@@ -117,13 +123,13 @@ export default async function DashboardPage() {
     nextDue: obligation.nextDue ? obligation.nextDue.toISOString() : null,
   }));
 
-  const remindersForWidgets = importantReminders.slice(0, 3).map((reminder: { id: any; title: any; dueAt: any; }) => ({
-    id: reminder.id,
-    title: reminder.title,
-    dueAt: reminder.dueAt,
-  }));
+const remindersForWidgets = importantReminders.slice(0, 3).map((reminder: ReminderDetail) => ({
+  id: reminder.id,
+  title: reminder.title,
+  dueAt: reminder.dueAt,
+}));
 
-  const journalForWidgets = journalRows.slice(0, 2).map((entry: { id: any; title: any; body: any; entryDate: { toISOString: () => any; }; }) => ({
+  const journalForWidgets = journalRows.slice(0, 2).map((entry: JournalRow) => ({
     id: entry.id,
     title: entry.title ?? "Not",
     body: entry.body,
@@ -131,7 +137,7 @@ export default async function DashboardPage() {
   }));
 
   const horizonBuckets = getHorizonBuckets(
-    reminderDetails.map((reminder: { id: any; title: any; dueAt: string; }) => ({
+    reminderDetails.map((reminder: ReminderDetail) => ({
       id: reminder.id,
       title: reminder.title,
       dueDate: reminder.dueAt,
@@ -139,12 +145,17 @@ export default async function DashboardPage() {
       kind: "REMINDER" as const,
     })),
     obligationRows
-      .filter((obligation) => obligation.nextDue)
-      .map((obligation) => ({
+      .filter(
+        (
+          obligation: ObligationRow,
+        ): obligation is ObligationRow & { nextDue: NonNullable<ObligationRow["nextDue"]> } =>
+          Boolean(obligation.nextDue),
+      )
+      .map((obligation: ObligationRow & { nextDue: NonNullable<ObligationRow["nextDue"]> }) => ({
         id: obligation.id,
         title: obligation.name,
-        dueDate: obligation.nextDue!.toISOString(),
-        daysLeft: calculateDaysLeft(obligation.nextDue!.toISOString(), nowMs),
+        dueDate: obligation.nextDue.toISOString(),
+        daysLeft: calculateDaysLeft(obligation.nextDue.toISOString(), nowMs),
         kind: "OBLIGATION" as const,
       })),
   );
@@ -156,7 +167,7 @@ export default async function DashboardPage() {
         liquidAssetValue={liquidAssetValue}
         assets={assetDetails}
         upcomingObligations={summaryObligations}
-        importantReminders={importantReminders.map((reminder: { id: any; title: any; description: any; dueAt: any; related: any; }) => ({
+        importantReminders={importantReminders.map((reminder: ReminderDetail) => ({
           id: reminder.id,
           title: reminder.title,
           description: reminder.description,

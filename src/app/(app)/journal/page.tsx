@@ -26,6 +26,7 @@ export default async function JournalPage() {
   const entries = await prisma.journalEntry.findMany({
     orderBy: { entryDate: "desc" },
   });
+  type JournalEntryRow = (typeof entries)[number];
 
   return (
     <div className="space-y-6">
@@ -70,7 +71,7 @@ export default async function JournalPage() {
       </form>
 
       <div className="grid gap-5 md:grid-cols-2">
-        {entries.map((entry) => (
+        {entries.map((entry: JournalEntryRow) => (
           <article
             key={entry.id}
             className="rounded-3xl border border-white/10 bg-slate-900/60 p-5"

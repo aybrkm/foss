@@ -79,6 +79,7 @@ export default async function ObligationsPage() {
       { createdAt: "desc" },
     ],
   });
+  type ObligationRow = (typeof obligations)[number];
 
   return (
     <div className="space-y-6">
@@ -110,7 +111,7 @@ export default async function ObligationsPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
-            {obligations.map((obligation) => (
+            {obligations.map((obligation: ObligationRow) => (
               <tr key={obligation.id} className="hover:bg-white/5">
                 <td className="px-5 py-4">
                   <p className="font-semibold text-white">{obligation.name}</p>

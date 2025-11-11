@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs";
+import { createServerClient } from "@supabase/ssr";
+import { getSupabaseConfig } from "@/lib/supabase/config";
 
 const PUBLIC_PATHS = [
   "/login",
@@ -18,7 +19,20 @@ function isPublicPath(pathname: string) {
 
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next();
-  const supabase = createMiddlewareClient({ req, res });
+  const { url, anonKey } = getSupabaseConfig();
+  const supabase = createServerClient(url, anonKey, {
+    cookies: {
+      get(name: string) {
+        return req.cookies.get(name)?.value;
+      },
+      set(name: string, value: string, options?: Parameters<typeof res.cookies.set>[2]) {
+        res.cookies.set(name, value, options);
+      },
+      remove(name: string, options?: Parameters<typeof res.cookies.set>[2]) {
+        res.cookies.set(name, "", options);
+      },
+    },
+  });
   const {
     data: { session },
   } = await supabase.auth.getSession();

@@ -1,17 +1,15 @@
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createServerComponentClient } from "@/lib/supabase/server-component-client";
 import { LoginForm } from "@/components/auth/LoginForm";
 
 type Props = {
-  searchParams: {
+  searchParams: Promise<{
     redirectedFrom?: string;
-  };
+  }>;
 };
 
 export default async function LoginPage({ searchParams }: Props) {
-  const cookieStore = cookies();
-  const supabase = createServerComponentClient({ cookies: () => cookieStore });
+  const supabase = await createServerComponentClient();
   const {
     data: { session },
   } = await supabase.auth.getSession();
@@ -20,7 +18,8 @@ export default async function LoginPage({ searchParams }: Props) {
     redirect("/dashboard");
   }
 
-  const redirectTo = searchParams.redirectedFrom ?? "/dashboard";
+  const resolvedSearchParams = await searchParams;
+  const redirectTo = resolvedSearchParams.redirectedFrom ?? "/dashboard";
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4">
