@@ -1,0 +1,129 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AssetType {
+  cash
+  investment
+  gold
+  real_estate
+  land
+  other
+}
+
+enum ObligationCategory {
+  payment
+  legal
+  other
+}
+
+enum ObligationFrequency {
+  once
+  monthly
+  quarterly
+  yearly
+  custom
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String?  @unique
+  name      String?
+  createdAt DateTime @default(now())
+
+  assets      Asset[]
+  obligations Obligation[]
+  reminders   Reminder[]
+  journal     JournalEntry[]
+  pageLayouts PageLayout[]
+}
+
+model Asset {
+  id              String    @id @default(uuid())
+  userId          String?
+  name            String
+  assetType       AssetType
+  isLiquid        Boolean
+  currentValue    Decimal   @db.Decimal(18, 2)
+  currency        String    @default("TRY") @db.Char(3)
+  acquisitionDate DateTime? @db.Date
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @default(now()) @updatedAt
+
+  user           User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  journalEntries JournalEntry[]
+}
+
+model Obligation {
+  id          String              @id @default(uuid())
+  userId      String?
+  name        String
+  category    ObligationCategory
+  amount      Decimal?            @db.Decimal(18, 2)
+  currency    String?             @db.Char(3)
+  frequency   ObligationFrequency @default(once)
+  nextDueDate DateTime?           @db.Date
+  endDate     DateTime?           @db.Date
+  notes       String?
+  isActive    Boolean             @default(true)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @default(now()) @updatedAt
+
+  user      User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reminders Reminder[]     @relation("ReminderObligation")
+  journal   JournalEntry[]
+}
+
+model Reminder {
+  id                  String    @id @default(uuid())
+  userId              String?
+  title               String
+  description         String?
+  startAt             DateTime?
+  dueAt               DateTime
+  isVeryImportant     Boolean   @default(false)
+  relatedObligationId String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @default(now()) @updatedAt
+
+  user              User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  relatedObligation Obligation? @relation("ReminderObligation", fields: [relatedObligationId], references: [id], onDelete: SetNull)
+
+  @@index([dueAt])
+  @@index([isVeryImportant, dueAt])
+}
+
+model JournalEntry {
+  id                  String   @id @default(uuid())
+  userId              String?
+  title               String?
+  body                String
+  entryDate           DateTime @default(now()) @db.Date
+  relatedAssetId      String?
+  relatedObligationId String?
+  createdAt           DateTime @default(now())
+
+  user              User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  relatedAsset      Asset?      @relation(fields: [relatedAssetId], references: [id], onDelete: SetNull)
+  relatedObligation Obligation? @relation(fields: [relatedObligationId], references: [id], onDelete: SetNull)
+
+  @@index([entryDate])
+}
+
+model PageLayout {
+  id        String   @id @default(uuid())
+  userId    String?
+  pageKey   String
+  layout    Json
+  updatedAt DateTime @default(now()) @updatedAt
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, pageKey])
+}

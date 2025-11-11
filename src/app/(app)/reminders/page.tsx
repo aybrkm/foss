@@ -1,0 +1,107 @@
+import prisma from "@/lib/prisma";
+
+const ranges = [
+  { label: "Bu hafta", maxDays: 7 },
+  { label: "Önümüzdeki ay", maxDays: 30 },
+  { label: "Önümüzdeki 6 ay", maxDays: 180 },
+] as const;
+
+const DAY_MS = 1000 * 60 * 60 * 24;
+
+type ReminderCard = {
+  id: string;
+  title: string;
+  dueAt: string;
+  isVeryImportant: boolean;
+  related: string | null;
+  daysLeft: number;
+};
+
+export default async function RemindersPage() {
+  const [reminders, obligations] = await Promise.all([
+    prisma.reminder.findMany({ orderBy: { dueAt: "asc" } }),
+    prisma.obligation.findMany({ select: { id: true, name: true } }),
+  ]);
+
+  const obligationMap = new Map(obligations.map((obligation) => [obligation.id, obligation.name]));
+  const referenceMs = new Date().getTime();
+
+  const reminderCards: ReminderCard[] = reminders.map((reminder) => {
+    const dueAt = reminder.dueAt.toISOString();
+    const daysLeft = Math.ceil((new Date(dueAt).getTime() - referenceMs) / DAY_MS);
+    return {
+      id: reminder.id,
+      title: reminder.title,
+      dueAt,
+      isVeryImportant: reminder.isVeryImportant,
+      related: reminder.relatedObligationId
+        ? obligationMap.get(reminder.relatedObligationId) ?? null
+        : null,
+      daysLeft,
+    };
+  });
+
+  const grouped = ranges.map((range, index) => {
+    const min = index === 0 ? 0 : ranges[index - 1].maxDays;
+    return {
+      label: range.label,
+      reminders: reminderCards.filter(
+        (reminder) => reminder.daysLeft > min && reminder.daysLeft <= range.maxDays,
+      ),
+    };
+  });
+
+  return (
+    <div className="space-y-8">
+      <header>
+        <p className="text-sm uppercase tracking-[0.4em] text-amber-300">Reminders</p>
+        <h2 className="text-3xl font-semibold text-white">
+          Kişisel işleri zaman dilimine göre grupla
+        </h2>
+        <p className="max-w-2xl text-slate-300">
+          reminders tablosu: start_at, due_at, is_very_important, related_obligation_id
+          ile dashboard’daki ÇOK ÖNEMLİ kartlarını besler.
+        </p>
+      </header>
+
+      <div className="grid gap-6 md:grid-cols-3">
+        {grouped.map((bucket) => (
+          <article
+            key={bucket.label}
+            className="rounded-3xl border border-white/10 bg-slate-900/60 p-5"
+          >
+            <h3 className="text-xl font-semibold text-white">{bucket.label}</h3>
+            <div className="mt-4 space-y-4">
+              {bucket.reminders.length === 0 && (
+                <p className="text-sm text-slate-500">Kayıt yok.</p>
+              )}
+              {bucket.reminders.map((reminder) => (
+                <div
+                  key={reminder.id}
+                  className="rounded-2xl border border-white/10 bg-black/30 p-4"
+                >
+                  <div className="flex items-center justify-between">
+                    <p className="font-semibold text-white">{reminder.title}</p>
+                    <span
+                      className={`text-xs ${
+                        reminder.isVeryImportant ? "text-rose-300" : "text-slate-400"
+                      }`}
+                    >
+                      {reminder.isVeryImportant ? "Çok önemli" : `${reminder.daysLeft} gün`}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400">
+                    {new Date(reminder.dueAt).toLocaleString("tr-TR")}
+                  </p>
+                  {reminder.related && (
+                    <p className="text-xs text-slate-400">Related: {reminder.related}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  );
+}
