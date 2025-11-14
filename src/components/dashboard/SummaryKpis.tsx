@@ -9,6 +9,7 @@ type AssetDetail = {
   assetType: string;
   isLiquid: boolean;
   value: number;
+  valueTry: number;
   currency: string;
   updatedAt: string;
 };
@@ -19,6 +20,7 @@ type ObligationDetail = {
   category: string;
   frequency: string;
   amount: number | null;
+  amountTry: number | null;
   currency: string | null;
   nextDue: string | null;
   notes: string | null;
@@ -58,7 +60,7 @@ export function SummaryKpis({
   const renderModalContent = () => {
     if (modal === "assets") {
       if (assets.length === 0) {
-        return <p className="text-sm text-slate-400">Kayıtlı varlık yok.</p>;
+        return <p className="text-sm text-slate-400">Kayıtlı varlık bulunmuyor.</p>;
       }
       return (
         <div className="space-y-3">
@@ -71,15 +73,18 @@ export function SummaryKpis({
                 <div>
                   <p className="text-base font-semibold text-white">{asset.name}</p>
                   <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
-                    {asset.assetType} - {asset.isLiquid ? "Likit" : "Illikit"}
+                    {asset.assetType} - {asset.isLiquid ? "Likit" : "İllikit"}
                   </p>
                 </div>
                 <p className="text-sm font-semibold text-white">
-                  {formatCurrency(asset.value, asset.currency)}
+                  <span>{formatCurrency(asset.value, asset.currency)}</span>
+                  <span className="block text-xs font-normal text-slate-400">
+                    ≈ {formatCurrency(asset.valueTry, "TRY")}
+                  </span>
                 </p>
               </div>
               <p className="text-xs text-slate-400">
-                Guncellendi: {new Date(asset.updatedAt).toLocaleDateString("tr-TR")}
+                Güncellendi: {new Date(asset.updatedAt).toLocaleDateString("tr-TR")}
               </p>
             </article>
           ))}
@@ -91,7 +96,7 @@ export function SummaryKpis({
       return (
         <div className="space-y-3">
           {upcomingObligations.length === 0 && (
-            <p className="text-sm text-slate-400">Aktif yukumluluk yok.</p>
+            <p className="text-sm text-slate-400">Aktif yükümlülük yok.</p>
           )}
           {upcomingObligations.map((obligation) => (
             <article
@@ -107,12 +112,19 @@ export function SummaryKpis({
                 </div>
                 <p className="text-sm font-semibold text-white">
                   {obligation.amount
-                    ? formatCurrency(obligation.amount, obligation.currency ?? "TRY")
+                    ? (
+                      <>
+                        <span>{formatCurrency(obligation.amount, obligation.currency ?? "TRY")}</span>
+                        <span className="block text-xs font-normal text-slate-400">
+                          ≈ {formatCurrency(obligation.amountTry ?? 0, "TRY")}
+                        </span>
+                      </>
+                    )
                     : "-"}
                 </p>
               </div>
               <p className="text-xs text-slate-400">
-                Next due:{" "}
+                Sonraki tarih:{" "}
                 {obligation.nextDue
                   ? new Date(obligation.nextDue).toLocaleString("tr-TR")
                   : "—"}
@@ -129,7 +141,7 @@ export function SummaryKpis({
     return (
       <div className="space-y-3">
         {importantReminders.length === 0 && (
-              <p className="text-sm text-slate-400">Cok onemli gorev yok.</p>
+              <p className="text-sm text-slate-400">Çok önemli görev yok.</p>
         )}
         {importantReminders.map((reminder) => (
           <article
@@ -139,14 +151,14 @@ export function SummaryKpis({
             <div className="flex items-center justify-between">
               <p className="text-base font-semibold text-white">{reminder.title}</p>
               <span className="text-xs text-amber-200">
-            {daysUntil(reminder.dueAt)} gun
+                {daysUntil(reminder.dueAt)} gün
               </span>
             </div>
             <p className="text-xs text-slate-400">
               {new Date(reminder.dueAt).toLocaleString("tr-TR")}
             </p>
             {reminder.related && (
-              <p className="mt-2 text-sm text-slate-300">Related: {reminder.related}</p>
+              <p className="mt-2 text-sm text-slate-300">Bağlantı: {reminder.related}</p>
             )}
             {reminder.description && (
               <p className="mt-1 text-sm text-slate-400">{reminder.description}</p>
@@ -161,25 +173,25 @@ export function SummaryKpis({
     modal === "assets"
       ? "Portföy dağılımı"
       : modal === "obligations"
-        ? "Onumuzdeki odemeler / resmi isler"
-        : "Oncelikli hatirlatmalar";
+        ? "Önümüzdeki ödemeler / resmi işler"
+        : "Öncelikli hatırlatmalar";
 
   const modalLabel =
     modal === "assets"
-      ? "Varliklar"
+      ? "Varlıklar"
       : modal === "obligations"
-        ? "Aktif yukumlulukler"
-        : "Cok onemli gorevler";
+        ? "Aktif yükümlülükler"
+        : "Çok önemli görevler";
 
   return (
     <>
       <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900 via-slate-900/80 to-slate-900/40 p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <span className="rounded-full border border-indigo-300/40 bg-indigo-500/10 px-3 py-1 text-[11px] uppercase tracking-[0.4em] text-indigo-200">
-            Onemli ozet
+            Önemli özet
           </span>
           <span className="text-[11px] uppercase tracking-[0.3em] text-slate-400">
-            assets / obligations / reminders / journal / layouts
+            varlıklar / yükümlülükler / hatırlatmalar / günlük / düzenler
           </span>
         </div>
         <div className="mt-3 grid gap-3 md:grid-cols-3">
@@ -189,7 +201,7 @@ export function SummaryKpis({
             className="rounded-2xl border border-white/10 bg-white/5 p-3 text-left transition hover:border-indigo-200/60 hover:bg-white/10"
           >
             <p className="text-[11px] uppercase tracking-[0.3em] text-indigo-200">
-              Toplam Varlik (TRY)
+              Toplam Varlık (TRY)
             </p>
             <p className="text-2xl font-semibold text-white">
               {formatCurrency(totalAssetValue, "TRY")}
@@ -197,7 +209,7 @@ export function SummaryKpis({
             <p className="text-xs text-slate-400">
               Likit {formatCurrency(liquidAssetValue, "TRY")}
             </p>
-            <p className="mt-1 text-xs text-slate-400">detay icin tikla</p>
+            <p className="mt-1 text-xs text-slate-400">detay için tıkla</p>
           </button>
           <button
             type="button"
@@ -205,12 +217,12 @@ export function SummaryKpis({
             className="rounded-2xl border border-white/10 bg-white/5 p-3 text-left transition hover:border-rose-200/60 hover:bg-white/10"
           >
             <p className="text-[11px] uppercase tracking-[0.3em] text-rose-200">
-              Aktif Yukumluluk
+              Aktif Yükümlülük
             </p>
             <p className="text-2xl font-semibold text-white">
               {upcomingObligations.length}
             </p>
-            <p className="text-xs text-slate-400">detay icin tikla</p>
+            <p className="text-xs text-slate-400">detay için tıkla</p>
           </button>
           <button
             type="button"
@@ -218,12 +230,12 @@ export function SummaryKpis({
             className="rounded-2xl border border-white/10 bg-white/5 p-3 text-left transition hover:border-amber-200/60 hover:bg-white/10"
           >
             <p className="text-[11px] uppercase tracking-[0.3em] text-amber-200">
-              Cok onemli
+              Çok önemli
             </p>
             <p className="text-2xl font-semibold text-white">
               {importantReminders.length}
             </p>
-            <p className="text-xs text-slate-400">detay icin tikla</p>
+            <p className="text-xs text-slate-400">detay için tıkla</p>
           </button>
         </div>
       </section>

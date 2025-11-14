@@ -1,6 +1,6 @@
-# FOSS – Next.js + Postgres starter
+# FLOSS – Next.js + Postgres starter
 
-FOSS (Free/Open Systems for Self) is a focused personal ops hub: assets, obligations, reminders, journal entries and layout metadata live in Postgres, and the entire UI is powered by the Next.js App Router + Prisma.
+FLOSS (Free/Libre Open Systems for Self) is a focused personal ops hub: assets, obligations, reminders, journal entries and layout metadata live in Postgres, and the entire UI is powered by the Next.js App Router + Prisma.
 
 ## Quick start
 

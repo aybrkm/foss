@@ -1,12 +1,46 @@
+import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import prisma from "@/lib/prisma";
+import { convertToTry, getExchangeRates } from "@/lib/exchange";
 import { formatCurrency } from "@/lib/format";
 import { computeNextDue } from "@/lib/recurrence";
 import { ObligationForm } from "@/components/forms/ObligationForm";
+import { ConfirmDoneButton } from "@/components/forms/ConfirmDoneButton";
 
 const categories = ["payment", "legal", "other"] as const;
 const recurrenceUnits = ["week", "month"] as const;
 const currencyOptions = ["TRY", "USD", "AED", "EUR"] as const;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+const adjustDateInput = (value?: string | null) => {
+  if (!value) {
+    return null;
+  }
+  const date = new Date(value);
+  date.setTime(date.getTime() + DAY_MS);
+  return date;
+};
+
+function calculateNextRecurringDate(obligation: {
+  nextDue: Date | null;
+  recurrenceInterval: number | null;
+  recurrenceUnit: "week" | "month" | null;
+}) {
+  if (!obligation.recurrenceInterval || !obligation.recurrenceUnit) {
+    return null;
+  }
+  const base = obligation.nextDue ? new Date(obligation.nextDue) : new Date();
+  const next = new Date(base);
+  if (obligation.recurrenceUnit === "week") {
+    next.setDate(next.getDate() + 7 * obligation.recurrenceInterval);
+    return next;
+  }
+  const originalDay = next.getDate();
+  next.setMonth(next.getMonth() + obligation.recurrenceInterval, 1);
+  const lastDay = new Date(next.getFullYear(), next.getMonth() + 1, 0).getDate();
+  next.setDate(Math.min(originalDay, lastDay));
+  return next;
+}
 
 async function createObligation(formData: FormData) {
   "use server";
@@ -25,7 +59,7 @@ async function createObligation(formData: FormData) {
     recurrenceIntervalRaw && recurrenceIntervalRaw.length > 0
       ? Number(recurrenceIntervalRaw)
       : null;
-  const baseDate = nextDueRaw ? new Date(nextDueRaw) : null;
+  const baseDate = adjustDateInput(nextDueRaw);
 
   if (!name || !category) {
     throw new Error("Eksik yukumluluk bilgisi");
@@ -72,14 +106,90 @@ async function createObligation(formData: FormData) {
   revalidatePath("/dashboard");
 }
 
+async function markObligationDone(formData: FormData) {
+  "use server";
+  const id = formData.get("id")?.toString();
+  if (!id) {
+    throw new Error("Yükümlülük bulunamadı");
+  }
+  const obligation = await prisma.obligation.findUnique({
+    where: { id },
+  });
+  if (!obligation) {
+    throw new Error("Yükümlülük bulunamadı");
+  }
+
+  const shouldClone =
+    obligation.isRecurring &&
+    obligation.recurrenceInterval &&
+    obligation.recurrenceUnit &&
+    !obligation.isDone;
+
+  if (shouldClone) {
+    const nextDue = calculateNextRecurringDate(obligation);
+    await prisma.$transaction([
+      prisma.obligation.update({
+        where: { id },
+        data: { isDone: true },
+      }),
+      prisma.obligation.create({
+        data: {
+          name: obligation.name,
+          category: obligation.category,
+          amount: obligation.amount,
+          currency: obligation.currency,
+          frequency: obligation.frequency,
+          isRecurring: obligation.isRecurring,
+          recurrenceInterval: obligation.recurrenceInterval,
+          recurrenceUnit: obligation.recurrenceUnit,
+          nextDue,
+          notes: obligation.notes,
+          isActive: obligation.isActive,
+          userId: obligation.userId,
+        },
+      }),
+    ]);
+  } else {
+    await prisma.obligation.update({
+      where: { id },
+      data: { isDone: true },
+    });
+  }
+  revalidatePath("/obligations");
+  revalidatePath("/dashboard");
+}
+
+async function deleteObligation(formData: FormData) {
+  "use server";
+  const id = formData.get("id")?.toString();
+  if (!id) {
+    throw new Error("Yükümlülük bulunamadı");
+  }
+  await prisma.obligation.delete({
+    where: { id },
+  });
+  revalidatePath("/obligations");
+  revalidatePath("/dashboard");
+}
+
 export default async function ObligationsPage() {
   const obligations = await prisma.obligation.findMany({
     orderBy: [
+      { isDone: "asc" },
       { nextDue: "asc" },
       { createdAt: "desc" },
     ],
   });
   type ObligationRow = (typeof obligations)[number];
+  const rates = await getExchangeRates();
+  const enrichedObligations = obligations.map((obligation: ObligationRow) => {
+    const amount = obligation.amount ? Number(obligation.amount) : null;
+    return {
+      ...obligation,
+      amountNumber: amount,
+      amountTry: amount ? convertToTry(amount, obligation.currency, rates) : null,
+    };
+  });
 
   return (
     <div className="space-y-6">
@@ -108,29 +218,75 @@ export default async function ObligationsPage() {
               <th className="px-5 py-4">Tekrar</th>
               <th className="px-5 py-4 text-right">Tutar</th>
               <th className="px-5 py-4 text-right">Next Due</th>
+              <th className="px-5 py-4 text-right">Düzenle</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
-            {obligations.map((obligation: ObligationRow) => (
-              <tr key={obligation.id} className="hover:bg-white/5">
-                <td className="px-5 py-4">
-                  <p className="font-semibold text-white">{obligation.name}</p>
-                  <p className="text-xs text-slate-400">
-                    {obligation.isActive ? "Aktif" : "Pasif"}
-                  </p>
+            {enrichedObligations.map((obligation: ObligationRow & { amountNumber: number | null; amountTry: number | null }) => {
+              const textClass = obligation.isDone ? "text-xs line-through" : "";
+              const statusColor = obligation.isDone ? "text-slate-500" : "text-white";
+              return (
+                <tr
+                  key={obligation.id}
+                  className={`hover:bg-white/5 ${obligation.isDone ? "text-slate-500" : "text-white"}`}
+                >
+                  <td className="px-5 py-4">
+                    <p className={`font-semibold ${statusColor} ${textClass}`}>{obligation.name}</p>
+                    <p className={`text-xs ${obligation.isDone ? "text-slate-500 line-through" : "text-slate-400"}`}>
+                      {obligation.isActive ? "Aktif" : "Pasif"}
+                    </p>
+                  </td>
+                  <td className={`px-5 py-4 capitalize text-slate-300 ${textClass}`}>
+                    {obligation.category}
+                  </td>
+                  <td className={`px-5 py-4 text-slate-300 ${textClass}`}>{formatRecurrence(obligation)}</td>
+                  <td className="px-5 py-4 text-right font-semibold">
+                    {obligation.amountNumber
+                      ? (
+                        <>
+                          <span className={`${statusColor} ${textClass}`}>
+                            {formatCurrency(obligation.amountNumber, obligation.currency ?? "TRY")}
+                          </span>
+                          <span className="block text-xs font-normal text-slate-400">
+                            ≈ {formatCurrency(obligation.amountTry ?? 0, "TRY")}
+                          </span>
+                        </>
+                      )
+                      : "-"}
                 </td>
-                <td className="px-5 py-4 capitalize text-slate-300">{obligation.category}</td>
-                <td className="px-5 py-4 text-slate-300">{formatRecurrence(obligation)}</td>
-                <td className="px-5 py-4 text-right font-semibold text-white">
-                  {obligation.amount
-                    ? formatCurrency(Number(obligation.amount), obligation.currency ?? "TRY")
-                    : "-"}
-                </td>
-                <td className="px-5 py-4 text-right text-slate-400">
-                  {obligation.nextDue ? new Date(obligation.nextDue).toLocaleDateString("tr-TR") : ""}
-                </td>
-              </tr>
-            ))}
+                  <td className={`px-5 py-4 text-right ${textClass || "text-slate-400"}`}>
+                    {obligation.nextDue ? new Date(obligation.nextDue).toLocaleDateString("tr-TR") : ""}
+                  </td>
+                  <td className="px-5 py-4 text-right flex items-center justify-end gap-2">
+                    {!obligation.isDone && (
+                      <Link
+                        href={`/obligations/${obligation.id}/edit`}
+                        className="inline-flex items-center justify-center rounded-full border border-white/20 px-3 py-1 text-xs text-white transition hover:border-white/60"
+                        aria-label="Yükümlülüğü düzenle"
+                      >
+                        ✏️
+                      </Link>
+                    )}
+                    {!obligation.isDone && (
+                      <ConfirmDoneButton
+                        action={markObligationDone}
+                        id={obligation.id}
+                        description="Tamamlandı olarak işaretlenen yeniden geri alınamaz."
+                      />
+                    )}
+                    <form action={deleteObligation}>
+                      <input type="hidden" name="id" value={obligation.id} />
+                      <button
+                        type="submit"
+                        className="inline-flex items-center justify-center rounded-full border border-rose-400/40 px-3 py-1 text-xs text-rose-200 transition hover:border-rose-300 hover:text-white"
+                      >
+                        ✕
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -149,4 +305,3 @@ function formatRecurrence(obligation: {
   const unitLabel = obligation.recurrenceUnit === "week" ? "hafta" : "ay";
   return `${obligation.recurrenceInterval} ${unitLabel}`;
 }
-

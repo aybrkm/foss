@@ -76,7 +76,7 @@ function AssetFormFields({ action, currencies, isLiquid }: FieldsProps) {
         type="number"
         name="value"
         min="0"
-        step="100"
+        step="0.01"
         placeholder="Toplam deger"
         className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white placeholder:text-slate-500"
         required

@@ -4,12 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const links = [
-  { label: "Dashboard", href: "/dashboard" },
-  { label: "Assets", href: "/assets" },
-  { label: "Obligations", href: "/obligations" },
-  { label: "Reminders", href: "/reminders" },
-  { label: "Journal", href: "/journal" },
-  { label: "Layouts", href: "/layouts" },
+  { label: "Panel", href: "/dashboard" },
+  { label: "Varlıklar", href: "/assets" },
+  { label: "Yükümlülükler", href: "/obligations" },
+  { label: "Hatırlatmalar", href: "/reminders" },
+  { label: "Günlük", href: "/journal" },
+  { label: "Yerleşimler", href: "/layouts" },
 ];
 
 export function MainNav() {

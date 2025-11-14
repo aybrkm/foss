@@ -1,5 +1,8 @@
+import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import prisma from "@/lib/prisma";
+import { ConfirmDoneButton } from "@/components/forms/ConfirmDoneButton";
+import { ObligationPicker } from "@/components/forms/ObligationPicker";
 
 const ranges = [
   { label: "Bu hafta", maxDays: 7 },
@@ -14,6 +17,7 @@ type ReminderCard = {
   title: string;
   dueAt: string;
   isVeryImportant: boolean;
+  isDone: boolean;
   related: string | null;
   daysLeft: number;
 };
@@ -44,10 +48,36 @@ async function createReminder(formData: FormData) {
   revalidatePath("/dashboard");
 }
 
+async function markReminderDone(formData: FormData) {
+  "use server";
+  const id = formData.get("id")?.toString();
+  if (!id) {
+    throw new Error("Hatırlatma bulunamadı");
+  }
+  await prisma.reminder.update({
+    where: { id },
+    data: { isDone: true },
+  });
+
+  revalidatePath("/reminders");
+  revalidatePath("/dashboard");
+}
+
 export default async function RemindersPage() {
   const [reminders, obligations] = await Promise.all([
     prisma.reminder.findMany({ orderBy: { dueAt: "asc" } }),
-    prisma.obligation.findMany({ select: { id: true, name: true } }),
+    prisma.obligation.findMany({
+      select: {
+        id: true,
+        name: true,
+        isDone: true,
+        category: true,
+        amount: true,
+        currency: true,
+        nextDue: true,
+        notes: true,
+      },
+    }),
   ]);
   type ReminderRow = (typeof reminders)[number];
   type ObligationOption = (typeof obligations)[number];
@@ -63,6 +93,7 @@ export default async function RemindersPage() {
       title: reminder.title,
       dueAt,
       isVeryImportant: reminder.isVeryImportant,
+      isDone: reminder.isDone,
       related: reminder.relatedObligationId
         ? obligationMap.get(reminder.relatedObligationId) ?? null
         : null,
@@ -70,11 +101,14 @@ export default async function RemindersPage() {
     };
   });
 
+  const activeReminders = reminderCards.filter((reminder) => !reminder.isDone);
+  const doneReminders = reminderCards.filter((reminder) => reminder.isDone);
+
   const grouped = ranges.map((range, index) => {
     const min = index === 0 ? 0 : ranges[index - 1].maxDays;
     return {
       label: range.label,
-      reminders: reminderCards.filter(
+      reminders: activeReminders.filter(
         (reminder) => reminder.daysLeft > min && reminder.daysLeft <= range.maxDays,
       ),
     };
@@ -118,18 +152,20 @@ export default async function RemindersPage() {
           placeholder="Açıklama (opsiyonel)"
           className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white placeholder:text-slate-500 md:col-span-2"
         />
-        <select
+        <ObligationPicker
           name="related"
-          className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white"
-          defaultValue=""
-        >
-          <option value="">Obligation bağlantısı (opsiyonel)</option>
-          {obligations.map((obligation: ObligationOption) => (
-            <option key={obligation.id} value={obligation.id}>
-              {obligation.name}
-            </option>
-          ))}
-        </select>
+          options={obligations
+            .filter((obligation: ObligationOption) => !obligation.isDone)
+            .map((obligation: ObligationOption) => ({
+              id: obligation.id,
+              name: obligation.name,
+              category: obligation.category,
+              amount: obligation.amount ? Number(obligation.amount) : null,
+              currency: obligation.currency ?? undefined,
+              nextDue: obligation.nextDue ? obligation.nextDue.toISOString() : null,
+              notes: obligation.notes,
+            }))}
+        />
         <button
           type="submit"
           className="rounded-xl bg-amber-500 px-4 py-3 text-sm font-semibold text-black transition hover:bg-amber-400"
@@ -150,19 +186,40 @@ export default async function RemindersPage() {
                 <p className="text-sm text-slate-500">Kayıt yok.</p>
               )}
               {bucket.reminders.map((reminder) => (
-                <div
-                  key={reminder.id}
-                  className="rounded-2xl border border-white/10 bg-black/30 p-4"
-                >
-                  <div className="flex items-center justify-between">
+                <div key={reminder.id} className="rounded-2xl border border-white/10 bg-black/30 p-4">
+                  <div className="flex items-center justify-between gap-2">
                     <p className="font-semibold text-white">{reminder.title}</p>
-                    <span
-                      className={`text-xs ${
-                        reminder.isVeryImportant ? "text-rose-300" : "text-slate-400"
-                      }`}
-                    >
-                      {reminder.isVeryImportant ? "Çok önemli" : `${reminder.daysLeft} gün`}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`text-xs ${
+                          reminder.isVeryImportant ? "text-rose-300" : "text-slate-400"
+                        }`}
+                      >
+                        {reminder.isVeryImportant ? "Çok önemli" : `${reminder.daysLeft} gün`}
+                      </span>
+                      <Link
+                        href={`/reminders/${reminder.id}/edit`}
+                        className="inline-flex items-center justify-center rounded-full border border-white/20 px-2 py-1 text-[11px] text-white transition hover:border-white/60"
+                        aria-label="Hatırlatmayı düzenle"
+                      >
+                        ✏️
+                      </Link>
+                      <form action={deleteReminder}>
+                        <input type="hidden" name="id" value={reminder.id} />
+                        <button
+                          type="submit"
+                          className="inline-flex items-center justify-center rounded-full border border-rose-400/40 px-2 py-1 text-[11px] text-rose-200 transition hover:border-rose-300 hover:text-white"
+                        >
+                          ✕
+                        </button>
+                      </form>
+                      <ConfirmDoneButton
+                        action={markReminderDone}
+                        id={reminder.id}
+                        label="Tamamlandı"
+                        description="Hatırlatmalar için tamamlandı işlemi geri alınamaz."
+                      />
+                    </div>
                   </div>
                   <p className="text-xs text-slate-400">
                     {new Date(reminder.dueAt).toLocaleString("tr-TR")}
@@ -176,6 +233,39 @@ export default async function RemindersPage() {
           </article>
         ))}
       </div>
+
+      {doneReminders.length > 0 && (
+        <section className="rounded-3xl border border-white/10 bg-slate-900/60 p-5">
+          <h3 className="text-xl font-semibold text-slate-300">Tamamlanan hatırlatmalar</h3>
+          <div className="mt-4 space-y-3">
+            {doneReminders.map((reminder) => (
+              <div
+                key={reminder.id}
+                className="rounded-2xl border border-white/10 bg-black/20 p-4 text-slate-500"
+              >
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold line-through">{reminder.title}</p>
+                  <form action={deleteReminder}>
+                    <input type="hidden" name="id" value={reminder.id} />
+                    <button
+                      type="submit"
+                      className="inline-flex items-center justify-center rounded-full border border-rose-400/40 px-2 py-1 text-[11px] text-rose-200 transition hover:border-rose-300 hover:text-white"
+                    >
+                      ✕
+                    </button>
+                  </form>
+                </div>
+                <p className="text-[11px]">
+                  {new Date(reminder.dueAt).toLocaleString("tr-TR")}
+                </p>
+                {reminder.related && (
+                  <p className="text-[11px]">Related: {reminder.related}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

@@ -16,7 +16,7 @@ const jetBrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FOSS • Personal Finance OS",
+  title: "FLOSS • Personal Finance OS",
   description:
     "Next.js + Postgres starter for assets, obligations, reminders, journal entries and page layouts.",
 };

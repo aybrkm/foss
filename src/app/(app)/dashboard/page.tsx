@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma";
+import { convertToTry, getExchangeRates } from "@/lib/exchange";
 import { DashboardWidgets } from "@/components/dashboard/DashboardWidgets";
 import { SummaryKpis } from "@/components/dashboard/SummaryKpis";
 
@@ -22,30 +23,48 @@ type HorizonItem = {
 };
 
 type HorizonBuckets = Record<HorizonKey, HorizonItem[]>;
+const kindLabels: Record<HorizonItem["kind"], string> = {
+  OBLIGATION: "Yükümlülük",
+  REMINDER: "Hatırlatma",
+};
 
 export default async function DashboardPage() {
-  const [assetRows, obligationRows, reminderRows, journalRows] = await Promise.all([
+  const [assetRows, obligationRows, reminderRows, journalRows, rates] = await Promise.all([
     prisma.asset.findMany({ orderBy: { updatedAt: "desc" } }),
-    prisma.obligation.findMany({ orderBy: { nextDue: "asc" } }),
-    prisma.reminder.findMany({ orderBy: { dueAt: "asc" } }),
+    prisma.obligation.findMany({
+      where: { isDone: false },
+      orderBy: { nextDue: "asc" },
+    }),
+    prisma.reminder.findMany({
+      where: { isDone: false },
+      orderBy: { dueAt: "asc" },
+    }),
     prisma.journalEntry.findMany({
       orderBy: { entryDate: "desc" },
       take: 4,
     }),
+    getExchangeRates(),
   ]);
   type ObligationRow = (typeof obligationRows)[number];
   type ReminderRow = (typeof reminderRows)[number];
   type AssetRow = (typeof assetRows)[number];
   type JournalRow = (typeof journalRows)[number];
+  type AssetWithConversion = AssetRow & { valueTry: number; numericValue: number };
   const now = new Date();
   const nowMs = now.getTime();
-  const totalAssetValue = assetRows.reduce(
-    (sum: number, asset: { currentValue: any; }) => sum + Number(asset.currentValue),
-    0,
-  );
-  const liquidAssetValue = assetRows
-    .filter((asset: { isLiquid: any; }) => asset.isLiquid)
-    .reduce((sum: number, asset: { currentValue: any; }) => sum + Number(asset.currentValue), 0);
+  const assetsWithRates: AssetWithConversion[] = assetRows.map((asset: AssetRow) => {
+    const numericValue = Number(asset.currentValue);
+    return {
+      ...asset,
+      numericValue,
+      valueTry: convertToTry(numericValue, asset.currency, rates),
+    };
+  });
+
+  const totalAssetValue = assetsWithRates.reduce((sum: number, asset: { valueTry: number }) => sum + asset.valueTry, 0);
+  const liquidAssetValue = assetsWithRates
+    .filter((asset: { isLiquid: any }) => asset.isLiquid)
+    .reduce((sum: number, asset: { valueTry: number }) => sum + asset.valueTry, 0);
 
   const obligationNameMap = new Map(
     obligationRows.map((obligation: { id: any; name: any; }) => [obligation.id, obligation.name]),
@@ -80,48 +99,58 @@ const importantReminders = reminderDetails.filter(
         new Date(a.nextDue ?? 0).getTime() - new Date(b.nextDue ?? 0).getTime(),
     );
 
-  const summaryObligations = upcomingObligations.map((obligation: ObligationRow) => ({
-    id: obligation.id,
-    name: obligation.name,
-    category: obligation.category,
-    frequency: obligation.frequency,
-    amount: obligation.amount ? Number(obligation.amount) : null,
-    currency: obligation.currency,
-    nextDue: obligation.nextDue ? obligation.nextDue.toISOString() : null,
-    notes: obligation.notes,
-    isRecurring: obligation.isRecurring,
-    recurrenceUnit: obligation.recurrenceUnit,
-    recurrenceInterval: obligation.recurrenceInterval,
-  }));
+  const summaryObligations = upcomingObligations.map((obligation: ObligationRow) => {
+    const amountNumber = obligation.amount ? Number(obligation.amount) : null;
+    return {
+      id: obligation.id,
+      name: obligation.name,
+      category: obligation.category,
+      frequency: obligation.frequency,
+      amount: amountNumber,
+      amountTry: amountNumber ? convertToTry(amountNumber, obligation.currency, rates) : null,
+      currency: obligation.currency,
+      nextDue: obligation.nextDue ? obligation.nextDue.toISOString() : null,
+      notes: obligation.notes,
+      isRecurring: obligation.isRecurring,
+      recurrenceUnit: obligation.recurrenceUnit,
+      recurrenceInterval: obligation.recurrenceInterval,
+    };
+  });
 
-  const assetDetails = assetRows.map((asset: AssetRow) => ({
+  const assetDetails = assetsWithRates.map((asset: AssetWithConversion) => ({
     id: asset.id,
     name: asset.name,
     assetType: asset.assetType,
     isLiquid: asset.isLiquid,
-    value: Number(asset.currentValue),
+    value: asset.numericValue,
+    valueTry: asset.valueTry,
     currency: asset.currency,
     updatedAt: asset.updatedAt.toISOString(),
   }));
 
-  const assetsForWidgets = assetRows.slice(0, 3).map((asset: AssetRow) => ({
+  const assetsForWidgets = assetsWithRates.slice(0, 3).map((asset: AssetWithConversion) => ({
     id: asset.id,
     name: asset.name,
     assetType: asset.assetType,
     isLiquid: asset.isLiquid,
-    value: Number(asset.currentValue),
+    value: asset.numericValue,
+    valueTry: asset.valueTry,
     currency: asset.currency,
   }));
 
-  const obligationsForWidgets = upcomingObligations.slice(0, 2).map((obligation: ObligationRow) => ({
-    id: obligation.id,
-    name: obligation.name,
-    category: obligation.category,
-    status: obligation.isActive ? "Aktif" : "Pasif",
-    amount: obligation.amount ? Number(obligation.amount) : null,
-    currency: obligation.currency,
-    nextDue: obligation.nextDue ? obligation.nextDue.toISOString() : null,
-  }));
+  const obligationsForWidgets = upcomingObligations.slice(0, 2).map((obligation: ObligationRow) => {
+    const amountNumber = obligation.amount ? Number(obligation.amount) : null;
+    return {
+      id: obligation.id,
+      name: obligation.name,
+      category: obligation.category,
+      status: obligation.isActive ? "Aktif" : "Pasif",
+      amount: amountNumber,
+      amountTry: amountNumber ? convertToTry(amountNumber, obligation.currency, rates) : null,
+      currency: obligation.currency,
+      nextDue: obligation.nextDue ? obligation.nextDue.toISOString() : null,
+    };
+  });
 
 const remindersForWidgets = importantReminders.slice(0, 3).map((reminder: ReminderDetail) => ({
   id: reminder.id,
@@ -196,7 +225,7 @@ const remindersForWidgets = importantReminders.slice(0, 3).map((reminder: Remind
                       <div>
                         <p className="text-sm font-semibold text-white">{item.title}</p>
                         <p className="text-[11px] uppercase tracking-[0.3em] text-slate-400">
-                          {item.kind}
+                          {kindLabels[item.kind]}
                         </p>
                       </div>
                       <p className="text-xs font-semibold text-white">

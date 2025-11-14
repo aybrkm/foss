@@ -1,9 +1,21 @@
+import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import prisma from "@/lib/prisma";
+import { convertToTry, getExchangeRates } from "@/lib/exchange";
 import { formatCurrency } from "@/lib/format";
 import { AssetForm } from "@/components/forms/AssetForm";
 
 const currencyOptions = ["TRY", "USD", "AED", "EUR"] as const;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+const adjustDateInput = (value?: string | null) => {
+  if (!value) {
+    return null;
+  }
+  const date = new Date(value);
+  date.setTime(date.getTime() + DAY_MS);
+  return date;
+};
 
 async function createAsset(formData: FormData) {
   "use server";
@@ -27,7 +39,7 @@ async function createAsset(formData: FormData) {
       currentValue: value,
       currency,
       notes,
-      acquisitionDate: acquisitionDateRaw ? new Date(acquisitionDateRaw) : null,
+      acquisitionDate: adjustDateInput(acquisitionDateRaw),
     },
   });
 
@@ -40,6 +52,15 @@ export default async function AssetsPage() {
     orderBy: { updatedAt: "desc" },
   });
   type AssetRow = typeof assets[number];
+  const rates = await getExchangeRates();
+  const enrichedAssets = assets.map((asset) => {
+    const numericValue = Number(asset.currentValue);
+    return {
+      ...asset,
+      numericValue,
+      valueTry: convertToTry(numericValue, asset.currency, rates),
+    };
+  });
 
   return (
     <div className="space-y-6">
@@ -63,10 +84,11 @@ export default async function AssetsPage() {
               <th className="px-5 py-4">Likidite</th>
               <th className="px-5 py-4 text-right">Deger</th>
               <th className="px-5 py-4 text-right">Guncelleme</th>
+              <th className="px-5 py-4 text-right">Düzenle</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
-            {assets.map((asset: AssetRow) => (
+            {enrichedAssets.map((asset: AssetRow & { numericValue: number; valueTry: number }) => (
               <tr key={asset.id} className="hover:bg-white/5">
                 <td className="px-5 py-4">
                   <p className="font-semibold text-white">{asset.name}</p>
@@ -77,10 +99,22 @@ export default async function AssetsPage() {
                   {asset.isLiquid ? "Likit" : "Illikit"}
                 </td>
                 <td className="px-5 py-4 text-right font-semibold text-white">
-                  {formatCurrency(Number(asset.currentValue), asset.currency)}
+                  <span>{formatCurrency(asset.numericValue, asset.currency)}</span>
+                  <span className="block text-xs font-normal text-slate-400">
+                    ≈ {formatCurrency(asset.valueTry, "TRY")}
+                  </span>
                 </td>
                 <td className="px-5 py-4 text-right text-slate-400">
                   {new Date(asset.updatedAt).toLocaleDateString("tr-TR")}
+                </td>
+                <td className="px-5 py-4 text-right">
+                  <Link
+                    href={`/assets/${asset.id}/edit`}
+                    className="inline-flex items-center justify-center rounded-full border border-white/20 px-3 py-1 text-xs text-white transition hover:border-white/60"
+                    aria-label="Varlığı düzenle"
+                  >
+                    ✏️
+                  </Link>
                 </td>
               </tr>
             ))}

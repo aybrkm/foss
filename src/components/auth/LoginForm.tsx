@@ -43,7 +43,7 @@ export function LoginForm({ redirectTo }: Props) {
       className="w-full max-w-md space-y-4 rounded-3xl border border-white/10 bg-slate-900/70 p-8 shadow-2xl"
     >
       <div className="space-y-2 text-center">
-        <p className="text-xs uppercase tracking-[0.4em] text-indigo-300">FOSS</p>
+        <p className="text-xs uppercase tracking-[0.4em] text-indigo-300">FLOSS</p>
         <h1 className="text-2xl font-semibold text-white">Giris Yap</h1>
         <p className="text-sm text-slate-400">Supabase hesabinizla oturum acin.</p>
       </div>

@@ -14,6 +14,7 @@ type AssetCard = {
   assetType: string;
   isLiquid: boolean;
   value: number;
+  valueTry: number;
   currency: string;
 };
 
@@ -23,6 +24,7 @@ type ObligationCard = {
   category: string;
   status: string;
   amount: number | null;
+  amountTry: number | null;
   currency: string | null;
   nextDue: string | null;
 };
@@ -100,16 +102,21 @@ export function DashboardWidgets({
             className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/40 px-3 py-2"
           >
             <div>
-              <p className="text-sm font-semibold text-white">{asset.name}</p>
-              <p className="text-[11px] uppercase tracking-[0.2em] text-slate-400">
-                {asset.isLiquid ? "Likit" : "İllikit"} - {asset.assetType}
-              </p>
-            </div>
+            <p className="text-sm font-semibold text-white">{asset.name}</p>
+            <p className="text-[11px] uppercase tracking-[0.2em] text-slate-400">
+              {asset.isLiquid ? "Likit" : "İllikit"} - {asset.assetType}
+            </p>
+          </div>
+          <div className="text-right">
             <p className="text-sm font-medium text-white">
               {formatCurrency(asset.value, asset.currency)}
             </p>
+            <p className="text-[11px] text-slate-400">
+              ≈ {formatCurrency(asset.valueTry, "TRY")}
+            </p>
           </div>
-        ))}
+        </div>
+      ))}
       </div>
     ),
     obligations: (
@@ -132,6 +139,11 @@ export function DashboardWidgets({
                 {obligation.amount
                   ? formatCurrency(obligation.amount, obligation.currency ?? "TRY")
                   : "-"}
+              </p>
+              <p className="text-[11px] text-slate-400">
+                {obligation.amount && obligation.amountTry
+                  ? `≈ ${formatCurrency(obligation.amountTry, "TRY")}`
+                  : ""}
               </p>
               <p className="text-[11px] text-slate-400">
                 {obligation.nextDue
@@ -182,18 +194,18 @@ export function DashboardWidgets({
   };
 
   const headers: Record<WidgetKey, { label: string; color: string; href: string }> = {
-    assets: { label: "Assets", color: "text-indigo-300", href: "/assets" },
+    assets: { label: "Varlıklar", color: "text-indigo-300", href: "/assets" },
     obligations: {
-      label: "Obligations",
+      label: "Yükümlülükler",
       color: "text-rose-300",
       href: "/obligations",
     },
     reminders: {
-      label: "Reminders",
+      label: "Hatırlatmalar",
       color: "text-amber-300",
       href: "/reminders",
     },
-    journal: { label: "Journal", color: "text-sky-300", href: "/journal" },
+    journal: { label: "Günlük", color: "text-sky-300", href: "/journal" },
   };
 
   return (
@@ -235,7 +247,7 @@ export function DashboardWidgets({
               href={headers[key].href}
               className="text-xs text-slate-300 transition hover:text-white"
             >
-              tamami -&gt;
+              tamamı -&gt;
             </Link>
           </header>
           {cards[key]}

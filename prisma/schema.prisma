@@ -65,6 +65,7 @@ model Obligation {
   currency    String?             @db.Char(3)
   frequency   ObligationFrequency @default(once)
   isRecurring Boolean             @default(false)
+  isDone      Boolean             @default(false)
   recurrenceInterval Int?
   recurrenceUnit    RecurrenceUnit?
   nextDue     DateTime?           @db.Date
@@ -87,6 +88,7 @@ model Reminder {
   startAt             DateTime?
   dueAt               DateTime
   isVeryImportant     Boolean   @default(false)
+  isDone              Boolean   @default(false)
   relatedObligationId String?
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @default(now()) @updatedAt

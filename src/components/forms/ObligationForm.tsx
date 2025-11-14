@@ -49,7 +49,7 @@ export function ObligationForm({
         type="number"
         name="amount"
         min="0"
-        step="100"
+        step="0.01"
         placeholder="Tutar (opsiyonel)"
         className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white placeholder:text-slate-500"
       />
