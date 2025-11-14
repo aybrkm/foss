@@ -22,13 +22,10 @@ type Props = {
 
 export default async function EditAssetPage({ params }: Props) {
   const { id } = await params;
-  const asset = await prisma.asset.findUnique({
-    where: { id },
-  });
-
-  if (!asset) {
-    notFound();
-  }
+  const asset =
+    (await prisma.asset.findUnique({
+      where: { id },
+    })) ?? notFound();
 
   const acquisitionDate = asset.acquisitionDate
     ? asset.acquisitionDate.toISOString().split("T")[0]

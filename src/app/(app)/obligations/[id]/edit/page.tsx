@@ -25,13 +25,10 @@ type Props = {
 
 export default async function EditObligationPage({ params }: Props) {
   const { id } = await params;
-  const obligation = await prisma.obligation.findUnique({
-    where: { id },
-  });
-
-  if (!obligation) {
-    notFound();
-  }
+  const obligation =
+    (await prisma.obligation.findUnique({
+      where: { id },
+    })) ?? notFound();
 
   const nextDueValue = obligation.nextDue ? obligation.nextDue.toISOString().split("T")[0] : "";
 
