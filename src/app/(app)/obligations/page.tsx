@@ -1,11 +1,10 @@
-import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import prisma from "@/lib/prisma";
 import { convertToTry, getExchangeRates } from "@/lib/exchange";
 import { formatCurrency } from "@/lib/format";
 import { computeNextDue } from "@/lib/recurrence";
 import { ObligationForm } from "@/components/forms/ObligationForm";
-import { ConfirmDoneButton } from "@/components/forms/ConfirmDoneButton";
+import { ObligationsTable } from "@/components/obligations/ObligationsTable";
 
 const categories = ["payment", "legal", "other"] as const;
 const recurrenceUnits = ["week", "month"] as const;
@@ -216,6 +215,20 @@ export default async function ObligationsPage() {
     const bDue = b.nextDue ? new Date(b.nextDue).getTime() : Number.MAX_SAFE_INTEGER;
     return aDue - bDue;
   });
+  const tableObligations = sortedObligations.map((obligation) => ({
+    id: obligation.id,
+    name: obligation.name,
+    category: obligation.category,
+    amountNumber: obligation.amountNumber,
+    amountTry: obligation.amountTry,
+    currency: obligation.currency,
+    isRecurring: obligation.isRecurring,
+    recurrenceInterval: obligation.recurrenceInterval,
+    recurrenceUnit: obligation.recurrenceUnit,
+    nextDue: obligation.nextDue ? obligation.nextDue.toISOString() : null,
+    isActive: obligation.isActive,
+    isDone: obligation.isDone,
+  }));
   const obligationHighlights = [
     {
       title: "Aktif yükümlülük",
@@ -265,105 +278,12 @@ export default async function ObligationsPage() {
         recurrenceUnits={recurrenceUnits}
       />
 
-      <div className="overflow-hidden rounded-3xl border border-white/10 bg-slate-900/60">
-        <table className="min-w-full divide-y divide-white/10 text-left text-sm">
-          <thead className="bg-white/5 text-xs uppercase tracking-widest text-slate-400">
-            <tr>
-              <th className="px-5 py-4">Yukumluluk</th>
-              <th className="px-5 py-4">Kategori</th>
-              <th className="px-5 py-4">Tekrar</th>
-              <th className="px-5 py-4 text-right">Tutar</th>
-              <th className="px-5 py-4 text-right">Next Due</th>
-              <th className="px-5 py-4 text-right">Düzenle</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-white/5">
-            {sortedObligations.map((obligation: ObligationRow & { amountNumber: number | null; amountTry: number | null }) => {
-              const textClass = obligation.isDone ? "text-xs line-through" : "";
-              const statusColor = obligation.isDone ? "text-slate-500" : "text-white";
-              let isOverdue = false;
-              if (obligation.nextDue) {
-                isOverdue = new Date(obligation.nextDue).getTime() < nowMs && !obligation.isDone;
-              }
-              return (
-                <tr
-                  key={obligation.id}
-                  className={`hover:bg-white/5 ${isOverdue ? "bg-rose-950/40" : ""} ${
-                    obligation.isDone ? "text-slate-500" : "text-white"
-                  }`}
-                >
-                  <td className="px-5 py-4">
-                    <p className={`font-semibold ${statusColor} ${textClass}`}>{obligation.name}</p>
-                    <p className={`text-xs ${obligation.isDone ? "text-slate-500 line-through" : "text-slate-400"}`}>
-                      {obligation.isActive ? "Aktif" : "Pasif"}
-                    </p>
-                  </td>
-                  <td className={`px-5 py-4 capitalize text-slate-300 ${textClass}`}>
-                    {obligation.category}
-                  </td>
-                  <td className={`px-5 py-4 text-slate-300 ${textClass}`}>{formatRecurrence(obligation)}</td>
-                  <td className="px-5 py-4 text-right font-semibold">
-                    {obligation.amountNumber
-                      ? (
-                        <>
-                          <span className={`${statusColor} ${textClass}`}>
-                            {formatCurrency(obligation.amountNumber, obligation.currency ?? "TRY")}
-                          </span>
-                          <span className="block text-xs font-normal text-slate-400">
-                            ≈ {formatCurrency(obligation.amountTry ?? 0, "TRY")}
-                          </span>
-                        </>
-                      )
-                      : "-"}
-                </td>
-                  <td className={`px-5 py-4 text-right ${textClass || "text-slate-400"}`}>
-                    {obligation.nextDue ? new Date(obligation.nextDue).toLocaleDateString("tr-TR") : ""}
-                  </td>
-                  <td className="px-5 py-4 text-right flex items-center justify-end gap-2">
-                    {!obligation.isDone && (
-                      <Link
-                        href={`/obligations/${obligation.id}/edit`}
-                        className="inline-flex items-center justify-center rounded-full border border-white/20 px-3 py-1 text-xs text-white transition hover:border-white/60"
-                        aria-label="Yükümlülüğü düzenle"
-                      >
-                        ✏️
-                      </Link>
-                    )}
-                    {!obligation.isDone && (
-                      <ConfirmDoneButton
-                        action={markObligationDone}
-                        id={obligation.id}
-                        description="Tamamlandı olarak işaretlenen yeniden geri alınamaz."
-                      />
-                    )}
-                    <form action={deleteObligation}>
-                      <input type="hidden" name="id" value={obligation.id} />
-                      <button
-                        type="submit"
-                        className="inline-flex items-center justify-center rounded-full border border-rose-400/40 px-3 py-1 text-xs text-rose-200 transition hover:border-rose-300 hover:text-white"
-                      >
-                        ✕
-                      </button>
-                    </form>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+      <ObligationsTable
+        obligations={tableObligations}
+        nowMs={nowMs}
+        markObligationDone={markObligationDone}
+        deleteObligation={deleteObligation}
+      />
     </div>
   );
-}
-
-function formatRecurrence(obligation: {
-  isRecurring: boolean;
-  recurrenceInterval: number | null;
-  recurrenceUnit: string | null;
-}) {
-  if (!obligation.isRecurring || !obligation.recurrenceInterval || !obligation.recurrenceUnit) {
-    return "Tek sefer";
-  }
-  const unitLabel = obligation.recurrenceUnit === "week" ? "hafta" : "ay";
-  return `${obligation.recurrenceInterval} ${unitLabel}`;
 }

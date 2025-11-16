@@ -5,6 +5,7 @@ export type ExchangeRates = {
   TRY: number;
   USD: number;
   EUR: number;
+  AED: number;
 };
 
 type CacheEntry = {
@@ -31,13 +32,14 @@ export async function getExchangeRates(): Promise<ExchangeRates> {
 
   const usd = extractRate(xml, "USD");
   const eur = extractRate(xml, "EUR");
+  const aed = extractRate(xml, "AED");
 
-  if (!usd || !eur) {
+  if (!usd || !eur || !aed) {
     throw new Error("TCMB kur verisi parse edilemedi");
   }
 
   cache = {
-    rates: { TRY: 1, USD: usd, EUR: eur },
+    rates: { TRY: 1, USD: usd, EUR: eur, AED: aed },
     fetchedAt: Date.now(),
   };
 
@@ -56,7 +58,7 @@ export function convertToTry(amount: number, currency: string | null | undefined
   return amount * rate;
 }
 
-function extractRate(xml: string, code: "USD" | "EUR") {
+function extractRate(xml: string, code: "USD" | "EUR" | "AED") {
   const currencyBlock = xml.match(
     new RegExp(`<Currency[^>]*Kod="${code}"[\\s\\S]*?<\\/Currency>`),
   );
