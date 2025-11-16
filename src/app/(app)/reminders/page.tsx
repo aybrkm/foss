@@ -1,14 +1,7 @@
-﻿import Link from "next/link";
-import { revalidatePath } from "next/cache";
+﻿import { revalidatePath } from "next/cache";
 import prisma from "@/lib/prisma";
-import { ConfirmDoneButton } from "@/components/forms/ConfirmDoneButton";
 import { ObligationPicker } from "@/components/forms/ObligationPicker";
-
-const ranges = [
-  { label: "Bu hafta", maxDays: 7 },
-  { label: "Önümüzdeki ay", maxDays: 30 },
-  { label: "Önümüzdeki 6 ay", maxDays: 180 },
-] as const;
+import { RemindersTable } from "@/components/reminders/RemindersTable";
 
 const DAY_MS = 1000 * 60 * 60 * 24;
 
@@ -16,6 +9,7 @@ type ReminderCard = {
   id: string;
   title: string;
   dueAt: string;
+  description: string | null;
   isVeryImportant: boolean;
   isDone: boolean;
   related: string | null;
@@ -107,6 +101,7 @@ export default async function RemindersPage() {
       id: reminder.id,
       title: reminder.title,
       dueAt,
+      description: reminder.description ?? null,
       isVeryImportant: reminder.isVeryImportant,
       isDone: reminder.isDone,
       related: reminder.relatedObligationId
@@ -136,16 +131,6 @@ export default async function RemindersPage() {
       hint: "arşivde",
     },
   ];
-
-  const grouped = ranges.map((range, index) => {
-    const min = index === 0 ? 0 : ranges[index - 1].maxDays;
-    return {
-      label: range.label,
-      reminders: activeReminders.filter(
-        (reminder) => reminder.daysLeft > min && reminder.daysLeft <= range.maxDays,
-      ),
-    };
-  });
 
   return (
     <div className="space-y-8">
@@ -217,99 +202,13 @@ export default async function RemindersPage() {
         </button>
       </form>
 
-      <div className="grid gap-6 md:grid-cols-3">
-        {grouped.map((bucket) => (
-          <article
-            key={bucket.label}
-            className="rounded-3xl border border-white/10 bg-slate-900/60 p-5"
-          >
-            <h3 className="text-xl font-semibold text-white">{bucket.label}</h3>
-            <div className="mt-4 space-y-4">
-              {bucket.reminders.length === 0 && (
-                <p className="text-sm text-slate-500">Kayıt yok.</p>
-              )}
-              {bucket.reminders.map((reminder) => (
-                <div key={reminder.id} className="rounded-2xl border border-white/10 bg-black/30 p-4">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="font-semibold text-white">{reminder.title}</p>
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`text-xs ${
-                          reminder.isVeryImportant ? "text-rose-300" : "text-slate-400"
-                        }`}
-                      >
-                        {reminder.isVeryImportant ? "Çok önemli" : `${reminder.daysLeft} gün`}
-                      </span>
-                      <Link
-                        href={`/reminders/${reminder.id}/edit`}
-                        className="inline-flex items-center justify-center rounded-full border border-white/20 px-2 py-1 text-[11px] text-white transition hover:border-white/60"
-                        aria-label="Hatırlatmayı düzenle"
-                      >
-                        ✏️
-                      </Link>
-                      <form action={deleteReminder}>
-                        <input type="hidden" name="id" value={reminder.id} />
-                        <button
-                          type="submit"
-                          className="inline-flex items-center justify-center rounded-full border border-rose-400/40 px-2 py-1 text-[11px] text-rose-200 transition hover:border-rose-300 hover:text-white"
-                        >
-                          ✕
-                        </button>
-                      </form>
-                      <ConfirmDoneButton
-                        action={markReminderDone}
-                        id={reminder.id}
-                        label="Tamamlandı"
-                        description="Hatırlatmalar için tamamlandı işlemi geri alınamaz."
-                      />
-                    </div>
-                  </div>
-                  <p className="text-xs text-slate-400">
-                    {new Date(reminder.dueAt).toLocaleString("tr-TR")}
-                  </p>
-                  {reminder.related && (
-                    <p className="text-xs text-slate-400">Related: {reminder.related}</p>
-                  )}
-                </div>
-              ))}
-            </div>
-          </article>
-        ))}
-      </div>
-
-      {doneReminders.length > 0 && (
-        <section className="rounded-3xl border border-white/10 bg-slate-900/60 p-5">
-          <h3 className="text-xl font-semibold text-slate-300">Tamamlanan hatırlatmalar</h3>
-          <div className="mt-4 space-y-3">
-            {doneReminders.map((reminder) => (
-              <div
-                key={reminder.id}
-                className="rounded-2xl border border-white/10 bg-black/20 p-4 text-slate-500"
-              >
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold line-through">{reminder.title}</p>
-                  <form action={deleteReminder}>
-                    <input type="hidden" name="id" value={reminder.id} />
-                    <button
-                      type="submit"
-                      className="inline-flex items-center justify-center rounded-full border border-rose-400/40 px-2 py-1 text-[11px] text-rose-200 transition hover:border-rose-300 hover:text-white"
-                    >
-                      ✕
-                    </button>
-                  </form>
-                </div>
-                <p className="text-[11px]">
-                  {new Date(reminder.dueAt).toLocaleString("tr-TR")}
-                </p>
-                {reminder.related && (
-                  <p className="text-[11px]">Related: {reminder.related}</p>
-                )}
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
+      <RemindersTable
+        reminders={reminderCards}
+        markReminderDone={markReminderDone}
+        deleteReminder={deleteReminder}
+      />
     </div>
   );
 }
+
 
