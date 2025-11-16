@@ -18,7 +18,9 @@ type Props = {
   placeholder?: string;
 };
 
-export function ObligationPicker({ name, options, placeholder = "Obligation bağlantısı (opsiyonel)" }: Props) {
+const CLEAR_LABEL = "Bağlantı yok";
+
+export function ObligationPicker({ name, options, placeholder = `${CLEAR_LABEL} (opsiyonel)` }: Props) {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState("");
   const [selectedLabel, setSelectedLabel] = useState<string | null>(null);
@@ -55,12 +57,19 @@ export function ObligationPicker({ name, options, placeholder = "Obligation bağ
     if (pieces.length === 0) {
       pieces.push("Ek bilgi yok");
     }
-    return pieces.join(" • ");
+    return pieces.join(" | ");
   };
 
   const handleSelect = (option: Option) => {
     setValue(option.id);
     setSelectedLabel(option.name);
+    setOpen(false);
+    setTooltip(null);
+  };
+
+  const handleClear = () => {
+    setValue("");
+    setSelectedLabel(null);
     setOpen(false);
     setTooltip(null);
   };
@@ -90,6 +99,13 @@ export function ObligationPicker({ name, options, placeholder = "Obligation bağ
       <input type="hidden" name={name} value={value} />
       {open && (
         <div className="absolute z-40 mt-2 max-h-48 w-full overflow-auto rounded-2xl border border-white/10 bg-slate-900/90 shadow-lg">
+          <button
+            type="button"
+            onClick={handleClear}
+            className="flex w-full items-center justify-between border-b border-white/5 px-4 py-2 text-left text-sm text-slate-300 hover:bg-white/5"
+          >
+            {CLEAR_LABEL}
+          </button>
           {options.length === 0 && (
             <p className="px-4 py-3 text-sm text-slate-400">Aktif obligation bulunamadı.</p>
           )}
