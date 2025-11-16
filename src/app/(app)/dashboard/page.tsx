@@ -212,34 +212,35 @@ const remindersForWidgets = importantReminders.slice(0, 3).map((reminder: Remind
               </p>
               <div className="space-y-3">
                 {horizonBuckets[key].length === 0 && (
-                  <p className="text-sm text-slate-500">Görev yok.</p>
+                  <p className="text-sm text-slate-500">Gorev yok.</p>
                 )}
-                {horizonBuckets[key].map((item) => (
-                  <article
-                    key={item.id}
-                    className="rounded-2xl border border-white/10 bg-slate-900/60 p-4"
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-semibold text-white">{item.title}</p>
-                        <p className="text-[11px] uppercase tracking-[0.3em] text-slate-400">
-                          {kindLabels[item.kind]}
-                        </p>
+                {horizonBuckets[key].map((item) => {
+                  const { label: dayLabel, className: dayClass } = getDayDisplay(item.daysLeft);
+                  return (
+                    <article
+                      key={item.id}
+                      className="rounded-2xl border border-white/10 bg-slate-900/60 p-4"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold text-white">{item.title}</p>
+                          <p className="text-[11px] uppercase tracking-[0.3em] text-slate-400">
+                            {kindLabels[item.kind]}
+                          </p>
+                        </div>
+                        <p className={`text-xs ${dayClass}`}>{dayLabel}</p>
                       </div>
-                      <p className="text-xs font-semibold text-white">
-                        {item.daysLeft} gün
+                      <p className="text-xs text-slate-400">
+                        {new Date(item.dueDate).toLocaleString("tr-TR", {
+                          day: "2-digit",
+                          month: "short",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
                       </p>
-                    </div>
-                    <p className="text-xs text-slate-400">
-                      {new Date(item.dueDate).toLocaleString("tr-TR", {
-                        day: "2-digit",
-                        month: "short",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </p>
-                  </article>
-                ))}
+                    </article>
+                  );
+                })}
               </div>
             </div>
           ))}
@@ -254,6 +255,19 @@ const remindersForWidgets = importantReminders.slice(0, 3).map((reminder: Remind
       />
     </div>
   );
+}
+
+function getDayDisplay(daysLeft: number) {
+  if (daysLeft < 0) {
+    return { label: `${Math.abs(daysLeft)} gun gecikti`, className: "text-rose-400 font-bold animate-pulse" };
+  }
+  if (daysLeft === 0) {
+    return { label: "Bugun", className: "text-amber-400 font-bold animate-pulse" };
+  }
+  if (daysLeft <= 14) {
+    return { label: `${daysLeft} gun kaldi`, className: "text-rose-300 font-bold animate-pulse" };
+  }
+  return { label: `${daysLeft} gun kaldi`, className: "text-emerald-300 font-semibold" };
 }
 
 function getHorizonBuckets(

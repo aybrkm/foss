@@ -228,6 +228,7 @@ export default async function ObligationsPage() {
     nextDue: obligation.nextDue ? obligation.nextDue.toISOString() : null,
     isActive: obligation.isActive,
     isDone: obligation.isDone,
+    daysLeft: obligation.nextDue ? Math.ceil((new Date(obligation.nextDue).getTime() - nowMs) / DAY_MS) : null,
   }));
   const obligationHighlights = [
     {

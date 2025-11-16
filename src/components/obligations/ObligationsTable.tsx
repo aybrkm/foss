@@ -18,6 +18,7 @@ type ObligationTableRow = {
   nextDue: string | null;
   isActive: boolean;
   isDone: boolean;
+  daysLeft: number | null;
 };
 
 type Props = {
@@ -65,6 +66,7 @@ export function ObligationsTable({
                   nextDueDate && !obligation.isDone ? nextDueDate.getTime() < nowMs : false;
                 const textClass = obligation.isDone ? "text-xs line-through" : "";
                 const statusColor = obligation.isDone ? "text-slate-500" : "text-white";
+                const { label: dayLabel, className: dayClass } = getDayMeta(obligation.daysLeft);
 
                 return (
                   <tr
@@ -95,8 +97,17 @@ export function ObligationsTable({
                         "-"
                       )}
                     </td>
-                    <td className={`px-5 py-4 text-right ${textClass || "text-slate-400"}`}>
-                      {nextDueDate ? nextDueDate.toLocaleDateString("tr-TR") : ""}
+                    <td className="px-5 py-4 text-right">
+                      {nextDueDate ? (
+                        <>
+                          <p className={textClass || "text-slate-400"}>
+                            {nextDueDate.toLocaleDateString("tr-TR")}
+                          </p>
+                          <p className={`text-xs ${dayClass} mt-1`}>{dayLabel}</p>
+                        </>
+                      ) : (
+                        <p className="text-xs text-slate-500">Tarih yok</p>
+                      )}
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex items-center justify-end gap-2">
@@ -167,4 +178,20 @@ function formatRecurrence(obligation: Pick<ObligationTableRow, "isRecurring" | "
   }
   const unitLabel = obligation.recurrenceUnit === "week" ? "hafta" : "ay";
   return `${obligation.recurrenceInterval} ${unitLabel}`;
+}
+
+function getDayMeta(daysLeft: number | null) {
+  if (typeof daysLeft !== "number") {
+    return { label: "Tarih yok", className: "text-slate-500" };
+  }
+  if (daysLeft < 0) {
+    return { label: `${Math.abs(daysLeft)} gun gecikti`, className: "text-rose-400 font-bold animate-pulse" };
+  }
+  if (daysLeft === 0) {
+    return { label: "Bugun", className: "text-amber-400 font-bold animate-pulse" };
+  }
+  if (daysLeft <= 14) {
+    return { label: `${daysLeft} gun kaldi`, className: "text-rose-300 font-bold animate-pulse" };
+  }
+  return { label: `${daysLeft} gun kaldi`, className: "text-emerald-300 font-semibold" };
 }

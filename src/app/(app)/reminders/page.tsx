@@ -6,8 +6,8 @@ import { ObligationPicker } from "@/components/forms/ObligationPicker";
 
 const ranges = [
   { label: "Bu hafta", maxDays: 7 },
-  { label: "Ã–nÃ¼mÃ¼zdeki ay", maxDays: 30 },
-  { label: "Ã–nÃ¼mÃ¼zdeki 6 ay", maxDays: 180 },
+  { label: "Önümüzdeki ay", maxDays: 30 },
+  { label: "Önümüzdeki 6 ay", maxDays: 180 },
 ] as const;
 
 const DAY_MS = 1000 * 60 * 60 * 24;
@@ -31,7 +31,7 @@ async function createReminder(formData: FormData) {
   const isVeryImportant = formData.get("isVeryImportant") === "on";
 
   if (!title || !dueAt) {
-    throw new Error("Eksik hatÄ±rlatma bilgisi");
+    throw new Error("Eksik hatırlatma bilgisi");
   }
 
   await prisma.reminder.create({
@@ -52,7 +52,7 @@ async function markReminderDone(formData: FormData) {
   "use server";
   const id = formData.get("id")?.toString();
   if (!id) {
-    throw new Error("HatÄ±rlatma bulunamadÄ±");
+    throw new Error("Hatırlatma bulunamadı");
   }
   await prisma.reminder.update({
     where: { id },
@@ -121,19 +121,19 @@ export default async function RemindersPage() {
   const importantActive = activeReminders.filter((reminder) => reminder.isVeryImportant).length;
   const reminderHighlights = [
     {
-      title: "Aktif hatÄ±rlatma",
+      title: "Aktif hatırlatma",
       value: `${activeReminders.length}`,
-      hint: "takip edilen gÃ¶rev",
+      hint: "takip edilen görev",
     },
     {
-      title: "Ã‡ok Ã¶nemli",
+      title: "Çok önemli",
       value: `${importantActive}`,
-      hint: "kritik iÅŸaretli",
+      hint: "kritik işaretli",
     },
     {
       title: "Tamamlanan",
       value: `${doneReminders.length}`,
-      hint: "arÅŸivde",
+      hint: "arşivde",
     },
   ];
 
@@ -176,7 +176,7 @@ export default async function RemindersPage() {
       >
         <input
           name="title"
-          placeholder="BaÅŸlÄ±k"
+          placeholder="Başlık"
           className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white placeholder:text-slate-500"
           required
         />
@@ -188,11 +188,11 @@ export default async function RemindersPage() {
         />
         <label className="flex items-center gap-2 text-sm text-slate-300">
           <input type="checkbox" name="isVeryImportant" className="size-4 accent-amber-500" />
-          Ã‡ok Ã¶nemli
+          Çok önemli
         </label>
         <input
           name="description"
-          placeholder="AÃ§Ä±klama (opsiyonel)"
+          placeholder="Açıklama (opsiyonel)"
           className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white placeholder:text-slate-500 md:col-span-2"
         />
         <ObligationPicker
@@ -213,7 +213,7 @@ export default async function RemindersPage() {
           type="submit"
           className="rounded-xl bg-amber-500 px-4 py-3 text-sm font-semibold text-black transition hover:bg-amber-400"
         >
-          HatÄ±rlatma ekle
+          Hatırlatma ekle
         </button>
       </form>
 
@@ -226,7 +226,7 @@ export default async function RemindersPage() {
             <h3 className="text-xl font-semibold text-white">{bucket.label}</h3>
             <div className="mt-4 space-y-4">
               {bucket.reminders.length === 0 && (
-                <p className="text-sm text-slate-500">KayÄ±t yok.</p>
+                <p className="text-sm text-slate-500">Kayıt yok.</p>
               )}
               {bucket.reminders.map((reminder) => (
                 <div key={reminder.id} className="rounded-2xl border border-white/10 bg-black/30 p-4">
@@ -238,14 +238,14 @@ export default async function RemindersPage() {
                           reminder.isVeryImportant ? "text-rose-300" : "text-slate-400"
                         }`}
                       >
-                        {reminder.isVeryImportant ? "Ã‡ok Ã¶nemli" : `${reminder.daysLeft} gÃ¼n`}
+                        {reminder.isVeryImportant ? "Çok önemli" : `${reminder.daysLeft} gün`}
                       </span>
                       <Link
                         href={`/reminders/${reminder.id}/edit`}
                         className="inline-flex items-center justify-center rounded-full border border-white/20 px-2 py-1 text-[11px] text-white transition hover:border-white/60"
-                        aria-label="HatÄ±rlatmayÄ± dÃ¼zenle"
+                        aria-label="Hatırlatmayı düzenle"
                       >
-                        âœï¸
+                        ✏️
                       </Link>
                       <form action={deleteReminder}>
                         <input type="hidden" name="id" value={reminder.id} />
@@ -253,14 +253,14 @@ export default async function RemindersPage() {
                           type="submit"
                           className="inline-flex items-center justify-center rounded-full border border-rose-400/40 px-2 py-1 text-[11px] text-rose-200 transition hover:border-rose-300 hover:text-white"
                         >
-                          âœ•
+                          ✕
                         </button>
                       </form>
                       <ConfirmDoneButton
                         action={markReminderDone}
                         id={reminder.id}
-                        label="TamamlandÄ±"
-                        description="HatÄ±rlatmalar iÃ§in tamamlandÄ± iÅŸlemi geri alÄ±namaz."
+                        label="Tamamlandı"
+                        description="Hatırlatmalar için tamamlandı işlemi geri alınamaz."
                       />
                     </div>
                   </div>
@@ -279,7 +279,7 @@ export default async function RemindersPage() {
 
       {doneReminders.length > 0 && (
         <section className="rounded-3xl border border-white/10 bg-slate-900/60 p-5">
-          <h3 className="text-xl font-semibold text-slate-300">Tamamlanan hatÄ±rlatmalar</h3>
+          <h3 className="text-xl font-semibold text-slate-300">Tamamlanan hatırlatmalar</h3>
           <div className="mt-4 space-y-3">
             {doneReminders.map((reminder) => (
               <div
@@ -294,7 +294,7 @@ export default async function RemindersPage() {
                       type="submit"
                       className="inline-flex items-center justify-center rounded-full border border-rose-400/40 px-2 py-1 text-[11px] text-rose-200 transition hover:border-rose-300 hover:text-white"
                     >
-                      âœ•
+                      ✕
                     </button>
                   </form>
                 </div>

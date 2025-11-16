@@ -8,7 +8,7 @@ async function createEntry(formData: FormData) {
   const entryDate = formData.get("entryDate")?.toString();
 
   if (!body) {
-    throw new Error("GÃ¼nlÃ¼k metni gerekli");
+    throw new Error("Günlük metni gerekli");
   }
 
   await prisma.journalEntry.create({
@@ -35,12 +35,12 @@ export default async function JournalPage() {
   }).length;
   const lastEntryDate = entries[0]?.entryDate
     ? new Date(entries[0].entryDate).toLocaleDateString("tr-TR")
-    : "KayÄ±t yok";
+    : "Kayıt yok";
   const journalHighlights = [
     {
-      title: "Toplam kayÄ±t",
+      title: "Toplam kayıt",
       value: `${entryTotal}`,
-      hint: "gÃ¼nlÃ¼k not",
+      hint: "günlük not",
     },
     {
       title: "Bu ay",
@@ -48,9 +48,9 @@ export default async function JournalPage() {
       hint: "yeni girdi",
     },
     {
-      title: "Son gÃ¼ncelleme",
+      title: "Son güncelleme",
       value: lastEntryDate,
-      hint: "en gÃ¼ncel not",
+      hint: "en güncel not",
     },
   ];
 
@@ -83,7 +83,7 @@ export default async function JournalPage() {
       >
         <input
           name="title"
-          placeholder="BaÅŸlÄ±k (opsiyonel)"
+          placeholder="Başlık (opsiyonel)"
           className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white placeholder:text-slate-500"
         />
         <input
@@ -102,7 +102,7 @@ export default async function JournalPage() {
           type="submit"
           className="rounded-xl bg-sky-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-sky-400 md:col-span-2"
         >
-          GÃ¼nlÃ¼k kaydet
+          Günlük kaydet
         </button>
       </form>
 
@@ -130,4 +130,6 @@ export default async function JournalPage() {
     </div>
   );
 }
+
+
 
