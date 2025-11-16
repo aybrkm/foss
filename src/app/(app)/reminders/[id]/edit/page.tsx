@@ -13,7 +13,7 @@ export default async function EditReminderPage({ params }: Props) {
     where: { id },
   });
   const obligationsPromise = prisma.obligation.findMany({
-    select: { id, name: true },
+    select: { id: true, name: true },
     orderBy: { name: "asc" },
   });
 
@@ -23,6 +23,7 @@ export default async function EditReminderPage({ params }: Props) {
     notFound();
   }
 
+  const reminderId = reminder.id;
   const dueAtValue = reminder.dueAt.toISOString().slice(0, 16);
 
   async function updateReminder(formData: FormData) {
@@ -38,7 +39,7 @@ export default async function EditReminderPage({ params }: Props) {
     }
 
     await prisma.reminder.update({
-      where: { id: reminder.id },
+      where: { id: reminderId },
       data: {
         title,
         dueAt: new Date(dueAt),

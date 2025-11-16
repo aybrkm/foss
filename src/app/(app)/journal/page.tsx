@@ -1,4 +1,4 @@
-import { revalidatePath } from "next/cache";
+﻿import { revalidatePath } from "next/cache";
 import prisma from "@/lib/prisma";
 
 async function createEntry(formData: FormData) {
@@ -8,7 +8,7 @@ async function createEntry(formData: FormData) {
   const entryDate = formData.get("entryDate")?.toString();
 
   if (!body) {
-    throw new Error("Günlük metni gerekli");
+    throw new Error("GÃ¼nlÃ¼k metni gerekli");
   }
 
   await prisma.journalEntry.create({
@@ -27,27 +27,63 @@ export default async function JournalPage() {
     orderBy: { entryDate: "desc" },
   });
   type JournalEntryRow = (typeof entries)[number];
+  const entryTotal = entries.length;
+  const now = new Date();
+  const entriesThisMonth = entries.filter((entry) => {
+    const date = new Date(entry.entryDate);
+    return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+  }).length;
+  const lastEntryDate = entries[0]?.entryDate
+    ? new Date(entries[0].entryDate).toLocaleDateString("tr-TR")
+    : "KayÄ±t yok";
+  const journalHighlights = [
+    {
+      title: "Toplam kayÄ±t",
+      value: `${entryTotal}`,
+      hint: "gÃ¼nlÃ¼k not",
+    },
+    {
+      title: "Bu ay",
+      value: `${entriesThisMonth}`,
+      hint: "yeni girdi",
+    },
+    {
+      title: "Son gÃ¼ncelleme",
+      value: lastEntryDate,
+      hint: "en gÃ¼ncel not",
+    },
+  ];
 
   return (
     <div className="space-y-6">
-      <header>
-        <p className="text-sm uppercase tracking-[0.4em] text-sky-300">Journal</p>
-        <h2 className="text-3xl font-semibold text-white">
-          Günlük / düşünce / karar kayıtları
-        </h2>
-        <p className="max-w-2xl text-slate-300">
-          journal_entries tablosu: title, body, entry_date, related_asset_id,
-          related_obligation_id alanlarıyla zihinsel yükü boşalt.
-        </p>
-      </header>
-
+      <section className="space-y-4">
+        <div className="rounded-3xl border border-sky-400/50 bg-sky-500/10 p-6">
+          <p className="text-xs uppercase tracking-[0.4em] text-sky-200">Günlük</p>
+          <h2 className="mt-2 text-3xl font-semibold text-white">Düşünce ve karar arşivi</h2>
+          <p className="mt-2 max-w-3xl text-sm text-sky-100/80">
+            Önemli notları tek yerde topla, yinelemeli düşünceleri tarihlendir ve ilerlemeyi izle.
+          </p>
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          {journalHighlights.map((item) => (
+            <article
+              key={item.title}
+              className="rounded-2xl border border-white/10 bg-slate-900/60 p-5 text-sm text-slate-200"
+            >
+              <p className="text-xs uppercase tracking-[0.3em] text-sky-200">{item.title}</p>
+              <p className="mt-2 text-2xl font-semibold text-white">{item.value}</p>
+              <p className="text-xs text-slate-400">{item.hint}</p>
+            </article>
+          ))}
+        </div>
+      </section>
       <form
         action={createEntry}
         className="grid gap-3 rounded-3xl border border-white/10 bg-slate-900/60 p-5 md:grid-cols-2"
       >
         <input
           name="title"
-          placeholder="Başlık (opsiyonel)"
+          placeholder="BaÅŸlÄ±k (opsiyonel)"
           className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white placeholder:text-slate-500"
         />
         <input
@@ -66,7 +102,7 @@ export default async function JournalPage() {
           type="submit"
           className="rounded-xl bg-sky-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-sky-400 md:col-span-2"
         >
-          Günlük kaydet
+          GÃ¼nlÃ¼k kaydet
         </button>
       </form>
 
@@ -94,3 +130,4 @@ export default async function JournalPage() {
     </div>
   );
 }
+

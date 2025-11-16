@@ -228,10 +228,11 @@ export default async function ObligationsPage() {
       hint: "yaklaşan ödeme",
     },
     {
-      title: "Bu yıl kalan ödeme",
-      value: formatCurrency(yearEndAmountTry, "TRY"),
-      hint: "kesinleşmiş tutar",
-    },  ];
+      title: "TRY bazında tutar",
+      value: formatCurrency(totalObligationTry, "TRY"),
+      hint: `${recurringCount} tekrar eden görev`,
+    },
+  ];
 
   return (
     <div className="space-y-6">
@@ -278,19 +279,13 @@ export default async function ObligationsPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
-            {sortedObligations.map((obligation: ObligationRow & { amountNumber: number | null; amountTry: number | null }) => {
+            {enrichedObligations.map((obligation: ObligationRow & { amountNumber: number | null; amountTry: number | null }) => {
               const textClass = obligation.isDone ? "text-xs line-through" : "";
               const statusColor = obligation.isDone ? "text-slate-500" : "text-white";
-              let isOverdue = false;
-              if (obligation.nextDue) {
-                isOverdue = new Date(obligation.nextDue).getTime() < nowMs && !obligation.isDone;
-              }
               return (
                 <tr
                   key={obligation.id}
-                  className={`hover:bg-white/5 ${isOverdue ? "bg-rose-950/40" : ""} ${
-                    obligation.isDone ? "text-slate-500" : "text-white"
-                  }`}
+                  className={`hover:bg-white/5 ${obligation.isDone ? "text-slate-500" : "text-white"}`}
                 >
                   <td className="px-5 py-4">
                     <p className={`font-semibold ${statusColor} ${textClass}`}>{obligation.name}</p>
@@ -367,3 +362,4 @@ function formatRecurrence(obligation: {
   const unitLabel = obligation.recurrenceUnit === "week" ? "hafta" : "ay";
   return `${obligation.recurrenceInterval} ${unitLabel}`;
 }
+

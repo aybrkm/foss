@@ -61,17 +61,51 @@ export default async function AssetsPage() {
       valueTry: convertToTry(numericValue, asset.currency, rates),
     };
   });
+  const totalPortfolioTry = enrichedAssets.reduce((sum, asset) => sum + asset.valueTry, 0);
+  const liquidCount = enrichedAssets.filter((asset) => asset.isLiquid).length;
+  const illiquidCount = enrichedAssets.length - liquidCount;
+  const assetHighlights = [
+    {
+      title: "Toplam portföy",
+      value: formatCurrency(totalPortfolioTry, "TRY"),
+      hint: "TRY karşılığı",
+    },
+    {
+      title: "Likit varlık",
+      value: `${liquidCount}`,
+      hint: "anında erişilebilir kayıt",
+    },
+    {
+      title: "İllikit varlık",
+      value: `${illiquidCount}`,
+      hint: "uzun vadeli pozisyon",
+    },
+  ];
 
   return (
     <div className="space-y-6">
-      <header className="space-y-3">
-        <p className="text-sm uppercase tracking-[0.4em] text-indigo-300">Assets</p>
-        <h2 className="text-3xl font-semibold text-white">Tum varliklar (likit + illikit)</h2>
-        <p className="max-w-2xl text-slate-300">
-          assets tablosu: name, asset_type (artik serbest metin), is_liquid, current_value, currency,
-          acquisition_date, notes.
-        </p>
-      </header>
+      <section className="space-y-4">
+        <div className="rounded-3xl border border-indigo-400/50 bg-indigo-500/10 p-6">
+          <p className="text-xs uppercase tracking-[0.4em] text-indigo-200">Varlıklar</p>
+          <h2 className="mt-2 text-3xl font-semibold text-white">Tüm varlıkları tek panelde tut</h2>
+          <p className="mt-2 max-w-3xl text-sm text-indigo-100/80">
+            Likit/illikit fark etmeksizin tüm pozisyonları güncel değer ve notlarıyla izleyerek portföyün
+            gerçek büyüklüğünü anlık gör.
+          </p>
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          {assetHighlights.map((item) => (
+            <article
+              key={item.title}
+              className="rounded-2xl border border-white/10 bg-slate-900/60 p-5 text-sm text-slate-200"
+            >
+              <p className="text-xs uppercase tracking-[0.3em] text-indigo-200">{item.title}</p>
+              <p className="mt-2 text-2xl font-semibold text-white">{item.value}</p>
+              <p className="text-xs text-slate-400">{item.hint}</p>
+            </article>
+          ))}
+        </div>
+      </section>
 
       <AssetForm action={createAsset} currencies={currencyOptions} />
 
