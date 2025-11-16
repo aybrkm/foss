@@ -32,7 +32,6 @@ export default async function DashboardPage() {
   const [assetRows, obligationRows, reminderRows, journalRows, rates] = await Promise.all([
     prisma.asset.findMany({ orderBy: { updatedAt: "desc" } }),
     prisma.obligation.findMany({
-      where: { isDone: false },
       orderBy: { nextDue: "asc" },
     }),
     prisma.reminder.findMany({
