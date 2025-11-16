@@ -114,22 +114,6 @@ async function markObligationDone(formData: FormData) {
   }
   const obligation = await prisma.obligation.findUnique({
     where: { id },
-    select: {
-      id: true,
-      name: true,
-      category: true,
-      amount: true,
-      currency: true,
-      frequency: true,
-      isRecurring: true,
-      isDone: true,
-      recurrenceInterval: true,
-      recurrenceUnit: true,
-      nextDue: true,
-      notes: true,
-      isActive: true,
-      userId: true,
-    },
   });
   if (!obligation) {
     throw new Error("Yükümlülük bulunamadı");
@@ -195,24 +179,6 @@ export default async function ObligationsPage() {
       { nextDue: "asc" },
       { createdAt: "desc" },
     ],
-    select: {
-      id: true,
-      name: true,
-      category: true,
-      amount: true,
-      currency: true,
-      frequency: true,
-      isRecurring: true,
-      recurrenceInterval: true,
-      recurrenceUnit: true,
-      nextDue: true,
-      endDate: true,
-      notes: true,
-      isActive: true,
-      isDone: true,
-      createdAt: true,
-      updatedAt: true,
-    },
   });
   type ObligationRow = (typeof obligations)[number];
   const rates = await getExchangeRates();
