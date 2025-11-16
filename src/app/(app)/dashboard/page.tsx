@@ -35,7 +35,6 @@ export default async function DashboardPage() {
       orderBy: { nextDue: "asc" },
     }),
     prisma.reminder.findMany({
-      where: { isDone: false },
       orderBy: { dueAt: "asc" },
     }),
     prisma.journalEntry.findMany({
