@@ -65,10 +65,13 @@ export default async function DashboardPage() {
     .reduce((sum: number, asset: { valueTry: number }) => sum + asset.valueTry, 0);
 
   const obligationNameMap = new Map(
-    obligationRows.map((obligation: { id: any; name: any; }) => [obligation.id, obligation.name]),
+    obligationRows.map((obligation: { id: any; name: any }) => [obligation.id, obligation.name]),
   );
 
-const reminderDetails = reminderRows.map((reminder: ReminderRow) => ({
+  const activeObligationRows = obligationRows.filter((obligation: ObligationRow) => !obligation.isDone);
+  const activeReminderRows = reminderRows.filter((reminder: ReminderRow) => !reminder.isDone);
+
+const reminderDetails = activeReminderRows.map((reminder: ReminderRow) => ({
   id: reminder.id,
   title: reminder.title,
   description: reminder.description,
@@ -85,7 +88,7 @@ const importantReminders = reminderDetails.filter(
   (reminder: ReminderDetail) => reminder.isVeryImportant,
 );
 
-  const upcomingObligations = obligationRows
+  const upcomingObligations = activeObligationRows
     .filter((obligation: ObligationRow) => {
       if (!obligation.nextDue) {
         return false;
@@ -171,7 +174,7 @@ const remindersForWidgets = importantReminders.slice(0, 3).map((reminder: Remind
       daysLeft: calculateDaysLeft(reminder.dueAt, nowMs),
       kind: "REMINDER" as const,
     })),
-    obligationRows
+    activeObligationRows
       .filter(
         (
           obligation: ObligationRow,

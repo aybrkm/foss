@@ -4,14 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const links = [
-  { label: "ÖZET", href: "/dashboard" },
-  { label: "Varlıklar", href: "/assets" },
-  { label: "Yükümlülükler", href: "/obligations" },
-  { label: "Nakit Akışı", href: "/cashflow" },
-  { label: "Yatırımlar", href: "/investments" },
-  { label: "Projeler", href: "/projects" },
-  { label: "Hatırlatıcılar", href: "/reminders" },
-  { label: "Günlük", href: "/journal" },
+  { label: "OZET", href: "/dashboard" },
+  { label: "Varliklar", href: "/assets" },
+  { label: "Yukumlulukler", href: "/obligations" },
+  { label: "Nakit Aks", href: "/cashflow" },
+  { label: "Yatirimlar", href: "/investments" },
+  { label: "Isler", href: "/projects" },
+  { label: "Hatirlatmalar", href: "/reminders" },
+  { label: "Gunluk", href: "/journal" },
 ];
 
 export function MainNav() {
@@ -22,8 +22,7 @@ export function MainNav() {
       {links.map((link) => {
         const isActive = pathname === link.href;
         const isOverview = link.href === "/dashboard";
-        const baseInactive =
-          "border border-transparent hover:border-white/30 hover:text-white";
+        const baseInactive = "border border-transparent hover:border-white/30 hover:text-white";
         const overviewInactive =
           "border border-indigo-400/40 bg-indigo-500/20 text-indigo-100 hover:border-indigo-300";
         const className = isActive
@@ -32,11 +31,7 @@ export function MainNav() {
             ? overviewInactive
             : baseInactive;
         return (
-          <Link
-            key={link.href}
-            href={link.href}
-            className={`rounded-full px-4 py-2 transition ${className}`}
-          >
+          <Link key={link.href} href={link.href} className={`rounded-full px-4 py-2 transition ${className}`}>
             {link.label}
           </Link>
         );

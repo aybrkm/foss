@@ -27,7 +27,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
           </div>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-6xl px-8 py-12 pb-24 lg:px-10">
+      <main className="mx-auto w-full max-w-[96rem] px-8 py-12 pb-24 lg:px-10">
         {children}
       </main>
     </div>
