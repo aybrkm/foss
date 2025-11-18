@@ -128,7 +128,7 @@ export default async function EditAssetPage({ params }: Props) {
           <option value="false">İllikit</option>
         </select>
         <input
-          type="date"
+          type="date" min="1000-01-01" max="5000-12-31"
           name="acquisitionDate"
           defaultValue={acquisitionDate}
           className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white"

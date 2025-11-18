@@ -90,7 +90,7 @@ function AssetFormFields({ action, currencies, isLiquid }: FieldsProps) {
       ) : (
         <>
           <input
-            type="date"
+            type="date" min="1000-01-01" max="5000-12-31"
             name="acquisitionDate"
             className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white"
           />

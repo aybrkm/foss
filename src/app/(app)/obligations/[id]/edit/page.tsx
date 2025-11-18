@@ -157,7 +157,7 @@ export default async function EditObligationPage({ params }: Props) {
           ))}
         </select>
         <input
-          type="date"
+          type="date" min="1000-01-01" max="5000-12-31"
           name="nextDue"
           defaultValue={nextDueValue}
           className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white"

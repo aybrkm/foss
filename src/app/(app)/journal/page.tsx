@@ -1,5 +1,6 @@
-﻿import { revalidatePath } from "next/cache";
+import { revalidatePath } from "next/cache";
 import prisma from "@/lib/prisma";
+import { JournalEntryCard } from "@/components/journal/JournalEntryCard";
 
 async function createEntry(formData: FormData) {
   "use server";
@@ -8,7 +9,7 @@ async function createEntry(formData: FormData) {
   const entryDate = formData.get("entryDate")?.toString();
 
   if (!body) {
-    throw new Error("Günlük metni gerekli");
+    throw new Error("Gunluk metni gerekli");
   }
 
   await prisma.journalEntry.create({
@@ -22,11 +23,49 @@ async function createEntry(formData: FormData) {
   revalidatePath("/journal");
 }
 
+async function updateEntry(formData: FormData) {
+  "use server";
+  const entryId = formData.get("entryId")?.toString();
+  if (!entryId) {
+    throw new Error("Gunluk kaydi bulunamadi");
+  }
+
+  const title = formData.get("title")?.toString().trim() || null;
+  const body = formData.get("body")?.toString().trim();
+  const entryDate = formData.get("entryDate")?.toString();
+
+  if (!body) {
+    throw new Error("Gunluk metni gerekli");
+  }
+
+  await prisma.journalEntry.update({
+    where: { id: entryId },
+    data: {
+      title,
+      body,
+      entryDate: entryDate ? new Date(entryDate) : undefined,
+    },
+  });
+
+  revalidatePath("/journal");
+}
+
+async function deleteEntry(formData: FormData) {
+  "use server";
+  const entryId = formData.get("entryId")?.toString();
+  if (!entryId) {
+    throw new Error("Silinecek gunluk bulunamadi");
+  }
+
+  await prisma.journalEntry.delete({ where: { id: entryId } });
+  revalidatePath("/journal");
+}
+
 export default async function JournalPage() {
   const entries = await prisma.journalEntry.findMany({
     orderBy: { entryDate: "desc" },
   });
-  type JournalEntryRow = (typeof entries)[number];
+
   const entryTotal = entries.length;
   const now = new Date();
   const entriesThisMonth = entries.filter((entry) => {
@@ -35,33 +74,31 @@ export default async function JournalPage() {
   }).length;
   const lastEntryDate = entries[0]?.entryDate
     ? new Date(entries[0].entryDate).toLocaleDateString("tr-TR")
-    : "Kayıt yok";
+    : "Kayit yok";
+
   const journalHighlights = [
-    {
-      title: "Toplam kayıt",
-      value: `${entryTotal}`,
-      hint: "günlük not",
-    },
-    {
-      title: "Bu ay",
-      value: `${entriesThisMonth}`,
-      hint: "yeni girdi",
-    },
-    {
-      title: "Son güncelleme",
-      value: lastEntryDate,
-      hint: "en güncel not",
-    },
+    { title: "Toplam kayit", value: `${entryTotal}`, hint: "gunluk not" },
+    { title: "Bu ay", value: `${entriesThisMonth}`, hint: "yeni girdi" },
+    { title: "Son guncelleme", value: lastEntryDate, hint: "en guncel not" },
   ];
+
+  const clientEntries = entries.map((entry) => ({
+    id: entry.id,
+    title: entry.title,
+    body: entry.body,
+    entryDate: entry.entryDate.toISOString(),
+    relatedAssetId: entry.relatedAssetId,
+    relatedObligationId: entry.relatedObligationId,
+  }));
 
   return (
     <div className="space-y-6">
       <section className="space-y-4">
         <div className="rounded-3xl border border-sky-400/50 bg-sky-500/10 p-6">
-          <p className="text-xs uppercase tracking-[0.4em] text-sky-200">Günlük</p>
-          <h2 className="mt-2 text-3xl font-semibold text-white">Düşünce ve karar arşivi</h2>
+          <p className="text-xs uppercase tracking-[0.4em] text-sky-200">Gunluk</p>
+          <h2 className="mt-2 text-3xl font-semibold text-white">Dusunce ve karar arsivi</h2>
           <p className="mt-2 max-w-3xl text-sm text-sky-100/80">
-            Önemli notları tek yerde topla, yinelemeli düşünceleri tarihlendir ve ilerlemeyi izle.
+            Onemli notlari tek yerde topla, yinelemeli dusunceleri tarihlendir ve ilerlemeyi izle.
           </p>
         </div>
         <div className="grid gap-4 md:grid-cols-3">
@@ -83,11 +120,11 @@ export default async function JournalPage() {
       >
         <input
           name="title"
-          placeholder="Başlık (opsiyonel)"
+          placeholder="Baslik (opsiyonel)"
           className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white placeholder:text-slate-500"
         />
         <input
-          type="date"
+          type="date" min="1000-01-01" max="5000-12-31"
           name="entryDate"
           className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white"
         />
@@ -102,34 +139,15 @@ export default async function JournalPage() {
           type="submit"
           className="rounded-xl bg-sky-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-sky-400 md:col-span-2"
         >
-          Günlük kaydet
+          Gunluk kaydet
         </button>
       </form>
 
       <div className="grid gap-5 md:grid-cols-2">
-        {entries.map((entry: JournalEntryRow) => (
-          <article
-            key={entry.id}
-            className="rounded-3xl border border-white/10 bg-slate-900/60 p-5"
-          >
-            <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
-              {new Date(entry.entryDate).toLocaleDateString("tr-TR")}
-            </p>
-            <h3 className="mt-2 text-xl font-semibold text-white">
-              {entry.title ?? "Not"}
-            </h3>
-            <p className="mt-3 whitespace-pre-wrap text-sm text-slate-300">{entry.body}</p>
-            {(entry.relatedAssetId || entry.relatedObligationId) && (
-              <p className="mt-3 text-xs text-slate-400">
-                Linked: {entry.relatedAssetId ?? entry.relatedObligationId}
-              </p>
-            )}
-          </article>
+        {clientEntries.map((entry) => (
+          <JournalEntryCard key={entry.id} entry={entry} onUpdate={updateEntry} onDelete={deleteEntry} />
         ))}
       </div>
     </div>
   );
 }
-
-
-
