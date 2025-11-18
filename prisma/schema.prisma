@@ -26,47 +26,19 @@ enum RecurrenceUnit {
   month
 }
 
-enum WorkstreamPhase {
-  idea
-  active
-  follow_up
-  archive
-}
-
-enum WorkstreamStatus {
-  on_track
-  at_risk
-  blocked
-}
-
-enum WorkItemStatus {
-  planned
-  in_progress
-  review
-  blocked
-  done
-}
-
-enum WorkItemPriority {
-  low
-  medium
-  high
-  asap
-}
-
 model User {
   id        String   @id @default(uuid())
   email     String?  @unique
   name      String?
   createdAt DateTime @default(now())
 
-  assets       Asset[]
-  obligations  Obligation[]
-  reminders    Reminder[]
-  journal      JournalEntry[]
-  pageLayouts  PageLayout[]
-  workstreams  Workstream[]
-  workItems    WorkItem[]
+  assets      Asset[]
+  obligations Obligation[]
+  reminders   Reminder[]
+  journal     JournalEntry[]
+  pageLayouts PageLayout[]
+  workspaceColumns WorkspaceColumn[]
+  workspaceCards   WorkspaceCard[]
 }
 
 model Asset {
@@ -159,45 +131,33 @@ model PageLayout {
   @@unique([userId, pageKey])
 }
 
-model Workstream {
-  id                   String           @id @default(uuid())
-  userId               String?
-  name                 String
-  owner                String?
-  stage                WorkstreamPhase
-  status               WorkstreamStatus
-  progress             Int              @default(0)
-  summary              String?
-  focus                String[]         @default([])
-  tags                 String[]         @default([])
-  startDate            DateTime?
-  dueDate              DateTime?
-  budgetUsedPercentage Int?
-  nextStep             String?
-  createdAt            DateTime         @default(now())
-  updatedAt            DateTime         @default(now()) @updatedAt
+model WorkspaceColumn {
+  id        String   @id @default(uuid())
+  userId    String?
+  title     String
+  width     Int      @default(1)
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
-  user  User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  tasks WorkItem[]
+  user  User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cards WorkspaceCard[]
+
+  @@index([userId, position])
 }
 
-model WorkItem {
-  id            String           @id @default(uuid())
-  workstreamId  String?
-  userId        String?
-  title         String
-  owner         String?
-  status        WorkItemStatus   @default(planned)
-  priority      WorkItemPriority @default(medium)
-  dueDate       DateTime?
-  effort        String?
-  description   String?
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @default(now()) @updatedAt
+model WorkspaceCard {
+  id        String   @id @default(uuid())
+  columnId  String
+  userId    String?
+  title     String
+  notes     String?   @db.Text
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
-  workstream Workstream? @relation(fields: [workstreamId], references: [id], onDelete: SetNull)
-  user       User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  column WorkspaceColumn @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  user   User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([status, priority])
-  @@index([dueDate])
+  @@index([columnId, position])
 }
