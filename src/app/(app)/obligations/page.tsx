@@ -50,9 +50,7 @@ const adjustDateInput = (value?: string | null) => {
   if (!value) {
     return null;
   }
-  const date = new Date(value);
-  date.setTime(date.getTime() + DAY_MS);
-  return date;
+  return new Date(value);
 };
 
 function calculateNextRecurringDate(obligation: {
