@@ -152,6 +152,21 @@ export function WorkspaceBoard({ initialColumns }: { initialColumns: ColumnData[
     setDraggingCardId(cardId);
   };
 
+  const moveCard = (columnId: string, cardId: string, direction: "up" | "down") => {
+    updateColumns((prev) =>
+      prev.map((column) => {
+        if (column.id !== columnId) return column;
+        const idx = column.cards.findIndex((c) => c.id === cardId);
+        if (idx === -1) return column;
+        const swapTo = direction === "up" ? idx - 1 : idx + 1;
+        if (swapTo < 0 || swapTo >= column.cards.length) return column;
+        const nextCards = [...column.cards];
+        [nextCards[idx], nextCards[swapTo]] = [nextCards[swapTo], nextCards[idx]];
+        return { ...column, cards: nextCards };
+      }),
+    );
+  };
+
   const handleDrop = (event: React.DragEvent<HTMLDivElement>, targetColumnId: string | null) => {
     event.preventDefault();
     const payload = event.dataTransfer.getData("text/plain");
@@ -421,32 +436,33 @@ export function WorkspaceBoard({ initialColumns }: { initialColumns: ColumnData[
             }`}
           >
             <div className="space-y-2">
-              <div className="flex items-start justify-between gap-2">
-                {isEditMode ? (
-                  <input
-                    value={column.title}
-                    onChange={(event) =>
-                      updateColumns((prev) =>
-                        prev.map((col) => (col.id === column.id ? { ...col, title: event.target.value } : col)),
-                      )
-                    }
-                    className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-lg font-semibold uppercase tracking-wide text-cyan-100 focus:border-fuchsia-300 focus:outline-none"
-                  />
-                ) : (
-                  <p className="w-full rounded-xl border border-transparent bg-black/5 px-3 py-2 text-lg font-semibold uppercase tracking-wide text-cyan-200">
-                    {column.title}
-                  </p>
-                )}
-                {isEditMode && (
-                  <button
-                    type="button"
-                    aria-label="Sutunu sil"
-                    onClick={() => handleRemoveColumn(column.id)}
-                    className="rounded-full border border-white/20 bg-white/10 px-2 text-xs font-bold text-white transition"
-                  >
-                    x
-                  </button>
-                )}
+              <div className="-mx-5 mb-3 rounded-t-2xl px-4 py-3">
+                <div className="flex items-center justify-between gap-2 rounded-t-2xl px-3 py-2 shadow-sm"
+                  style={{ background: 'linear-gradient(90deg,#0ea5e9aa 0%,#6366f1aa 100%)' }}>
+                  {isEditMode ? (
+                    <input
+                      value={column.title}
+                      onChange={(event) =>
+                        updateColumns((prev) =>
+                          prev.map((col) => (col.id === column.id ? { ...col, title: event.target.value } : col)),
+                        )
+                      }
+                      className="w-full rounded-md border border-transparent bg-transparent px-2 py-1 text-lg font-semibold uppercase tracking-wide text-white focus:outline-none"
+                    />
+                  ) : (
+                    <p className="w-full text-lg font-semibold uppercase tracking-wide text-white">{column.title}</p>
+                  )}
+                  {isEditMode && (
+                    <button
+                      type="button"
+                      aria-label="Sutunu sil"
+                      onClick={() => handleRemoveColumn(column.id)}
+                      className="ml-2 rounded-full border border-white/20 bg-white/10 px-2 text-xs font-bold text-white transition"
+                    >
+                      x
+                    </button>
+                  )}
+                </div>
               </div>
               {isEditMode && (
                 <div className="flex gap-2">
@@ -475,12 +491,11 @@ export function WorkspaceBoard({ initialColumns }: { initialColumns: ColumnData[
               {column.cards.map((card) => (
                 <div
                   key={card.id}
-                  draggable
-                  onDragStart={(event) => handleCardDragStart(event, card.id, column.id)}
+                  draggable={false}
                   onPointerDownCapture={handlePointerDownCapture}
                   onPointerUpCapture={handlePointerUpCapture}
                   className={`${
-                    isEditMode ? "cursor-move" : "cursor-pointer"
+                    isEditMode ? "cursor-default" : "cursor-pointer"
                   } rounded-2xl border border-white/10 bg-slate-900/60 p-4 text-sm text-slate-100 shadow-[0_5px_25px_rgba(15,23,42,0.45)] hover:border-white/30 hover:bg-slate-900/80 ${
                     draggingCardId === card.id ? "opacity-60" : ""
                   }`}
@@ -488,19 +503,45 @@ export function WorkspaceBoard({ initialColumns }: { initialColumns: ColumnData[
                 >
                   <div className="flex items-center justify-between gap-3">
                     <span>{card.title}</span>
-                    {isEditMode && (
-                      <button
-                        type="button"
-                        aria-label="Karti sil"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          handleDeleteCard(column.id, card.id);
-                        }}
-                        className="rounded-full border border-white/10 px-2 py-1 text-xs text-slate-400 hover:border-rose-300 hover:text-rose-200"
-                      >
-                        Sil
-                      </button>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {isEditMode && (
+                        <>
+                          <button
+                            type="button"
+                            aria-label="Yukar Move up"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              moveCard(column.id, card.id, "up");
+                            }}
+                            className="rounded-md border border-white/10 bg-white/5 px-2 py-1 text-xs text-white hover:bg-white/10"
+                          >
+                            ▲
+                          </button>
+                          <button
+                            type="button"
+                            aria-label="Aşağı Move down"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              moveCard(column.id, card.id, "down");
+                            }}
+                            className="rounded-md border border-white/10 bg-white/5 px-2 py-1 text-xs text-white hover:bg-white/10"
+                          >
+                            ▼
+                          </button>
+                          <button
+                            type="button"
+                            aria-label="Karti sil"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              handleDeleteCard(column.id, card.id);
+                            }}
+                            className="rounded-full border border-white/10 px-2 py-1 text-xs text-slate-400 hover:border-rose-300 hover:text-rose-200"
+                          >
+                            Sil
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
