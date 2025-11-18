@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, FormEvent } from "react";
 
 type Props = {
   action: (formData: FormData) => void;
@@ -16,12 +16,29 @@ export function ObligationForm({
   recurrenceUnits,
 }: Props) {
   const [isRecurring, setIsRecurring] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const showRecurrence = isRecurring;
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    if (!showRecurrence) {
+      setError(null);
+      return;
+    }
+    const form = event.currentTarget;
+    const nextDue = (form.elements.namedItem("nextDue") as HTMLInputElement | null)?.value;
+    if (!nextDue) {
+      event.preventDefault();
+      setError("Tekrar eden yukumlulukler icin baslangic tarihi secmelisin.");
+      return;
+    }
+    setError(null);
+  };
 
   return (
     <form
       action={action}
+      onSubmit={handleSubmit}
       className="grid gap-3 rounded-3xl border border-white/10 bg-slate-900/60 p-5 md:grid-cols-3"
     >
       <input
@@ -65,9 +82,12 @@ export function ObligationForm({
         ))}
       </select>
       <input
-        type="date" min="1000-01-01" max="5000-12-31"
+        type="date"
+        min="1000-01-01"
+        max="5000-12-31"
         name="nextDue"
         className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white"
+        required={showRecurrence}
       />
       <label className="flex items-center gap-2 rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-slate-300">
         <input
@@ -110,6 +130,11 @@ export function ObligationForm({
         placeholder="Not (opsiyonel)"
         className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white placeholder:text-slate-500 md:col-span-2"
       />
+      {error && (
+        <p className="md:col-span-3 rounded-xl border border-rose-400/40 bg-rose-500/10 px-4 py-2 text-sm text-rose-200">
+          {error}
+        </p>
+      )}
       <button
         type="submit"
         className="rounded-xl bg-rose-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-rose-400 md:col-span-1"
