@@ -16,27 +16,31 @@ const obligationIntegrations = [
   {
     region: "Türkiye",
     items: [
-      {
-        name: "Paraşüt",
-        description: "Fatura ve taksit verisini çekip yükümlülük kayıtlarını otomatik oluşturma.",
-      },
-      {
-        name: "Logo Netsis",
-        description: "ERP ödeme planlarını Workspace yükümlülük listesine eşitleme.",
-      },
+      { name: "Paraşüt", description: "Fatura ve taksit verisini çekip yükümlülük kaydı oluşturma." },
+      { name: "Logo Netsis", description: "ERP ödeme planlarını Workspace listesine eşitleme." },
+      { name: "Mikro Yazılım", description: "Cari hesap taksitlerini otomatik çekme." },
+      { name: "Nebim V3", description: "Mağaza tedarik borçlarını iş kartına dönüştürmek." },
+      { name: "BizimHesap", description: "Serbest meslek fatura tahsilatlarını izlemek." },
+      { name: "Kolay IK Bordro", description: "Maaş ve yan hak ödemelerini yükümlülükler olarak işlemek." },
+      { name: "Kuveyt Türk Kurumsal", description: "Leasing ve taksitli borçları senkronize etmek." },
+      { name: "Akbank Kurumsal Ödeme", description: "Kredi taksitlerini otomatik planlamak." },
+      { name: "Vodafone Business Cloud", description: "Operasyonel abonelikleri kartlaştırmak." },
+      { name: "Türk Telekom Kurumsal", description: "Periyodik telekom ödemelerini takibe almak." },
     ],
   },
   {
     region: "ABD",
     items: [
-      {
-        name: "QuickBooks Online",
-        description: "Bills modülündeki ödemeleri vadeleriyle içeri aktarma.",
-      },
-      {
-        name: "Stripe Billing",
-        description: "Abonelik/ödeme planlarını otomatik izleme ve hatırlatma üretme.",
-      },
+      { name: "QuickBooks Online", description: "Bills modülündeki ödemeleri vadeleriyle içeri aktarma." },
+      { name: "Stripe Billing", description: "Abonelik planlarını otomatik izleme." },
+      { name: "Xero Bills", description: "Vendor invoice’larını Workspace’de göstermek." },
+      { name: "Bill.com", description: "AP süreçlerini aktararak onay takibi yapmak." },
+      { name: "Chargebee", description: "SaaS faturalarını görev olarak işlemek." },
+      { name: "Gusto Payroll", description: "Bordro ödeme tarihlerini yükümlülüğe dönüştürmek." },
+      { name: "Rippling", description: "Personel yan hak ödemelerini otomatik hatırlatmak." },
+      { name: "Sage Intacct", description: "Kurumsal borç planlarını senkronize etme." },
+      { name: "FreshBooks", description: "Serbest meslek faturalarını otomatik takip etmek." },
+      { name: "Oracle NetSuite", description: "Global AP kalemlerini Workspace’e bağlamak." },
     ],
   },
 ];

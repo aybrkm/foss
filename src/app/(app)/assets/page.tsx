@@ -52,27 +52,31 @@ const assetIntegrations = [
   {
     region: "Türkiye",
     items: [
-      {
-        name: "MKK e-Yatırım API",
-        description: "Borsa İstanbul portföy bakiyelerini otomatik çekerek varlık listesine yansıtma.",
-      },
-      {
-        name: "Enpara / Kuveyt Türk Open Banking",
-        description: "Çoklu banka hesap değerlerini günlük olarak senkronize etme.",
-      },
+      { name: "MKK e-Yatırım API", description: "Borsa İstanbul portföy bakiyelerini otomatik çekmek." },
+      { name: "Enpara / Kuveyt Türk Open Banking", description: "Banka hesap değerlerini günlük senkronize etmek." },
+      { name: "Garanti BBVA API", description: "TRY/USD hesap bakiyelerini gerçek zamanlı okumak." },
+      { name: "İşbank Maxi API", description: "Hisse ve fon blokelerini varlık tablosuna aktarmak." },
+      { name: "QNB Finansinvest", description: "Yatırım hesap özetlerini periyodik olarak çekme." },
+      { name: "DenizBank Açık Bankacılık", description: "Vadeli/vadesiz bakiyeleri Workspace’e taşıma." },
+      { name: "Vakıf Yatırım API", description: "BIST emir ve bakiye durumlarını entegre etmek." },
+      { name: "Halkbank Kurumsal", description: "KOBİ nakit pozisyonlarını günlük izleme." },
+      { name: "Akbank Direkt API", description: "Çoklu para birimindeki hesap bakiyelerini raporlama." },
+      { name: "Gedik Trader", description: "Türev pozisyonlarını otomatik kayda geçirmek." },
     ],
   },
   {
     region: "ABD",
     items: [
-      {
-        name: "Plaid Investments",
-        description: "Brokerage ve tasarruf hesaplarını tek API üzerinden izleme.",
-      },
-      {
-        name: "Robinhood / Alpaca",
-        description: "Hisse-senet emir ve bakiye verisini gerçek zamanlı almak.",
-      },
+      { name: "Plaid Investments", description: "Brokerage ve tasarruf hesaplarını tek API üzerinden izleme." },
+      { name: "Robinhood / Alpaca", description: "Hisse-senet emir ve bakiye verisini gerçek zamanlı almak." },
+      { name: "Fidelity Wealthscape", description: "Emeklilik hesaplarını Workspace’de gösterme." },
+      { name: "Charles Schwab API", description: "Portföy dağılımını otomatik güncelleme." },
+      { name: "Vanguard Connect", description: "Fon ve ETF bakiyelerini çekip raporlama." },
+      { name: "Betterment", description: "Robo-Advisor varlıklarını tek panelde toplamak." },
+      { name: "Wealthfront", description: "Nakit ve yatırım hesaplarını senkronize etmek." },
+      { name: "Coinbase Prime", description: "Kripto varlık bakiyelerini izlemek." },
+      { name: "Kraken Institutional", description: "Kurumsal kripto portföyünü aktarmak." },
+      { name: "Mercury Treasury", description: "USD nakit pozisyonunu otomatik güncellemek." },
     ],
   },
 ];

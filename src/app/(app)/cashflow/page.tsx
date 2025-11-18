@@ -19,27 +19,31 @@ const cashflowIntegrations = [
   {
     region: "Türkiye",
     items: [
-      {
-        name: "Akbank API Portalı",
-        description: "Hesap hareketlerini günlük çekerek tahsilat/ödeme akışını güncel tutma.",
-      },
-      {
-        name: "Paraşüt Cashflow",
-        description: "Gelir-gider projeksiyonlarını API üzerinden içeri alıp tahmin oluşturma.",
-      },
+      { name: "Akbank API Portalı", description: "Hesap hareketlerini günlük çekerek tahsilat/ödeme akışını izleme." },
+      { name: "Paraşüt Cashflow", description: "Gelir-gider projeksiyonlarını import ederek tahmin üretme." },
+      { name: "İşbank MaxiCash", description: "KOBİ hesabı bakiyelerini otomatik güncelleme." },
+      { name: "Garanti BBVA Connect", description: "Nakit pozisyonlarını kur bazında raporlamak." },
+      { name: "QNB Finansbank Kurumsal", description: "POS ve tahsilat akışını günlük görmek." },
+      { name: "ING Türkiye API", description: "USD/EUR hesap hareketlerini Workspace'e aktarmak." },
+      { name: "VakifBank V-Flow", description: "Çek/Senet vade planlarını izlemek." },
+      { name: "DenizBank Treasury", description: "FX forward ve faiz ödemelerini planlamak." },
+      { name: "Turkcell Paycell Business", description: "Tahsilat kanalından gelen tutarları nakit tablosuna eklemek." },
+      { name: "Papara İş", description: "Cüzdan hareketlerini kısa vadeli nakde yansıtmak." },
     ],
   },
   {
     region: "ABD",
     items: [
-      {
-        name: "Brex Treasury",
-        description: "Kurumsal kart ve banka bakiyelerini tek tablodan izleme.",
-      },
-      {
-        name: "Xero Cashflow",
-        description: "USD bazlı tahsilat planlarını nakit görünümüne senkronize etme.",
-      },
+      { name: "Brex Treasury", description: "Kurumsal kart ve banka bakiyelerini tek tablodan izleme." },
+      { name: "Xero Cashflow", description: "USD bazlı tahsilat planlarını nakit görünümüne senkronize etme." },
+      { name: "Ramp", description: "Kart harcamalarını gerçek zamanlı nakit çıkışına bağlama." },
+      { name: "Mercury Treasury", description: "Startup nakit pozisyonunu otomatik raporlama." },
+      { name: "QuickBooks Cash", description: "Gelir/gider tahminlerini Workspace içine almak." },
+      { name: "Wise Business API", description: "Çoklu para birimi bakiyelerini tek yerde göstermek." },
+      { name: "BlueVine", description: "Kredi hattı kullanımını nakit tahminine eklemek." },
+      { name: "Oracle NetSuite Cash360", description: "Kurumsal nakit forecastını içeri aktarmak." },
+      { name: "SAP Concur", description: "Masraf formlarını otomatik nakit çıkışına dönüştürme." },
+      { name: "Stripe Treasury", description: "Platform ödemelerini günlük yönetime taşımak." },
     ],
   },
 ];

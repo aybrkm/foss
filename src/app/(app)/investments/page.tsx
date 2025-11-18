@@ -19,27 +19,31 @@ const investmentIntegrations = [
   {
     region: "Türkiye",
     items: [
-      {
-        name: "Midas",
-        description: "Borsa İstanbul ve ABD hisselerini tek arayüzden aktararak pozisyonları güncelleme.",
-      },
-      {
-        name: "Fintables API",
-        description: "BIST finansal verilerini çekip şirket notlarını zenginleştirme.",
-      },
+      { name: "Midas", description: "Borsa İstanbul ve ABD hisselerini tek arayüzden aktararak pozisyonları güncelleme." },
+      { name: "Fintables API", description: "BIST finansal verilerini çekip şirket notlarını zenginleştirme." },
+      { name: "Matriks Data", description: "Anlık fiyat akışını performans kartlarına bağlamak." },
+      { name: "Gedik Trader", description: "Opsiyon ve vadeli işlemlerini portföye katmak." },
+      { name: "İş Yatırım TradeMaster", description: "Yatırım hesabı bakiyelerini entegre etmek." },
+      { name: "Vakıf Yatırım API", description: "FX ve altın hesaplarını anlık görmek." },
+      { name: "TEB Yatırım", description: "Fon sepetlerini otomatik import etmek." },
+      { name: "Deniz Trader", description: "Global piyasa pozisyonlarını tek bakışta görmek." },
+      { name: "BtcTurk Pro", description: "Kripto pozisyonlarını yatırım tablosuna taşımak." },
+      { name: "Paribu Kurumsal", description: "Stablecoin bakiyelerini portföyde göstermek." },
     ],
   },
   {
     region: "ABD",
     items: [
-      {
-        name: "Interactive Brokers",
-        description: "Portföy bakiyesi, emir ve işlem geçmişini API üzerinden alma.",
-      },
-      {
-        name: "Polygon.io",
-        description: "Gerçek zamanlı piyasa datasıyla performans hesaplamak.",
-      },
+      { name: "Interactive Brokers", description: "Portföy bakiyesi, emir ve işlem geçmişini API üzerinden alma." },
+      { name: "Polygon.io", description: "Gerçek zamanlı piyasa datasıyla performans hesaplamak." },
+      { name: "Alpaca", description: "Brokerage hesabını yönetip otomatik emir kaydı almak." },
+      { name: "Robinhood Connect", description: "Retail portföyü Workspace’e taşımak." },
+      { name: "Bloomberg Portfolio", description: "Profesyonel veri setlerini kartlara beslemek." },
+      { name: "Morningstar Direct", description: "Fon verilerini KPI’lara bağlamak." },
+      { name: "BlackRock Aladdin", description: "Risk analiz çıktısını yatırım alanına yansıtmak." },
+      { name: "Charles Schwab API", description: "IRAs ve brokerage bakiyelerini import etmek." },
+      { name: "Vanguard Connect", description: "Fon/ETF pozisyonlarını senkronize etmek." },
+      { name: "Coinbase Prime", description: "Kurumsal kripto portföyünü izlemek." },
     ],
   },
 ];
