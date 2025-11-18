@@ -1,9 +1,24 @@
+type ProductType = "personal" | "business" | "both";
+
 type Integration = {
   region: string;
   items: {
     name: string;
     description: string;
+    product: ProductType;
   }[];
+};
+
+const productLabel: Record<ProductType, string> = {
+  personal: "Floss Personal",
+  business: "Floss Business",
+  both: "Personal & Business",
+};
+
+const productColor: Record<ProductType, string> = {
+  personal: "bg-sky-500/30 text-sky-100 border-sky-400/50",
+  business: "bg-emerald-500/30 text-emerald-100 border-emerald-400/50",
+  both: "bg-indigo-500/30 text-indigo-100 border-indigo-400/50",
 };
 
 export function IntegrationInfoCard({
@@ -31,6 +46,11 @@ export function IntegrationInfoCard({
                 <li key={item.name}>
                   <p className="font-semibold text-white">{item.name}</p>
                   <p className="text-xs text-slate-400">{item.description}</p>
+                  <span
+                    className={`mt-1 inline-flex rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wide ${productColor[item.product]}`}
+                  >
+                    {productLabel[item.product]}
+                  </span>
                 </li>
               ))}
             </ul>
