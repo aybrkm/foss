@@ -5,6 +5,7 @@ import { convertToTry, getExchangeRates } from "@/lib/exchange";
 import { formatCurrency } from "@/lib/format";
 import { AssetForm } from "@/components/forms/AssetForm";
 import { IntegrationInfoCard } from "@/components/common/IntegrationInfoCard";
+import type { Integration } from "@/components/common/IntegrationInfoCard";
 
 const currencyOptions = ["TRY", "USD", "AED", "EUR"] as const;
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -48,7 +49,7 @@ async function createAsset(formData: FormData) {
   revalidatePath("/dashboard");
 }
 
-const assetIntegrations = [
+const assetIntegrations: Integration[] = [
   {
     region: "Türkiye",
     items: [

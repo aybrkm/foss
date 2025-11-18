@@ -1,6 +1,6 @@
-type ProductType = "personal" | "business" | "both";
+export type ProductType = "personal" | "business" | "both";
 
-type Integration = {
+export type Integration = {
   region: string;
   items: {
     name: string;

@@ -1,4 +1,5 @@
 import { IntegrationInfoCard } from "@/components/common/IntegrationInfoCard";
+import type { Integration } from "@/components/common/IntegrationInfoCard";
 
 const focusAreas = [
   {
@@ -15,7 +16,7 @@ const focusAreas = [
   },
 ];
 
-const investmentIntegrations = [
+const investmentIntegrations: Integration[] = [
   {
     region: "Türkiye",
     items: [

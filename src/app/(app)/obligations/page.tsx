@@ -6,13 +6,14 @@ import { computeNextDue } from "@/lib/recurrence";
 import { ObligationForm } from "@/components/forms/ObligationForm";
 import { ObligationsTable } from "@/components/obligations/ObligationsTable";
 import { IntegrationInfoCard } from "@/components/common/IntegrationInfoCard";
+import type { Integration } from "@/components/common/IntegrationInfoCard";
 
 const categories = ["payment", "legal", "other"] as const;
 const recurrenceUnits = ["week", "month"] as const;
 const currencyOptions = ["TRY", "USD", "AED", "EUR"] as const;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-const obligationIntegrations = [
+const obligationIntegrations: Integration[] = [
   {
     region: "Türkiye",
     items: [

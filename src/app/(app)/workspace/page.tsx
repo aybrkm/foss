@@ -1,8 +1,9 @@
 import { IntegrationInfoCard } from "@/components/common/IntegrationInfoCard";
+import type { Integration } from "@/components/common/IntegrationInfoCard";
 import { WorkspaceBoard } from "@/components/workspace";
 import prisma from "@/lib/prisma";
 
-const workspaceIntegrations = [
+const workspaceIntegrations: Integration[] = [
   {
     region: "Türkiye",
     items: [

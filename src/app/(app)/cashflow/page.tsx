@@ -1,4 +1,5 @@
 import { IntegrationInfoCard } from "@/components/common/IntegrationInfoCard";
+import type { Integration } from "@/components/common/IntegrationInfoCard";
 
 const placeholderItems = [
   {
@@ -15,7 +16,7 @@ const placeholderItems = [
   },
 ];
 
-const cashflowIntegrations = [
+const cashflowIntegrations: Integration[] = [
   {
     region: "Türkiye",
     items: [
