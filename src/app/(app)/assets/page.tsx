@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { convertToTry, getExchangeRates } from "@/lib/exchange";
 import { formatCurrency } from "@/lib/format";
 import { AssetForm } from "@/components/forms/AssetForm";
+import { IntegrationInfoCard } from "@/components/common/IntegrationInfoCard";
 
 const currencyOptions = ["TRY", "USD", "AED", "EUR"] as const;
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -47,6 +48,35 @@ async function createAsset(formData: FormData) {
   revalidatePath("/dashboard");
 }
 
+const assetIntegrations = [
+  {
+    region: "Türkiye",
+    items: [
+      {
+        name: "MKK e-Yatırım API",
+        description: "Borsa İstanbul portföy bakiyelerini otomatik çekerek varlık listesine yansıtma.",
+      },
+      {
+        name: "Enpara / Kuveyt Türk Open Banking",
+        description: "Çoklu banka hesap değerlerini günlük olarak senkronize etme.",
+      },
+    ],
+  },
+  {
+    region: "ABD",
+    items: [
+      {
+        name: "Plaid Investments",
+        description: "Brokerage ve tasarruf hesaplarını tek API üzerinden izleme.",
+      },
+      {
+        name: "Robinhood / Alpaca",
+        description: "Hisse-senet emir ve bakiye verisini gerçek zamanlı almak.",
+      },
+    ],
+  },
+];
+
 export default async function AssetsPage() {
   const assets = await prisma.asset.findMany({
     orderBy: { updatedAt: "desc" },
@@ -84,6 +114,11 @@ export default async function AssetsPage() {
 
   return (
     <div className="space-y-6">
+      <IntegrationInfoCard
+        title="Varlık senkronizasyon entegrasyonları"
+        description="Bankalar ve aracı kurumlarla otomatik veri akışı için planlanan bağlantılar."
+        integrations={assetIntegrations}
+      />
       <section className="space-y-4">
         <div className="rounded-3xl border border-indigo-400/50 bg-indigo-500/10 p-6">
           <p className="text-xs uppercase tracking-[0.4em] text-indigo-200">Varlıklar</p>

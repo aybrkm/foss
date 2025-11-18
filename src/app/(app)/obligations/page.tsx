@@ -5,11 +5,41 @@ import { formatCurrency } from "@/lib/format";
 import { computeNextDue } from "@/lib/recurrence";
 import { ObligationForm } from "@/components/forms/ObligationForm";
 import { ObligationsTable } from "@/components/obligations/ObligationsTable";
+import { IntegrationInfoCard } from "@/components/common/IntegrationInfoCard";
 
 const categories = ["payment", "legal", "other"] as const;
 const recurrenceUnits = ["week", "month"] as const;
 const currencyOptions = ["TRY", "USD", "AED", "EUR"] as const;
 const DAY_MS = 24 * 60 * 60 * 1000;
+
+const obligationIntegrations = [
+  {
+    region: "Türkiye",
+    items: [
+      {
+        name: "Paraşüt",
+        description: "Fatura ve taksit verisini çekip yükümlülük kayıtlarını otomatik oluşturma.",
+      },
+      {
+        name: "Logo Netsis",
+        description: "ERP ödeme planlarını Workspace yükümlülük listesine eşitleme.",
+      },
+    ],
+  },
+  {
+    region: "ABD",
+    items: [
+      {
+        name: "QuickBooks Online",
+        description: "Bills modülündeki ödemeleri vadeleriyle içeri aktarma.",
+      },
+      {
+        name: "Stripe Billing",
+        description: "Abonelik/ödeme planlarını otomatik izleme ve hatırlatma üretme.",
+      },
+    ],
+  },
+];
 
 const adjustDateInput = (value?: string | null) => {
   if (!value) {
@@ -249,6 +279,11 @@ export default async function ObligationsPage() {
 
   return (
     <div className="space-y-6">
+      <IntegrationInfoCard
+        title="Yükümlülükler için planlanan entegrasyonlar"
+        description="Muhasebe ve abonelik sağlayıcılarından otomatik veri çekerek ödeme planlarını güncel tutma."
+        integrations={obligationIntegrations}
+      />
       <section className="space-y-4">
         <div className="rounded-3xl border border-rose-400/50 bg-rose-500/10 p-6">
           <p className="text-xs uppercase tracking-[0.4em] text-rose-200">Yükümlülükler</p>

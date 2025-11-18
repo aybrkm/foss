@@ -1,3 +1,5 @@
+import { IntegrationInfoCard } from "@/components/common/IntegrationInfoCard";
+
 const placeholderItems = [
   {
     title: "Aylık girişler",
@@ -13,9 +15,43 @@ const placeholderItems = [
   },
 ];
 
+const cashflowIntegrations = [
+  {
+    region: "Türkiye",
+    items: [
+      {
+        name: "Akbank API Portalı",
+        description: "Hesap hareketlerini günlük çekerek tahsilat/ödeme akışını güncel tutma.",
+      },
+      {
+        name: "Paraşüt Cashflow",
+        description: "Gelir-gider projeksiyonlarını API üzerinden içeri alıp tahmin oluşturma.",
+      },
+    ],
+  },
+  {
+    region: "ABD",
+    items: [
+      {
+        name: "Brex Treasury",
+        description: "Kurumsal kart ve banka bakiyelerini tek tablodan izleme.",
+      },
+      {
+        name: "Xero Cashflow",
+        description: "USD bazlı tahsilat planlarını nakit görünümüne senkronize etme.",
+      },
+    ],
+  },
+];
+
 export default function CashflowPage() {
   return (
     <div className="space-y-8">
+      <IntegrationInfoCard
+        title="Nakit akışı entegrasyonları"
+        description="Banka ve muhasebe servisleriyle veri akışını otomatikleştirerek planı güncel tutma."
+        integrations={cashflowIntegrations}
+      />
       <div className="rounded-3xl border border-emerald-400/30 bg-emerald-500/10 p-6">
         <p className="text-xs uppercase tracking-[0.4em] text-emerald-300">NAKİT AKIŞI</p>
         <h1 className="mt-2 text-3xl font-semibold text-white">Nakit akışı görünümü</h1>
