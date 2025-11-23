@@ -2,6 +2,7 @@ import prisma from "@/lib/prisma";
 import { convertToTry, getExchangeRates } from "@/lib/exchange";
 import { DashboardWidgets } from "@/components/dashboard/DashboardWidgets";
 import { SummaryKpis } from "@/components/dashboard/SummaryKpis";
+import { requireUserId } from "@/lib/auth";
 
 const DAY_MS = 1000 * 60 * 60 * 24;
 
@@ -19,27 +20,36 @@ type HorizonItem = {
   title: string;
   dueDate: string;
   daysLeft: number;
-  kind: "OBLIGATION" | "REMINDER";
+  kind: "OBLIGATION" | "REMINDER" | "INCOME";
 };
 
 type HorizonBuckets = Record<HorizonKey, HorizonItem[]>;
 const kindLabels: Record<HorizonItem["kind"], string> = {
   OBLIGATION: "Yükümlülük",
   REMINDER: "Hatırlatma",
+  INCOME: "Gelir",
 };
 
 export default async function DashboardPage() {
-  const [assetRows, obligationRows, reminderRows, journalRows, rates] = await Promise.all([
-    prisma.asset.findMany({ orderBy: { updatedAt: "desc" } }),
+  const userId = await requireUserId();
+  const [assetRows, obligationRows, reminderRows, journalRows, incomeRows, rates] = await Promise.all([
+    prisma.asset.findMany({ where: { userId }, orderBy: { updatedAt: "desc" } }),
     prisma.obligation.findMany({
+      where: { userId },
       orderBy: { nextDue: "asc" },
     }),
     prisma.reminder.findMany({
+      where: { userId },
       orderBy: { dueAt: "asc" },
     }),
     prisma.journalEntry.findMany({
+      where: { userId },
       orderBy: { entryDate: "desc" },
       take: 4,
+    }),
+    prisma.cashflowIncome.findMany({
+      where: { userId },
+      orderBy: { occurredAt: "asc" },
     }),
     getExchangeRates(),
   ]);
@@ -59,23 +69,23 @@ export default async function DashboardPage() {
     };
   });
 
-  const totalAssetValue = assetsWithRates.reduce((sum: number, asset: { valueTry: number }) => sum + asset.valueTry, 0);
+  const totalAssetValue = assetsWithRates.reduce((sum: number, asset: AssetWithConversion) => sum + asset.valueTry, 0);
   const liquidAssetValue = assetsWithRates
-    .filter((asset: { isLiquid: any }) => asset.isLiquid)
-    .reduce((sum: number, asset: { valueTry: number }) => sum + asset.valueTry, 0);
+    .filter((asset) => asset.isLiquid)
+    .reduce((sum: number, asset) => sum + asset.valueTry, 0);
 
   const obligationNameMap = new Map(
-    obligationRows.map((obligation: { id: any; name: any }) => [obligation.id, obligation.name]),
+    obligationRows.map((obligation) => [obligation.id, obligation.name]),
   );
 
   const activeObligationRows = obligationRows.filter((obligation: ObligationRow) => !obligation.isDone);
   const activeReminderRows = reminderRows.filter((reminder: ReminderRow) => !reminder.isDone);
 
-const reminderDetails = activeReminderRows.map((reminder: ReminderRow) => ({
-  id: reminder.id,
-  title: reminder.title,
-  description: reminder.description,
-  dueAt: reminder.dueAt.toISOString(),
+  const reminderDetails = activeReminderRows.map((reminder: ReminderRow) => ({
+    id: reminder.id,
+    title: reminder.title,
+    description: reminder.description,
+    dueAt: reminder.dueAt.toISOString(),
     isVeryImportant: reminder.isVeryImportant,
     related: reminder.relatedObligationId
       ? obligationNameMap.get(reminder.relatedObligationId) ?? null
@@ -88,6 +98,16 @@ const importantReminders = reminderDetails.filter(
   (reminder: ReminderDetail) => reminder.isVeryImportant,
 );
 
+  const upcomingIncomes = incomeRows
+    .filter((income) => new Date(income.occurredAt).getTime() > nowMs)
+    .map((income) => ({
+      id: income.id,
+      title: income.title,
+      dueDate: income.occurredAt.toISOString(),
+      daysLeft: calculateDaysLeft(income.occurredAt.toISOString(), nowMs),
+      kind: "INCOME" as const,
+    }));
+
   const upcomingObligations = activeObligationRows
     .filter((obligation: ObligationRow) => {
       if (!obligation.nextDue) {
@@ -96,7 +116,7 @@ const importantReminders = reminderDetails.filter(
       return new Date(obligation.nextDue).getTime() > nowMs;
     })
     .sort(
-      (a: { nextDue: any; }, b: { nextDue: any; }) =>
+      (a, b) =>
         new Date(a.nextDue ?? 0).getTime() - new Date(b.nextDue ?? 0).getTime(),
     );
 
@@ -188,6 +208,7 @@ const remindersForWidgets = importantReminders.slice(0, 3).map((reminder: Remind
         daysLeft: calculateDaysLeft(obligation.nextDue.toISOString(), nowMs),
         kind: "OBLIGATION" as const,
       })),
+    upcomingIncomes,
   );
 
   return (
@@ -219,10 +240,17 @@ const remindersForWidgets = importantReminders.slice(0, 3).map((reminder: Remind
                 )}
                 {horizonBuckets[key].map((item) => {
                   const { label: dayLabel, className: dayClass } = getDayDisplay(item.daysLeft);
+                  const toneStyle =
+                    item.kind === "OBLIGATION"
+                      ? { backgroundColor: "rgba(244, 63, 94, 0.08)" }
+                      : item.kind === "REMINDER"
+                        ? { backgroundColor: "rgba(251, 191, 36, 0.08)" }
+                        : { backgroundColor: "rgba(16, 185, 129, 0.08)" };
                   return (
                     <article
                       key={item.id}
-                      className="rounded-2xl border border-white/10 bg-slate-900/60 p-4"
+                      className="rounded-2xl border border-white/10 p-4"
+                      style={toneStyle}
                     >
                       <div className="flex items-center justify-between gap-3">
                         <div>
@@ -276,6 +304,7 @@ function getDayDisplay(daysLeft: number) {
 function getHorizonBuckets(
   reminderItems: HorizonItem[],
   obligationItems: HorizonItem[],
+  incomeItems: HorizonItem[],
 ): HorizonBuckets {
   const buckets: HorizonBuckets = {
     week: [],
@@ -298,6 +327,7 @@ function getHorizonBuckets(
 
   reminderItems.forEach(assign);
   obligationItems.forEach(assign);
+  incomeItems.forEach(assign);
 
   return buckets;
 }

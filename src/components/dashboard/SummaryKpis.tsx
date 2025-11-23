@@ -185,7 +185,7 @@ export function SummaryKpis({
 
   return (
     <>
-      <section className="rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900 via-slate-900/80 to-slate-900/40 p-4">
+      <section className="rounded-2xl border border-white/10 bg-linear-to-br from-slate-900 via-slate-900/80 to-slate-900/40 p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <span className="rounded-full border border-indigo-300/40 bg-indigo-500/10 px-3 py-1 text-[11px] uppercase tracking-[0.4em] text-indigo-200">
             Önemli özet

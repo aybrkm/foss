@@ -4,48 +4,76 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSupabaseClient } from "@/components/providers/SupabaseProvider";
 
-type Props = {
-  redirectTo: string;
-};
+const MASTER_CODE_HINT = "6 haneli, 3 aynı rakam art arda olamaz (örn: 333 yasak, 112233 serbest)";
 
-export function LoginForm({ redirectTo }: Props) {
+function isValidMasterCode(code: string) {
+  if (!/^\d{6}$/.test(code)) {
+    return false;
+  }
+  for (let i = 0; i < code.length - 2; i += 1) {
+    if (code[i] === code[i + 1] && code[i] === code[i + 2]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+export function RegisterForm() {
   const router = useRouter();
   const supabase = useSupabaseClient();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [masterCode, setMasterCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
+
+    if (!isValidMasterCode(masterCode)) {
+      setError(MASTER_CODE_HINT);
+      return;
+    }
+
     setLoading(true);
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({
+    const { error: signUpError } = await supabase.auth.signUp({
       email,
       password,
     });
 
-    if (signInError) {
-      setError(signInError.message);
+    if (signUpError) {
+      setError(signUpError.message);
       setLoading(false);
       return;
     }
 
-    router.replace(redirectTo);
+    const response = await fetch("/api/master-key", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ masterCode }),
+    });
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      setError(data.error ?? "Master key kaydedilemedi");
+      setLoading(false);
+      return;
+    }
+
+    router.replace("/dashboard");
     router.refresh();
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="w-full max-w-md space-y-4 rounded-3xl border border-white/10 bg-slate-900/70 p-8 shadow-2xl"
-    >
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2 text-center">
         <p className="text-xs uppercase tracking-[0.4em] text-indigo-300">FLOSS</p>
-        <h1 className="text-2xl font-semibold text-white">Giris Yap</h1>
-        <p className="text-sm text-slate-400">Supabase hesabinizla oturum acin.</p>
+        <h1 className="text-2xl font-semibold text-white">Kayıt Ol</h1>
+        <p className="text-sm text-slate-400">
+          Email/parola ile hesap aç, 6 haneli master kodunu belirle.
+        </p>
       </div>
 
       <label className="block text-sm text-slate-300">
@@ -60,7 +88,7 @@ export function LoginForm({ redirectTo }: Props) {
       </label>
 
       <label className="block text-sm text-slate-300">
-        Sifre
+        Parola
         <input
           type="password"
           value={password}
@@ -70,6 +98,21 @@ export function LoginForm({ redirectTo }: Props) {
         />
       </label>
 
+      <label className="block text-sm text-slate-300">
+        Master Kod
+        <input
+          type="password"
+          value={masterCode}
+          onChange={(event) => setMasterCode(event.target.value)}
+          placeholder="123456"
+          className="mt-1 w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+          inputMode="numeric"
+          pattern="\\d{6}"
+          required
+        />
+        <p className="mt-1 text-xs text-slate-400">{MASTER_CODE_HINT}</p>
+      </label>
+
       {error && <p className="text-sm text-rose-400">{error}</p>}
 
       <button
@@ -77,18 +120,8 @@ export function LoginForm({ redirectTo }: Props) {
         disabled={loading}
         className="w-full rounded-xl bg-indigo-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {loading ? "Giris yapiliyor..." : "Giris yap"}
+        {loading ? "Kayıt yapılıyor..." : "Kayıt ol"}
       </button>
-
-      <p className="text-center text-sm text-slate-400">
-        Hesabın yok mu?{" "}
-        <a
-          href="/register"
-          className="text-indigo-300 underline decoration-dotted underline-offset-4"
-        >
-          Kayıt ol
-        </a>
-      </p>
     </form>
   );
 }

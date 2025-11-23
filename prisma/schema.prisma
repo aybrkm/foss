@@ -26,19 +26,40 @@ enum RecurrenceUnit {
   month
 }
 
+enum DigitalAccountCategory {
+  email
+  cloud
+  streaming
+  social
+  dev_tool
+  other
+}
+
+enum SubscriptionPeriod {
+  monthly
+  quarterly
+  semiannual
+  yearly
+  lifetime
+}
+
 model User {
   id        String   @id @default(uuid())
   email     String?  @unique
   name      String?
+  masterKeyHash String?
   createdAt DateTime @default(now())
 
-  assets      Asset[]
-  obligations Obligation[]
-  reminders   Reminder[]
-  journal     JournalEntry[]
-  pageLayouts PageLayout[]
-  workspaceColumns WorkspaceColumn[]
-  workspaceCards   WorkspaceCard[]
+  assets               Asset[]
+  obligations          Obligation[]
+  reminders            Reminder[]
+  journal              JournalEntry[]
+  pageLayouts          PageLayout[]
+  workspaceColumns     WorkspaceColumn[]
+  workspaceCards       WorkspaceCard[]
+  digitalAccounts      DigitalAccount[]
+  digitalSubscriptions DigitalSubscription[]
+  incomes              CashflowIncome[]
 }
 
 model Asset {
@@ -59,27 +80,31 @@ model Asset {
 }
 
 model Obligation {
-  id          String              @id @default(uuid())
-  userId      String?
-  name        String
-  category    ObligationCategory
-  amount      Decimal?            @db.Decimal(18, 2)
-  currency    String?             @db.Char(3)
-  frequency   ObligationFrequency @default(once)
-  isRecurring Boolean             @default(false)
-  isDone      Boolean             @default(false)
+  id                 String              @id @default(uuid())
+  userId             String?
+  name               String
+  category           ObligationCategory
+  amount             Decimal?            @db.Decimal(18, 2)
+  currency           String?             @db.Char(3)
+  frequency          ObligationFrequency @default(once)
+  isRecurring        Boolean             @default(false)
+  isDone             Boolean             @default(false)
   recurrenceInterval Int?
-  recurrenceUnit    RecurrenceUnit?
-  nextDue     DateTime?           @db.Date
-  endDate     DateTime?           @db.Date
-  notes       String?
-  isActive    Boolean             @default(true)
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @default(now()) @updatedAt
+  recurrenceUnit     RecurrenceUnit?
+  nextDue            DateTime?           @db.Date
+  endDate            DateTime?           @db.Date
+  notes              String?
+  isActive           Boolean             @default(true)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @default(now()) @updatedAt
 
-  user      User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  reminders Reminder[]     @relation("ReminderObligation")
-  journal   JournalEntry[]
+  user             User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  digitalAccount   DigitalAccount? @relation(fields: [digitalAccountId], references: [id], onDelete: Cascade)
+  digitalAccountId String?
+  reminders        Reminder[]      @relation("ReminderObligation")
+  journal          JournalEntry[]
+
+  @@index([digitalAccountId])
 }
 
 model Reminder {
@@ -151,7 +176,7 @@ model WorkspaceCard {
   columnId  String
   userId    String?
   title     String
-  notes     String?   @db.Text
+  notes     String?  @db.Text
   position  Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
@@ -160,4 +185,54 @@ model WorkspaceCard {
   user   User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([columnId, position])
+}
+
+model DigitalAccount {
+  id                  String                  @id @default(uuid())
+  userId              String?
+  providerName        String
+  accountIdentifier   String
+  loginUrl            String?
+  category            DigitalAccountCategory?
+  isPremium           Boolean                 @default(false)
+  notes               String?
+  passwordHint        String?
+  passwordLastChanged DateTime?               @db.Date
+  encryptedPassword   String?                 @db.Text
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime                @default(now()) @updatedAt
+
+  user         User?                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscription DigitalSubscription?
+  obligations  Obligation[]
+}
+
+model DigitalSubscription {
+  id               String             @id @default(uuid())
+  digitalAccountId String             @unique
+  userId           String?
+  amount           Decimal            @db.Decimal(18, 2)
+  currency         String             @db.Char(3)
+  period           SubscriptionPeriod
+  firstDue         DateTime           @db.Date
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @default(now()) @updatedAt
+
+  account DigitalAccount @relation(fields: [digitalAccountId], references: [id], onDelete: Cascade)
+  user    User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model CashflowIncome {
+  id         String   @id @default(uuid())
+  userId     String?
+  title      String
+  category   String
+  amount     Decimal  @db.Decimal(18, 2)
+  currency   String   @default("TRY") @db.Char(3)
+  occurredAt DateTime @db.Date
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

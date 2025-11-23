@@ -19,6 +19,8 @@ type ObligationTableRow = {
   isActive: boolean;
   isDone: boolean;
   daysLeft: number | null;
+  digitalAccountName?: string | null;
+  digitalAccountIdentifier?: string | null;
 };
 
 type Props = {
@@ -80,6 +82,12 @@ export function ObligationsTable({
                       <p className={`text-xs ${obligation.isDone ? "text-slate-500 line-through" : "text-slate-400"}`}>
                         {obligation.isActive ? "Aktif" : "Pasif"}
                       </p>
+                      {obligation.digitalAccountName && (
+                        <p className="text-[11px] uppercase tracking-[0.25em] text-fuchsia-200">
+                          Dijital: {obligation.digitalAccountName}
+                          {obligation.digitalAccountIdentifier ? ` (${obligation.digitalAccountIdentifier})` : ""}
+                        </p>
+                      )}
                     </td>
                     <td className={`px-5 py-4 capitalize text-slate-300 ${textClass}`}>{obligation.category}</td>
                     <td className={`px-5 py-4 text-slate-300 ${textClass}`}>{formatRecurrence(obligation)}</td>

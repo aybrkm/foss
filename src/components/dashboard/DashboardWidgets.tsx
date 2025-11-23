@@ -209,7 +209,7 @@ export function DashboardWidgets({
   };
 
   return (
-    <div className="grid gap-6 xl:grid-cols-3 xl:auto-rows-[minmax(0,1fr)]">
+    <div className="grid gap-6 xl:grid-cols-3 xl:auto-rows-fr">
       {order.map((key) => (
         <article
           key={key}

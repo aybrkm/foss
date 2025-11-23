@@ -1,9 +1,11 @@
 import { revalidatePath } from "next/cache";
 import prisma from "@/lib/prisma";
 import { JournalEntryCard } from "@/components/journal/JournalEntryCard";
+import { requireUserId } from "@/lib/auth";
 
 async function createEntry(formData: FormData) {
   "use server";
+  const userId = await requireUserId();
   const title = formData.get("title")?.toString().trim() || null;
   const body = formData.get("body")?.toString().trim();
   const entryDate = formData.get("entryDate")?.toString();
@@ -17,6 +19,7 @@ async function createEntry(formData: FormData) {
       title,
       body,
       entryDate: entryDate ? new Date(entryDate) : undefined,
+      userId,
     },
   });
 
@@ -25,6 +28,7 @@ async function createEntry(formData: FormData) {
 
 async function updateEntry(formData: FormData) {
   "use server";
+  const userId = await requireUserId();
   const entryId = formData.get("entryId")?.toString();
   if (!entryId) {
     throw new Error("Gunluk kaydi bulunamadi");
@@ -38,8 +42,8 @@ async function updateEntry(formData: FormData) {
     throw new Error("Gunluk metni gerekli");
   }
 
-  await prisma.journalEntry.update({
-    where: { id: entryId },
+  await prisma.journalEntry.updateMany({
+    where: { id: entryId, userId },
     data: {
       title,
       body,
@@ -52,17 +56,20 @@ async function updateEntry(formData: FormData) {
 
 async function deleteEntry(formData: FormData) {
   "use server";
+  const userId = await requireUserId();
   const entryId = formData.get("entryId")?.toString();
   if (!entryId) {
     throw new Error("Silinecek gunluk bulunamadi");
   }
 
-  await prisma.journalEntry.delete({ where: { id: entryId } });
+  await prisma.journalEntry.deleteMany({ where: { id: entryId, userId } });
   revalidatePath("/journal");
 }
 
 export default async function JournalPage() {
+  const userId = await requireUserId();
   const entries = await prisma.journalEntry.findMany({
+    where: { userId },
     orderBy: { entryDate: "desc" },
   });
 

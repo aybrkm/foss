@@ -1,81 +1,144 @@
-import { IntegrationInfoCard } from "@/components/common/IntegrationInfoCard";
-import type { Integration } from "@/components/common/IntegrationInfoCard";
+import { revalidatePath } from "next/cache";
+import prisma from "@/lib/prisma";
+import { convertToTry, getExchangeRates } from "@/lib/exchange";
+import { formatCurrency } from "@/lib/format";
+import { IncomeForm } from "@/components/cashflow/IncomeForm";
+import { IncomeTable } from "@/components/cashflow/IncomeTable";
+import { requireUserId } from "@/lib/auth";
 
-const placeholderItems = [
-  {
-    title: "Aylık girişler",
-    description: "Maaş, freelance ve diğer tekrar eden gelir kalemleri burada görünecek.",
-  },
-  {
-    title: "Aylık çıkışlar",
-    description: "Faturalar, hedefler ve otomatik ödemeler bu bölümde toplanacak.",
-  },
-  {
-    title: "Öngörülen bakiye",
-    description: "Gelir/ gider planı baz alınarak ileri tarihli nakit durumu hesaplanacak.",
-  },
-];
+const currencyOptions = ["TRY", "USD", "AED", "EUR"] as const;
+const incomeCategories = ["maas", "freelance", "yatirim", "kira", "diger"] as const;
 
-const cashflowIntegrations: Integration[] = [
-  {
-    region: "Türkiye",
-    items: [
-      { name: "Akbank API Portalı", description: "Hesap hareketlerini günlük çekerek tahsilat/ödeme akışını izleme.", product: "business" },
-      { name: "Paraşüt Cashflow", description: "Gelir-gider projeksiyonlarını import ederek tahmin üretme.", product: "both" },
-      { name: "İşbank MaxiCash", description: "KOBİ hesabı bakiyelerini otomatik güncelleme.", product: "business" },
-      { name: "Garanti BBVA Connect", description: "Nakit pozisyonlarını kur bazında raporlamak.", product: "business" },
-      { name: "QNB Finansbank Kurumsal", description: "POS ve tahsilat akışını günlük görmek.", product: "business" },
-      { name: "ING Türkiye API", description: "USD/EUR hesap hareketlerini Workspace'e aktarmak.", product: "business" },
-      { name: "VakifBank V-Flow", description: "Çek/Senet vade planlarını izlemek.", product: "business" },
-      { name: "DenizBank Treasury", description: "FX forward ve faiz ödemelerini planlamak.", product: "business" },
-      { name: "Turkcell Paycell Business", description: "Tahsilat kanalından gelen tutarları nakit tablosuna eklemek.", product: "business" },
-      { name: "Papara İş", description: "Cüzdan hareketlerini kısa vadeli nakde yansıtmak.", product: "personal" },
-    ],
-  },
-  {
-    region: "ABD",
-    items: [
-      { name: "Brex Treasury", description: "Kurumsal kart ve banka bakiyelerini tek tablodan izleme.", product: "business" },
-      { name: "Xero Cashflow", description: "USD bazlı tahsilat planlarını nakit görünümüne senkronize etme.", product: "business" },
-      { name: "Ramp", description: "Kart harcamalarını gerçek zamanlı nakit çıkışına bağlama.", product: "business" },
-      { name: "Mercury Treasury", description: "Startup nakit pozisyonunu otomatik raporlama.", product: "business" },
-      { name: "QuickBooks Cash", description: "Gelir/gider tahminlerini Workspace içine almak.", product: "personal" },
-      { name: "Wise Business API", description: "Çoklu para birimi bakiyelerini tek yerde göstermek.", product: "both" },
-      { name: "BlueVine", description: "Kredi hattı kullanımını nakit tahminine eklemek.", product: "business" },
-      { name: "Oracle NetSuite Cash360", description: "Kurumsal nakit forecastını içeri aktarmak.", product: "business" },
-      { name: "SAP Concur", description: "Masraf formlarını otomatik nakit çıkışına dönüştürme.", product: "business" },
-      { name: "Stripe Treasury", description: "Platform ödemelerini günlük yönetime taşımak.", product: "business" },
-    ],
-  },
-];
+async function createIncome(formData: FormData) {
+  "use server";
+  const userId = await requireUserId();
+  const title = formData.get("title")?.toString().trim();
+  const category = formData.get("category")?.toString().trim();
+  const occurredAtRaw = formData.get("occurredAt")?.toString();
+  const amountRaw = formData.get("amount")?.toString();
+  const currency = formData.get("currency")?.toString() || currencyOptions[0];
+  const notes = formData.get("notes")?.toString().trim() || null;
 
-export default function CashflowPage() {
+  const amount = amountRaw ? Number(amountRaw) : NaN;
+  const occurredAt = occurredAtRaw ? new Date(occurredAtRaw) : null;
+
+  if (!title || !category || !occurredAt || Number.isNaN(amount) || amount <= 0) {
+    throw new Error("Gelir için başlık, kategori, tarih ve tutar gerekli");
+  }
+
+  await prisma.cashflowIncome.create({
+    data: {
+      title,
+      category,
+      occurredAt,
+      amount,
+      currency,
+      notes,
+      userId,
+    },
+  });
+
+  revalidatePath("/cashflow");
+  revalidatePath("/dashboard");
+}
+
+async function deleteIncome(formData: FormData) {
+  "use server";
+  const userId = await requireUserId();
+  const id = formData.get("id")?.toString();
+  if (!id) {
+    throw new Error("Gelir bulunamadı");
+  }
+  await prisma.cashflowIncome.deleteMany({
+    where: { id, userId },
+  });
+
+  revalidatePath("/cashflow");
+  revalidatePath("/dashboard");
+}
+
+export default async function CashflowPage() {
+  const userId = await requireUserId();
+  const [incomes, rates] = await Promise.all([
+    prisma.cashflowIncome.findMany({
+      where: { userId },
+      orderBy: { occurredAt: "desc" },
+    }),
+    getExchangeRates(),
+  ]);
+
+  const enriched = incomes.map((income) => {
+    const amountNumber = Number(income.amount);
+    return {
+      ...income,
+      amountNumber,
+      amountTry: convertToTry(amountNumber, income.currency, rates),
+    };
+  });
+
+  const now = new Date();
+  const nowMs = now.getTime();
+  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1).getTime() - 1;
+  const startOfYear = new Date(now.getFullYear(), 0, 1).getTime();
+  const endOfYear = new Date(now.getFullYear() + 1, 0, 1).getTime() - 1;
+
+  const incomeByWindow = (predicate: (time: number) => boolean) =>
+    enriched
+      .filter((income) => predicate(new Date(income.occurredAt).getTime()))
+      .reduce((sum, income) => sum + income.amountTry, 0);
+
+  const monthExpected = incomeByWindow((time) => time >= nowMs && time <= endOfMonth);
+  const yearToDateRealized = incomeByWindow((time) => time >= startOfYear && time <= nowMs);
+  const yearRemainingExpected = incomeByWindow((time) => time > nowMs && time <= endOfYear);
+
+  const highlights = [
+    { title: "Bu ay beklenen gelir", value: formatCurrency(monthExpected, "TRY"), hint: "ay sonuna kadar plan" },
+    { title: "Yılbaşından bugüne", value: formatCurrency(yearToDateRealized, "TRY"), hint: "gerçekleşen toplam" },
+    { title: "Yıl sonuna kadar beklenen", value: formatCurrency(yearRemainingExpected, "TRY"), hint: "planlanan giriş" },
+  ];
+
+  const tableRows = enriched.map((income) => ({
+    id: income.id,
+    title: income.title,
+    category: income.category,
+    amount: income.amountNumber,
+    currency: income.currency,
+    occurredAt: income.occurredAt.toISOString(),
+    notes: income.notes,
+  }));
+
   return (
     <div className="space-y-8">
-      <IntegrationInfoCard
-        title="Nakit akışı entegrasyonları"
-        description="Banka ve muhasebe servisleriyle veri akışını otomatikleştirerek planı güncel tutma."
-        integrations={cashflowIntegrations}
-      />
-      <div className="rounded-3xl border border-emerald-400/30 bg-emerald-500/10 p-6">
-        <p className="text-xs uppercase tracking-[0.4em] text-emerald-300">NAKİT AKIŞI</p>
-        <h1 className="mt-2 text-3xl font-semibold text-white">Nakit akışı görünümü</h1>
-        <p className="mt-1 text-sm text-emerald-100/80">
-          Yakında, tüm gelir ve gider projeksiyonların bu sayfadan yönetilecek.
-        </p>
-      </div>
-
-      <section className="grid gap-4 md:grid-cols-3">
-        {placeholderItems.map((item) => (
-          <article
-            key={item.title}
-            className="rounded-2xl border border-white/10 bg-slate-900/60 p-5 text-sm text-slate-200"
-          >
-            <p className="text-xs uppercase tracking-[0.3em] text-emerald-200">{item.title}</p>
-            <p className="mt-2 text-slate-100">{item.description}</p>
-          </article>
-        ))}
+      <section className="space-y-4">
+        <div className="rounded-3xl border border-emerald-400/50 bg-emerald-500/10 p-6">
+          <p className="text-xs uppercase tracking-[0.4em] text-emerald-300">NAKİT AKIŞI</p>
+          <h1 className="mt-2 text-3xl font-semibold text-white">Gelir akışını yönet</h1>
+          <p className="mt-1 text-sm text-emerald-100/80">
+            Bu ekranda sadece gelir kalemlerini topluyoruz. Giderler Yükümlülükler sekmesinde otomatik ödemelerle takip ediliyor.
+          </p>
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          {highlights.map((item) => (
+            <article
+              key={item.title}
+              className="rounded-2xl border border-white/10 bg-slate-900/60 p-5 text-sm text-slate-200"
+            >
+              <p className="text-xs uppercase tracking-[0.3em] text-emerald-200">{item.title}</p>
+              <p className="mt-2 text-2xl font-semibold text-white">{item.value}</p>
+              <p className="text-xs text-slate-400">{item.hint}</p>
+            </article>
+          ))}
+        </div>
       </section>
+
+      <IncomeForm
+        action={createIncome}
+        categories={incomeCategories}
+        currencies={currencyOptions}
+        submitLabel="Gelir ekle"
+      />
+
+      <IncomeTable incomes={tableRows} deleteAction={deleteIncome} />
     </div>
   );
 }

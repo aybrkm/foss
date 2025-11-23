@@ -8,6 +8,9 @@ async function main() {
     prisma.journalEntry.deleteMany(),
     prisma.reminder.deleteMany(),
     prisma.obligation.deleteMany(),
+    prisma.digitalSubscription.deleteMany(),
+    prisma.digitalAccount.deleteMany(),
+    prisma.cashflowIncome.deleteMany(),
     prisma.asset.deleteMany(),
     prisma.user.deleteMany(),
   ]);

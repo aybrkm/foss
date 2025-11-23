@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import prisma from "@/lib/prisma";
+import { requireUserId } from "@/lib/auth";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -22,9 +23,10 @@ type Props = {
 
 export default async function EditAssetPage({ params }: Props) {
   const { id } = await params;
+  const userId = await requireUserId();
   const asset =
-    (await prisma.asset.findUnique({
-      where: { id },
+    (await prisma.asset.findFirst({
+      where: { id, userId },
     })) ?? notFound();
 
   const acquisitionDate = asset.acquisitionDate
@@ -33,6 +35,10 @@ export default async function EditAssetPage({ params }: Props) {
 
   async function updateAsset(formData: FormData) {
     "use server";
+    const userId = await requireUserId();
+    if (asset.userId !== userId) {
+      throw new Error("Bu kaydı güncelleme yetkin yok");
+    }
     const name = formData.get("name")?.toString().trim();
     const assetType = formData.get("assetType")?.toString().trim();
     const currency = formData.get("currency")?.toString() || "TRY";

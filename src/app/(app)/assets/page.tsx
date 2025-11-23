@@ -6,6 +6,7 @@ import { formatCurrency } from "@/lib/format";
 import { AssetForm } from "@/components/forms/AssetForm";
 import { IntegrationInfoCard } from "@/components/common/IntegrationInfoCard";
 import type { Integration } from "@/components/common/IntegrationInfoCard";
+import { requireUserId } from "@/lib/auth";
 
 const currencyOptions = ["TRY", "USD", "AED", "EUR"] as const;
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -21,6 +22,7 @@ const adjustDateInput = (value?: string | null) => {
 
 async function createAsset(formData: FormData) {
   "use server";
+  const userId = await requireUserId();
   const name = formData.get("name")?.toString().trim();
   const assetType = formData.get("assetType")?.toString().trim();
   const currency = formData.get("currency")?.toString() || "TRY";
@@ -42,6 +44,7 @@ async function createAsset(formData: FormData) {
       currency,
       notes,
       acquisitionDate: adjustDateInput(acquisitionDateRaw),
+      userId,
     },
   });
 
@@ -83,7 +86,9 @@ const assetIntegrations: Integration[] = [
 ];
 
 export default async function AssetsPage() {
+  const userId = await requireUserId();
   const assets = await prisma.asset.findMany({
+    where: { userId },
     orderBy: { updatedAt: "desc" },
   });
   type AssetRow = typeof assets[number];

@@ -3,8 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import prisma from "@/lib/prisma";
 import { computeNextDue } from "@/lib/recurrence";
-
-const DAY_MS = 24 * 60 * 60 * 1000;
+import { requireUserId } from "@/lib/auth";
 
 const adjustDateInput = (value?: string | null) => {
   if (!value) {
@@ -23,15 +22,20 @@ type Props = {
 
 export default async function EditObligationPage({ params }: Props) {
   const { id } = await params;
+  const userId = await requireUserId();
   const obligation =
-    (await prisma.obligation.findUnique({
-      where: { id },
+    (await prisma.obligation.findFirst({
+      where: { id, userId },
     })) ?? notFound();
 
   const nextDueValue = obligation.nextDue ? obligation.nextDue.toISOString().split("T")[0] : "";
 
   async function updateObligation(formData: FormData) {
     "use server";
+    const userId = await requireUserId();
+    if (obligation.userId !== userId) {
+      throw new Error("Bu kaydı güncelleme yetkin yok");
+    }
     const name = formData.get("name")?.toString().trim();
     const category = formData.get("category")?.toString() as (typeof categories)[number] | undefined;
     const amountRaw = formData.get("amount")?.toString();

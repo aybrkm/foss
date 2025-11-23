@@ -7,6 +7,7 @@ import { ObligationForm } from "@/components/forms/ObligationForm";
 import { ObligationsTable } from "@/components/obligations/ObligationsTable";
 import { IntegrationInfoCard } from "@/components/common/IntegrationInfoCard";
 import type { Integration } from "@/components/common/IntegrationInfoCard";
+import { requireUserId } from "@/lib/auth";
 
 const categories = ["payment", "legal", "other"] as const;
 const recurrenceUnits = ["week", "month"] as const;
@@ -76,6 +77,7 @@ function calculateNextRecurringDate(obligation: {
 
 async function createObligation(formData: FormData) {
   "use server";
+  const userId = await requireUserId();
   const name = formData.get("name")?.toString().trim();
   const category = formData.get("category")?.toString() as (typeof categories)[number] | undefined;
   const amountRaw = formData.get("amount")?.toString();
@@ -131,6 +133,7 @@ async function createObligation(formData: FormData) {
       recurrenceInterval: requiresInterval ? recurrenceInterval : null,
       isActive: true,
       notes,
+      userId,
     },
   });
 
@@ -140,12 +143,13 @@ async function createObligation(formData: FormData) {
 
 async function markObligationDone(formData: FormData) {
   "use server";
+  const userId = await requireUserId();
   const id = formData.get("id")?.toString();
   if (!id) {
     throw new Error("Yükümlülük bulunamadı");
   }
-  const obligation = await prisma.obligation.findUnique({
-    where: { id },
+  const obligation = await prisma.obligation.findFirst({
+    where: { id, userId },
   });
   if (!obligation) {
     throw new Error("Yükümlülük bulunamadı");
@@ -178,6 +182,7 @@ async function markObligationDone(formData: FormData) {
           notes: obligation.notes,
           isActive: obligation.isActive,
           userId: obligation.userId,
+          digitalAccountId: obligation.digitalAccountId,
         },
       }),
     ]);
@@ -193,19 +198,27 @@ async function markObligationDone(formData: FormData) {
 
 async function deleteObligation(formData: FormData) {
   "use server";
+  const userId = await requireUserId();
   const id = formData.get("id")?.toString();
   if (!id) {
     throw new Error("Yükümlülük bulunamadı");
   }
-  await prisma.obligation.delete({
-    where: { id },
+  await prisma.obligation.deleteMany({
+    where: { id, userId },
   });
   revalidatePath("/obligations");
   revalidatePath("/dashboard");
 }
 
 export default async function ObligationsPage() {
+  const userId = await requireUserId();
   const obligations = await prisma.obligation.findMany({
+    where: { userId },
+    include: {
+      digitalAccount: {
+        select: { providerName: true, accountIdentifier: true },
+      },
+    },
     orderBy: [
       { isDone: "asc" },
       { nextDue: "asc" },
@@ -222,7 +235,7 @@ export default async function ObligationsPage() {
       amountTry: amount ? convertToTry(amount, obligation.currency, rates) : null,
     };
   });
-  const nowMs = Date.now();
+  const nowMs = new Date().getTime();
   const upcomingWindowMs = nowMs + 30 * DAY_MS;
   const activeCount = enrichedObligations.filter((obligation) => !obligation.isDone).length;
   const dueSoonCount = enrichedObligations.filter((obligation) => {
@@ -262,6 +275,8 @@ export default async function ObligationsPage() {
     isActive: obligation.isActive,
     isDone: obligation.isDone,
     daysLeft: obligation.nextDue ? Math.ceil((new Date(obligation.nextDue).getTime() - nowMs) / DAY_MS) : null,
+    digitalAccountName: obligation.digitalAccount?.providerName ?? null,
+    digitalAccountIdentifier: obligation.digitalAccount?.accountIdentifier ?? null,
   }));
   const obligationHighlights = [
     {

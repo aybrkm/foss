@@ -18,7 +18,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
       <header className="border-b border-white/10 bg-slate-950/60">
-        <div className="mx-auto flex w-full max-w-[96rem] flex-col items-center gap-4 px-8 py-6 text-white xl:px-12">
+        <div className="mx-auto flex w-full max-w-384 flex-col items-center gap-4 px-8 py-6 text-white xl:px-12">
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Link
               href="/dashboard"
@@ -31,7 +31,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
           </div>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-[96rem] px-8 py-12 pb-24 lg:px-10">
+      <main className="mx-auto w-full max-w-384 px-8 py-12 pb-24 lg:px-10">
         {children}
       </main>
     </div>

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -374,7 +375,7 @@ export function WorkspaceBoard({ initialColumns }: { initialColumns: ColumnData[
 
   return (
     <div className="space-y-6">
-      <section className="rounded-3xl border border-white/10 bg-gradient-to-br from-indigo-600/15 via-slate-950 to-slate-950 p-6 text-white shadow-[0_10px_40px_rgba(15,23,42,0.35)]">
+      <section className="rounded-3xl border border-white/10 bg-linear-to-br from-indigo-600/15 via-slate-950 to-slate-950 p-6 text-white shadow-[0_10px_40px_rgba(15,23,42,0.35)]">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.5em] text-fuchsia-200">Workspace</p>
@@ -431,7 +432,7 @@ export function WorkspaceBoard({ initialColumns }: { initialColumns: ColumnData[
               gridColumn: `span ${Math.min(column.width, 4)} / span ${Math.min(column.width, 4)}`,
               opacity: draggingColumnId === column.id ? 0.5 : 1,
             }}
-            className={`relative flex min-h-[320px] flex-col gap-4 rounded-3xl border border-slate-800 bg-slate-950/60 p-5 transition ${
+            className={`relative flex min-h-80 flex-col gap-4 rounded-3xl border border-slate-800 bg-slate-950/60 p-5 transition ${
               dragOverColumnId === column.id && draggingColumnId ? "ring-2 ring-fuchsia-300" : ""
             }`}
           >

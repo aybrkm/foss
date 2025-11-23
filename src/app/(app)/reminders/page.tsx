@@ -2,6 +2,7 @@
 import prisma from "@/lib/prisma";
 import { ObligationPicker } from "@/components/forms/ObligationPicker";
 import { RemindersTable } from "@/components/reminders/RemindersTable";
+import { requireUserId } from "@/lib/auth";
 
 const DAY_MS = 1000 * 60 * 60 * 24;
 
@@ -18,6 +19,7 @@ type ReminderCard = {
 
 async function createReminder(formData: FormData) {
   "use server";
+  const userId = await requireUserId();
   const title = formData.get("title")?.toString().trim();
   const dueAt = formData.get("dueAt")?.toString();
   const description = formData.get("description")?.toString().trim() || null;
@@ -35,6 +37,7 @@ async function createReminder(formData: FormData) {
       description,
       relatedObligationId: relatedObligationId || null,
       isVeryImportant,
+      userId,
     },
   });
 
@@ -44,12 +47,13 @@ async function createReminder(formData: FormData) {
 
 async function markReminderDone(formData: FormData) {
   "use server";
+  const userId = await requireUserId();
   const id = formData.get("id")?.toString();
   if (!id) {
     throw new Error("Hatırlatma bulunamadı");
   }
-  await prisma.reminder.update({
-    where: { id },
+  await prisma.reminder.updateMany({
+    where: { id, userId },
     data: { isDone: true },
   });
 
@@ -59,13 +63,14 @@ async function markReminderDone(formData: FormData) {
 
 async function deleteReminder(formData: FormData) {
   "use server";
+  const userId = await requireUserId();
   const id = formData.get("id")?.toString();
   if (!id) {
     throw new Error("Hatırlatma bulunamadı");
   }
 
-  await prisma.reminder.delete({
-    where: { id },
+  await prisma.reminder.deleteMany({
+    where: { id, userId },
   });
 
   revalidatePath("/reminders");
@@ -73,9 +78,11 @@ async function deleteReminder(formData: FormData) {
 }
 
 export default async function RemindersPage() {
+  const userId = await requireUserId();
   const [reminders, obligations] = await Promise.all([
-    prisma.reminder.findMany({ orderBy: { dueAt: "asc" } }),
+    prisma.reminder.findMany({ where: { userId }, orderBy: { dueAt: "asc" } }),
     prisma.obligation.findMany({
+      where: { userId },
       select: {
         id: true,
         name: true,
@@ -210,5 +217,4 @@ export default async function RemindersPage() {
     </div>
   );
 }
-
 
