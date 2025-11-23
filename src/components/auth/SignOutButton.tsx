@@ -2,7 +2,7 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { useSupabaseClient } from "@supabase/auth-helpers-react";
+import { useSupabaseClient } from "@/components/providers/SupabaseProvider";
 
 export function SignOutButton() {
   const [pending, startTransition] = useTransition();

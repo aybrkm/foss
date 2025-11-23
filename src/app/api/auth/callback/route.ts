@@ -14,3 +14,41 @@ export async function GET(request: Request) {
 
   return NextResponse.redirect(new URL(next, request.url));
 }
+
+export async function POST(request: Request) {
+  const supabase = await createRouteHandlerSupabaseClient();
+  const { event, session } = await request.json();
+
+  if (!event) {
+    return NextResponse.json({ error: "Auth event missing" }, { status: 400 });
+  }
+
+  if (event === "SIGNED_OUT" || event === "USER_DELETED") {
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true });
+  }
+
+  if (event !== "INITIAL_SESSION" && event !== "SIGNED_IN" && event !== "TOKEN_REFRESHED") {
+    return NextResponse.json({ success: true });
+  }
+
+  const access_token = session?.access_token;
+  const refresh_token = session?.refresh_token;
+
+  if (!access_token || !refresh_token) {
+    return NextResponse.json({ success: true });
+  }
+
+  const { error } = await supabase.auth.setSession({ access_token, refresh_token });
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ success: true });
+}
