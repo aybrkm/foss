@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 const stats = [
-  { label: "Portföy görünümü", value: "₺2.4M" },
+  { label: "Net varlık", value: "₺2.4M" },
   { label: "Yaklaşan ödeme", value: "₺18.450 • 3g" },
   { label: "Şifreli hesap", value: "7 parola" },
 ];
@@ -9,7 +9,7 @@ const stats = [
 const pillars = [
   {
     title: "Kişisel CFO",
-    body: "Varlık, borç, gelir ve aboneliklerini aynı ekranda topla; net varlık ve nakit akışı hep güncel.",
+    body: "Net varlık, borç ve nakit akışını tek ekranda yönet; taksit, kredi, abonelik ve gelirler hep güncel.",
   },
   {
     title: "Şifreli kasa",
@@ -17,7 +17,7 @@ const pillars = [
   },
   {
     title: "Akıllı hatırlatma",
-    body: "Yaklaşan ödemeleri, gelirleri ve kritik notları takvime göre öne çıkarır; gecikme riskini azaltır.",
+    body: "Yaklaşan ödemeler, gelirler ve nakit hareketleri vadesine göre öne çıkar; gecikme riskini azaltır.",
   },
   {
     title: "Entegrasyon + otomasyon",
@@ -27,8 +27,8 @@ const pillars = [
 
 const steps = [
   "Kayıt ol ve master kodunu belirle.",
-  "Varlık, borç ve dijital hesaplarını ekle.",
-  "Vade takvimini ve uyarıları yönetmeye başla.",
+  "Varlık, borç, gelir ve dijital hesaplarını ekle.",
+  "Vade takvimini, nakit akışını ve uyarıları yönetmeye başla.",
 ];
 
 const integrations = [
@@ -65,14 +65,13 @@ export default function Home() {
 
         <div className="mx-auto flex max-w-6xl flex-col gap-10 px-6 pb-16 lg:flex-row lg:items-center">
           <div className="space-y-6 lg:max-w-xl">
-            <p className="text-xs uppercase tracking-[0.35em] text-indigo-200">Kişisel finans OS</p>
+            <p className="text-xs uppercase tracking-[0.35em] text-indigo-200">Finans OS</p>
             <h1 className="text-4xl font-semibold leading-tight text-white md:text-5xl">
               Kişisel CFO: varlık, borç, abonelik ve parolalarını tek panelden yönet.
             </h1>
             <p className="text-lg text-slate-300">
-              Varlıklarını, yükümlülüklerini ve dijital hesap parolalarını topla; master kod ile şifrele,
-              vadeleri otomatik izle, gecikme riskini düşür. Hem bireysel hem kurumsal finansını aynı OS
-              üzerinden yönet.
+              Net varlık, borç, abonelik ve gelirlerini tek panelde topla; master kodla şifrele. Vade ve kur bilgisi
+              otomatik çekilsin, nakit akışın her sabah güncel olsun. Life OS ekleri ikincil; ana odak finans sağlığı.
             </p>
             <div className="flex flex-wrap gap-3">
               <Link
@@ -145,6 +144,30 @@ export default function Home() {
               <p className="mt-2 text-sm text-slate-200">{feature.body}</p>
             </article>
           ))}
+        </section>
+
+        <section className="grid gap-4 lg:grid-cols-3">
+          <article className="rounded-3xl border border-white/10 bg-[#0b1027] p-6 shadow-lg shadow-black/30">
+            <p className="text-xs uppercase tracking-[0.3em] text-indigo-200">Finans odaklı</p>
+            <h2 className="mt-2 text-2xl font-semibold text-white">Net varlık + nakit akışı</h2>
+            <p className="mt-2 text-sm text-slate-300">
+              Varlık/borç dengesini, tahsilat ve ödeme akışını aynı yerde gör. TRY/USD/AED dönüşümleri, vade takvimi ve hatırlatmalar otomatik.
+            </p>
+          </article>
+          <article className="rounded-3xl border border-white/10 bg-slate-900/70 p-6 shadow-lg shadow-black/30">
+            <p className="text-xs uppercase tracking-[0.3em] text-fuchsia-200">Şifreli kayıtlar</p>
+            <h2 className="mt-2 text-2xl font-semibold text-white">Master kodla güvenlik</h2>
+            <p className="mt-2 text-sm text-slate-300">
+              Dijital hesap parolaları master kodla şifrelenir; sadece sen açarsın. Ekip içi paylaşımda dahi çözmek için onay gerekir.
+            </p>
+          </article>
+          <article className="rounded-3xl border border-white/10 bg-slate-900/70 p-6 shadow-lg shadow-black/30">
+            <p className="text-xs uppercase tracking-[0.3em] text-emerald-200">Life OS ikinci planda</p>
+            <h2 className="mt-2 text-2xl font-semibold text-white">Not, görev, entegrasyon ekleri</h2>
+            <p className="mt-2 text-sm text-slate-300">
+              Finans ana kadroda; günlük/görev eklentileri opsiyonel. Not ve ticket entegrasyonları, finansal timeline’ı desteklemek için var.
+            </p>
+          </article>
         </section>
 
         <section className="rounded-3xl border border-white/10 bg-slate-900/70 p-8 shadow-lg shadow-black/20">
