@@ -66,6 +66,25 @@ export async function POST(request: Request) {
         name: user.user_metadata?.name ?? null,
       },
     });
+  } else {
+    // Fallback: oturum kurulduktan sonra Supabase üzerinden kullanıcıyı çekip ekle
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (user?.id) {
+      await prisma.user.upsert({
+        where: { id: user.id },
+        create: {
+          id: user.id,
+          email: user.email,
+          name: user.user_metadata?.name ?? null,
+        },
+        update: {
+          email: user.email,
+          name: user.user_metadata?.name ?? null,
+        },
+      });
+    }
   }
 
   return NextResponse.json({ success: true });
