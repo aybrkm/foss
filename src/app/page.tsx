@@ -38,6 +38,67 @@ const integrations = [
   "Kişisel bulut ve parola yöneticileri",
 ];
 
+const benefits = [
+  {
+    title: "Tek finansal gerçeklik",
+    body: "Bankalar, brokerler, abonelikler, gelir ve şirket bilançosu tek havuzda birleşir.",
+  },
+  {
+    title: "Zaman kazandıran otomasyon",
+    body: "Tekrar eden ödemeler, şirket faturaları, abonelikler ve yatırım pozisyonları kendiliğinden güncellenir.",
+  },
+  {
+    title: "Kurumsal + bireysel tek panel",
+    body: "Patronlar, girişimciler ve profesyoneller için; kişisel ve şirket katmanlarını aynı ekranda yönet.",
+  },
+  {
+    title: "Akıllı içgörüler",
+    body: "Net worth analizi, nakit akışı tahmini, yaklaşan yükümlülük uyarıları ve yatırım performansı.",
+  },
+];
+
+const integrationLogos = [
+  "Plaid",
+  "Codat",
+  "IBKR",
+  "Açık Bankacılık TR",
+  "Logo/Mikro",
+  "Stripe Billing",
+  "QuickBooks",
+  "Xero",
+];
+
+const tourSections = [
+  { title: "Dashboard", body: "Toplam varlık, borç, net worth trendi, yaklaşan ödemeler, gelir kutuları." },
+  { title: "Varlıklar", body: "Banka, yatırım, emlak, kripto ve şirket varlıkları tek listede." },
+  { title: "Yükümlülükler", body: "Krediler, faturalar, vergiler, dijital abonelik ödemeleri; vade ve kurla birlikte." },
+  { title: "Dijital Hesaplar", body: "Platform giriş bilgileri + otomatik abonelik yönetimi, master kodla şifreli." },
+  { title: "Nakit Akışı", body: "Gelir yönetimi, geçmiş + geleceğe dönük tahmin ve uyarılar." },
+  { title: "Yatırımlar", body: "Pozisyonlar, performans, dağılım ve para birimi bazlı görünüm." },
+  { title: "Workspace", body: "Görevler, notlar, hatırlatmalar; finansal timeline’ı destekleyen ek katman." },
+];
+
+const testimonials = [
+  {
+    quote: "“FLOSS sayesinde kişisel ve şirket finansını aynı ekranda tutuyorum; nakit açığı sürpriz olmuyor.”",
+    name: "Ebru • Girişimci",
+  },
+  {
+    quote: "“Abonelikler ve ödemeler otomatik akıyor, yatırım değerlerim anında TRY’ye çevriliyor.”",
+    name: "Kerem • CTO",
+  },
+  {
+    quote: "“Parolalar master kodla şifreli, ekip paylaşsa bile benden onay almadan açılmıyor.”",
+    name: "Derya • Finans Direktörü",
+  },
+];
+
+const faqs = [
+  { q: "Veriler nasıl korunuyor?", a: "Parolalar master kod ile istemci tarafında şifrelenir; veritabanında hash + şifreli kayıt tutarız." },
+  { q: "Hangi entegrasyonlar var?", a: "Plaid/Codat, IBKR, TR açık bankacılık aggregator’ları, Stripe Billing, Logo/Mikro ve görev sistemleri sırada." },
+  { q: "Bireysel ve kurumsal ayrımı var mı?", a: "Evet; kişisel ve şirket katmanları ayrı tutulur, ama tek dashboard’dan yönetilir." },
+];
+
 export default function Home() {
   return (
     <div className="min-h-screen bg-[#04060d] text-slate-100">
@@ -104,6 +165,15 @@ export default function Home() {
             <div className="absolute -left-8 -top-6 h-28 w-28 rounded-full bg-indigo-500/20 blur-3xl" />
             <div className="absolute right-0 top-10 h-24 w-24 rounded-full bg-emerald-400/20 blur-3xl" />
             <div className="relative space-y-3 rounded-3xl border border-white/10 bg-slate-900/70 p-5 shadow-2xl shadow-black/40 backdrop-blur">
+              <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#0c1024]/80 p-4">
+                <p className="text-[11px] uppercase tracking-[0.28em] text-indigo-200">Canlı demo</p>
+                <p className="text-sm text-slate-300">Net worth yükseliyor, yükümlülük kartları güncelleniyor, entegrasyonlardan veri akıyor.</p>
+                <div className="mt-3 h-40 rounded-xl bg-gradient-to-r from-indigo-500/20 via-fuchsia-500/15 to-emerald-500/20">
+                  <div className="flex h-full items-center justify-center text-xs uppercase tracking-[0.3em] text-slate-400">
+                    Video/animasyon alanı
+                  </div>
+                </div>
+              </div>
               <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-[#0c1024]/80 px-4 py-3">
                 <div>
                   <p className="text-[11px] uppercase tracking-[0.28em] text-indigo-200">Varlıklar</p>
@@ -134,6 +204,18 @@ export default function Home() {
       </header>
 
       <main className="mx-auto max-w-6xl space-y-12 px-6 py-12">
+        <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {benefits.map((item) => (
+            <article
+              key={item.title}
+              className="rounded-2xl border border-white/10 bg-slate-900/70 p-5 shadow-lg shadow-black/20"
+            >
+              <p className="text-xs uppercase tracking-[0.3em] text-indigo-200">{item.title}</p>
+              <p className="mt-2 text-sm text-slate-200">{item.body}</p>
+            </article>
+          ))}
+        </section>
+
         <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {pillars.map((feature) => (
             <article
@@ -168,6 +250,43 @@ export default function Home() {
               Finans ana kadroda; günlük/görev eklentileri opsiyonel. Not ve ticket entegrasyonları, finansal timeline’ı desteklemek için var.
             </p>
           </article>
+        </section>
+
+        <section className="rounded-3xl border border-white/10 bg-slate-900/70 p-8 shadow-lg shadow-black/20">
+          <div className="flex flex-col gap-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-[0.3em] text-indigo-200">Entegrasyonlar</p>
+                <h3 className="text-2xl font-semibold text-white">Tek tıklamayla bağlanır, saniyeler içinde içeri aktarılır.</h3>
+                <p className="text-sm text-slate-300">ABD: Plaid, Codat, IBKR. Türkiye: açık bankacılık aggregator’ları, broker ve muhasebe bağlantıları.</p>
+              </div>
+              <Link
+                href="/register"
+                className="hidden rounded-xl border border-white/20 px-4 py-2 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:border-white/50 md:inline-flex"
+              >
+                Bağla ve dene
+              </Link>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-4">
+              {integrationLogos.map((logo) => (
+                <div key={logo} className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-center text-sm font-semibold text-slate-200">
+                  {logo}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {tourSections.map((item) => (
+            <article
+              key={item.title}
+              className="rounded-2xl border border-white/10 bg-slate-900/70 p-5 shadow-lg shadow-black/20"
+            >
+              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">{item.title}</p>
+              <p className="mt-2 text-sm text-slate-200">{item.body}</p>
+            </article>
+          ))}
         </section>
 
         <section className="rounded-3xl border border-white/10 bg-slate-900/70 p-8 shadow-lg shadow-black/20">
@@ -225,6 +344,35 @@ export default function Home() {
             >
               Giriş Yap
             </Link>
+          </div>
+          <div className="mt-6 flex flex-wrap justify-center gap-2 text-xs text-slate-400">
+            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">Master kod şifreleme</span>
+            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">KVKK uyumlu</span>
+            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">PCI DSS altyapısı</span>
+          </div>
+        </section>
+
+        <section className="grid gap-4 md:grid-cols-3">
+          {testimonials.map((item) => (
+            <article
+              key={item.name}
+              className="rounded-2xl border border-white/10 bg-slate-900/70 p-5 shadow-lg shadow-black/20"
+            >
+              <p className="text-sm text-slate-200">{item.quote}</p>
+              <p className="mt-3 text-xs uppercase tracking-[0.25em] text-indigo-200">{item.name}</p>
+            </article>
+          ))}
+        </section>
+
+        <section className="rounded-3xl border border-white/10 bg-slate-900/70 p-8 shadow-lg shadow-black/20">
+          <h3 className="text-xl font-semibold text-white">Sık Sorulanlar</h3>
+          <div className="mt-4 space-y-3">
+            {faqs.map((item) => (
+              <div key={item.q} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                <p className="text-sm font-semibold text-white">{item.q}</p>
+                <p className="text-sm text-slate-300">{item.a}</p>
+              </div>
+            ))}
           </div>
         </section>
       </main>
