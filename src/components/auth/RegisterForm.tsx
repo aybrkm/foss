@@ -1,23 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { isValidMasterCode } from "@/lib/client-crypto";
 import { useSupabaseClient } from "@/components/providers/SupabaseProvider";
 
 const MASTER_CODE_HINT = "6 haneli, 3 aynı rakam art arda olamaz (örn: 333 yasak, 112233 serbest)";
-
-function isValidMasterCode(code: string) {
-  if (!/^\d{6}$/.test(code)) {
-    return false;
-  }
-  for (let i = 0; i < code.length - 2; i += 1) {
-    if (code[i] === code[i + 1] && code[i] === code[i + 2]) {
-      return false;
-    }
-  }
-  return true;
-}
 
 export function RegisterForm() {
   const router = useRouter();
@@ -119,9 +107,9 @@ export function RegisterForm() {
           placeholder="123456"
           className="mt-1 w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-400"
           inputMode="numeric"
-          pattern="\\d{6}"
           maxLength={6}
           required
+          title={MASTER_CODE_HINT}
         />
         <p className="mt-1 text-xs text-slate-400">{MASTER_CODE_HINT}</p>
       </label>
