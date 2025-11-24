@@ -1,46 +1,70 @@
 import Link from "next/link";
 
-const highlights = [
-  { label: "Varlık + yükümlülük takibi", value: "Tek panel" },
-  { label: "Şifreli kasa", value: "Master kod ile" },
-  { label: "Hatırlatıcı + görev", value: "Otomatik vade" },
+const stats = [
+  { label: "Portföy toplamı", value: "₺2.4M" },
+  { label: "Yaklaşan ödeme", value: "₺18.450 • 3g" },
+  { label: "Şifreli kayıt", value: "7 parola" },
 ];
 
-const featureCards = [
+const pillars = [
   {
-    title: "Portföy görünürlüğü",
-    body: "Tüm varlıklarını ve borçlarını tek ekranda gör, TRY/USD gibi para birimlerine anında çevir.",
+    title: "Tek panel",
+    body: "Varlık, borç, gelir ve aboneliklerini aynı ekranda topla; kur dönüşümleri ve vade hesaplamaları otomatik.",
   },
   {
-    title: "Şifreli dijital hesaplar",
-    body: "Parola ve abonelik bilgilerini master kod ile şifrele, ekip içi paylaşımı güvenle yap.",
+    title: "Şifreli kasa",
+    body: "Dijital hesap parolalarını master kod ile şifrele. Paylaşsan bile çözmek için senden onay gerekir.",
   },
   {
-    title: "Hatırlatmalar ve akış",
-    body: "Ödemeleri, gelirleri ve doküman notlarını vade bazlı akışta takip et, gecikmeleri yakala.",
+    title: "Akıllı hatırlatma",
+    body: "Yaklaşan ödemeleri, gelirleri ve kritik notları takvime göre öne çıkarır; gecikme riskini azaltır.",
+  },
+  {
+    title: "Ekip & SaaS hazır",
+    body: "Supabase + Next.js altyapısı; kendi veritabanınla veya SaaS olarak kullan, ekibinle paylaş.",
   },
 ];
 
 const steps = [
   "Kayıt ol ve master kodunu belirle.",
-  "Varlık, yükümlülük ve dijital hesaplarını ekle.",
-  "Vade takvimini ve uyarıları tek panelden yönet.",
+  "Varlık, borç ve dijital hesaplarını ekle.",
+  "Vade takvimini ve uyarıları yönetmeye başla.",
 ];
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
-      <header className="relative overflow-hidden border-b border-white/10 bg-gradient-to-br from-indigo-900/60 via-slate-900 to-slate-950">
-        <div className="absolute left-1/2 top-1/2 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-indigo-500/10 blur-3xl" />
-        <div className="relative mx-auto flex max-w-5xl flex-col gap-10 px-6 py-16 lg:flex-row lg:items-center lg:py-20">
-          <div className="space-y-6 lg:max-w-2xl">
-            <p className="text-xs uppercase tracking-[0.4em] text-indigo-200">FLOSS</p>
+    <div className="min-h-screen bg-[#04060d] text-slate-100">
+      <header className="border-b border-white/5 bg-gradient-to-br from-[#0a0f2d] via-[#050816] to-[#04060d]">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.35em] text-indigo-200">
+            <span className="h-2 w-2 rounded-full bg-indigo-400" />
+            FLOSS
+          </div>
+          <div className="flex items-center gap-3 text-sm">
+            <Link
+              href="/login"
+              className="rounded-xl border border-white/15 px-4 py-2 font-semibold text-white hover:border-white/40"
+            >
+              Giriş Yap
+            </Link>
+            <Link
+              href="/register"
+              className="rounded-xl bg-indigo-500 px-4 py-2 font-semibold text-white shadow-lg shadow-indigo-500/30 hover:bg-indigo-400"
+            >
+              Kayıt Ol
+            </Link>
+          </div>
+        </div>
+
+        <div className="mx-auto flex max-w-6xl flex-col gap-10 px-6 pb-16 lg:flex-row lg:items-center">
+          <div className="space-y-6 lg:max-w-xl">
+            <p className="text-xs uppercase tracking-[0.35em] text-indigo-200">Kişisel finans OS</p>
             <h1 className="text-4xl font-semibold leading-tight text-white md:text-5xl">
-              Kişisel finans OS: varlık, borç, şifreli hesap ve hatırlatma tek yerde.
+              Varlık, borç ve şifreli hesaplarını tek panelden yönet.
             </h1>
             <p className="text-lg text-slate-300">
-              Varlıklarını, yükümlülüklerini ve abonelik parolalarını tek panelde topla. Master kod ile
-              şifrele, yaklaşan vadeleri otomatik hesapla, gecikmeden haberdar ol.
+              Varlıklarını, yükümlülüklerini ve dijital hesap parolalarını topla; master kod ile şifrele,
+              vadeleri otomatik izle, gecikme riskini düşür.
             </p>
             <div className="flex flex-wrap gap-3">
               <Link
@@ -53,44 +77,48 @@ export default function Home() {
                 href="/login"
                 className="inline-flex items-center gap-2 rounded-xl border border-white/20 px-5 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:border-white/50"
               >
-                Giriş Yap
+                Demo Giriş
               </Link>
             </div>
             <div className="grid gap-3 sm:grid-cols-3">
-              {highlights.map((item) => (
+              {stats.map((item) => (
                 <div
                   key={item.label}
-                  className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200"
+                  className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200 shadow-inner shadow-black/10"
                 >
-                  <p className="text-xs uppercase tracking-[0.3em] text-indigo-200">{item.label}</p>
+                  <p className="text-[11px] uppercase tracking-[0.28em] text-indigo-200">{item.label}</p>
                   <p className="text-lg font-semibold text-white">{item.value}</p>
                 </div>
               ))}
             </div>
           </div>
-          <div className="relative w-full max-w-lg self-start rounded-3xl border border-white/10 bg-black/30 p-6 shadow-2xl">
-            <div className="absolute right-6 top-6 h-16 w-16 rounded-full bg-emerald-500/20 blur-2xl" />
-            <div className="absolute -left-10 -top-8 h-20 w-20 rounded-full bg-indigo-500/10 blur-2xl" />
-            <div className="relative space-y-4 text-sm text-slate-200">
-              <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
-                <span className="text-xs uppercase tracking-[0.3em] text-indigo-200">Varlıklar</span>
-                <span className="text-lg font-semibold text-white">₺ 2.45M</span>
+
+          <div className="relative w-full lg:max-w-xl">
+            <div className="absolute -left-8 -top-6 h-28 w-28 rounded-full bg-indigo-500/20 blur-3xl" />
+            <div className="absolute right-0 top-10 h-24 w-24 rounded-full bg-emerald-400/20 blur-3xl" />
+            <div className="relative space-y-3 rounded-3xl border border-white/10 bg-slate-900/70 p-5 shadow-2xl shadow-black/40 backdrop-blur">
+              <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-[#0c1024]/80 px-4 py-3">
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.28em] text-indigo-200">Varlıklar</p>
+                  <p className="text-sm text-slate-300">TRY + USD toplu</p>
+                </div>
+                <p className="text-xl font-semibold text-white">₺ 2.45M</p>
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <p className="text-xs uppercase tracking-[0.3em] text-rose-200">Yaklaşan Ödeme</p>
-                <p className="mt-1 text-xl font-semibold text-white">Kredi Taksiti</p>
-                <p className="text-sm text-slate-300">30 Kasım • ₺18.450 • Otomatik hatırlatma açık</p>
+                <p className="text-[11px] uppercase tracking-[0.28em] text-rose-200">Yaklaşan ödeme</p>
+                <p className="text-lg font-semibold text-white">Kredi Taksiti</p>
+                <p className="text-sm text-slate-300">30 Kasım • ₺18.450 • Otomatik hatırlatma</p>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <p className="text-xs uppercase tracking-[0.3em] text-emerald-200">Gelir Akışı</p>
-                  <p className="text-lg font-semibold text-white">Serbest Proje</p>
+                  <p className="text-[11px] uppercase tracking-[0.28em] text-emerald-200">Gelir</p>
+                  <p className="text-base font-semibold text-white">Serbest Proje</p>
                   <p className="text-sm text-slate-300">3 gün kaldı • $2.800</p>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <p className="text-xs uppercase tracking-[0.3em] text-fuchsia-200">Parola Kasası</p>
-                  <p className="text-lg font-semibold text-white">7 kayıt şifreli</p>
-                  <p className="text-sm text-slate-300">Master kod: yalnızca sende</p>
+                  <p className="text-[11px] uppercase tracking-[0.28em] text-fuchsia-200">Parola kasası</p>
+                  <p className="text-base font-semibold text-white">7 kayıt şifreli</p>
+                  <p className="text-sm text-slate-300">Master kod sadece sende</p>
                 </div>
               </div>
             </div>
@@ -98,53 +126,58 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl space-y-12 px-6 py-12">
-        <section className="grid gap-4 md:grid-cols-3">
-          {featureCards.map((feature) => (
+      <main className="mx-auto max-w-6xl space-y-12 px-6 py-12">
+        <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {pillars.map((feature) => (
             <article
               key={feature.title}
-              className="rounded-2xl border border-white/10 bg-slate-900/50 p-5 shadow-lg shadow-black/20"
+              className="rounded-2xl border border-white/10 bg-slate-900/70 p-5 shadow-lg shadow-black/20"
             >
               <p className="text-xs uppercase tracking-[0.3em] text-slate-400">{feature.title}</p>
-              <p className="mt-2 text-base text-slate-200">{feature.body}</p>
+              <p className="mt-2 text-sm text-slate-200">{feature.body}</p>
             </article>
           ))}
         </section>
 
-        <section className="rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950 p-8">
-          <div className="grid gap-8 md:grid-cols-2 md:items-center">
-            <div className="space-y-3">
-              <p className="text-xs uppercase tracking-[0.3em] text-indigo-200">3 adımda başla</p>
-              <h2 className="text-3xl font-semibold text-white">Dakikalar içinde hazır</h2>
-              <p className="text-sm text-slate-300">
-                FLOSS’u SaaS olarak kullanabilir, kendi veritabanına bağlayabilir veya ekip arkadaşlarınla
-                paylaşabilirsin. Şifreli kayıtlar master kod ile korunur.
-              </p>
-            </div>
-            <ol className="space-y-3 text-sm text-slate-200">
-              {steps.map((step, index) => (
-                <li
-                  key={step}
-                  className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3"
-                >
-                  <span className="mt-1 flex h-7 w-7 items-center justify-center rounded-full bg-indigo-500/80 text-xs font-semibold text-white">
-                    {index + 1}
-                  </span>
-                  <span>{step}</span>
-                </li>
-              ))}
-            </ol>
+        <section className="grid gap-8 lg:grid-cols-2 lg:items-center">
+          <div className="space-y-3">
+            <p className="text-xs uppercase tracking-[0.3em] text-indigo-200">3 adımda başla</p>
+            <h2 className="text-3xl font-semibold text-white">Dakikalar içinde hazır</h2>
+            <p className="text-sm text-slate-300">
+              Master kodunu belirle, kayıtlarını ekle, vadeleri otomatik takip et. Şifreli kayıtlar sadece sende,
+              veriler Supabase üzerinde.
+            </p>
           </div>
-          <div className="mt-8 flex flex-wrap gap-3">
+          <ol className="space-y-3 text-sm text-slate-200">
+            {steps.map((step, index) => (
+              <li
+                key={step}
+                className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3"
+              >
+                <span className="mt-1 flex h-7 w-7 items-center justify-center rounded-full bg-indigo-500/80 text-xs font-semibold text-white">
+                  {index + 1}
+                </span>
+                <span>{step}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        <section className="rounded-3xl border border-white/10 bg-slate-900/70 p-8 text-center shadow-lg shadow-black/20">
+          <p className="text-xs uppercase tracking-[0.35em] text-indigo-200">Başlayalım</p>
+          <h3 className="mt-2 text-2xl font-semibold text-white">
+            Paralarını, parolalarını ve vadelerini tek yerden yönet
+          </h3>
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Link
               href="/register"
-              className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:-translate-y-0.5"
+              className="rounded-xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:-translate-y-0.5"
             >
               Kayıt Ol
             </Link>
             <Link
               href="/login"
-              className="inline-flex items-center gap-2 rounded-xl border border-white/20 px-5 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:border-white/50"
+              className="rounded-xl border border-white/20 px-5 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:border-white/50"
             >
               Giriş Yap
             </Link>
