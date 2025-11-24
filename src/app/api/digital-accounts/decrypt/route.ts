@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Veri eksik" }, { status: 400 });
   }
 
-  const [user, account] = await Promise.all([
+  const [userRow, account] = await Promise.all([
     prisma.user.findUnique({ where: { id: user.id }, select: { masterKeyHash: true } }),
     prisma.digitalAccount.findFirst({
       where: { id, userId: user.id },
@@ -31,12 +31,12 @@ export async function POST(request: Request) {
     }),
   ]);
 
-  if (!account?.encryptedPassword) {
+  if (!account?.encryptedPassword || !userRow) {
     return NextResponse.json({ error: "Şifre bulunamadı" }, { status: 400 });
   }
-  if (user?.masterKeyHash) {
+  if (userRow.masterKeyHash) {
     const hash = createHash("sha256").update(masterCode).digest("hex");
-    if (hash !== user.masterKeyHash) {
+    if (hash !== userRow.masterKeyHash) {
       return NextResponse.json({ error: "Master kod hatalı" }, { status: 403 });
     }
   }
