@@ -15,7 +15,7 @@ export default async function RegisterPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4">
-      <div className="w-full max-w-xl space-y-6 rounded-3xl border border-white/10 bg-slate-900/70 p-8 shadow-2xl">
+      <div className="w-full max-w-md space-y-6">
         <RegisterForm />
         <div className="text-center text-sm text-slate-400">
           Zaten hesabın var mı?{" "}

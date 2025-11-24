@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 
 /**
- * Ensures that the generated Prisma client includes the Workspace models.
+ * Ensures that the generated Prisma client includes recently added models.
  * If not, it runs `prisma generate`. This avoids random runtime failures
  * when someone forgets to regenerate after pulling schema changes, while
  * also skipping unnecessary generate calls that would fail when the DLL
@@ -14,7 +14,7 @@ const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 
 const CLIENT_INDEX = path.join(__dirname, "..", "node_modules", ".prisma", "client", "index.js");
-const REQUIRED_SIGNATURES = ["workspaceColumn", "workspaceCard"];
+const REQUIRED_SIGNATURES = ["workspaceColumn", "workspaceCard", "digitalSubscription"];
 
 function hasWorkspaceModels() {
   try {

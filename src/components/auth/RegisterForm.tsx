@@ -26,6 +26,7 @@ export function RegisterForm() {
   const [masterCode, setMasterCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -67,7 +68,10 @@ export function RegisterForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form
+      onSubmit={handleSubmit}
+      className="w-full space-y-4 rounded-3xl border border-white/10 bg-slate-900/70 p-8 shadow-2xl"
+    >
       <div className="space-y-2 text-center">
         <p className="text-xs uppercase tracking-[0.4em] text-indigo-300">FLOSS</p>
         <h1 className="text-2xl font-semibold text-white">Kayıt Ol</h1>
@@ -89,13 +93,23 @@ export function RegisterForm() {
 
       <label className="block text-sm text-slate-300">
         Parola
-        <input
-          type="password"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          className="mt-1 w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-          required
-        />
+        <div className="relative mt-1">
+          <input
+            type={showPassword ? "text" : "password"}
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 pr-24 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            required
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((prev) => !prev)}
+            className="absolute inset-y-1 right-2 rounded-lg px-3 text-xs font-semibold text-slate-200 transition hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400"
+            aria-pressed={showPassword}
+          >
+            {showPassword ? "Gizle" : "Göster"}
+          </button>
+        </div>
       </label>
 
       <label className="block text-sm text-slate-300">
@@ -103,11 +117,12 @@ export function RegisterForm() {
         <input
           type="password"
           value={masterCode}
-          onChange={(event) => setMasterCode(event.target.value)}
+          onChange={(event) => setMasterCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
           placeholder="123456"
           className="mt-1 w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-400"
           inputMode="numeric"
           pattern="\\d{6}"
+          maxLength={6}
           required
         />
         <p className="mt-1 text-xs text-slate-400">{MASTER_CODE_HINT}</p>
