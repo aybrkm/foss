@@ -1,15 +1,15 @@
 import Link from "next/link";
 
 const stats = [
-  { label: "Portföy toplamı", value: "₺2.4M" },
+  { label: "Portföy görünümü", value: "₺2.4M" },
   { label: "Yaklaşan ödeme", value: "₺18.450 • 3g" },
-  { label: "Şifreli kayıt", value: "7 parola" },
+  { label: "Şifreli hesap", value: "7 parola" },
 ];
 
 const pillars = [
   {
-    title: "Tek panel",
-    body: "Varlık, borç, gelir ve aboneliklerini aynı ekranda topla; kur dönüşümleri ve vade hesaplamaları otomatik.",
+    title: "Kişisel CFO",
+    body: "Varlık, borç, gelir ve aboneliklerini aynı ekranda topla; net varlık ve nakit akışı hep güncel.",
   },
   {
     title: "Şifreli kasa",
@@ -20,8 +20,8 @@ const pillars = [
     body: "Yaklaşan ödemeleri, gelirleri ve kritik notları takvime göre öne çıkarır; gecikme riskini azaltır.",
   },
   {
-    title: "Ekip & SaaS hazır",
-    body: "Supabase + Next.js altyapısı; kendi veritabanınla veya SaaS olarak kullan, ekibinle paylaş.",
+    title: "Entegrasyon + otomasyon",
+    body: "Banka, abonelik ve görev kaynaklarını bağla; vade ve kur bilgisi otomatik gelsin, görevler güncellensin.",
   },
 ];
 
@@ -29,6 +29,13 @@ const steps = [
   "Kayıt ol ve master kodunu belirle.",
   "Varlık, borç ve dijital hesaplarını ekle.",
   "Vade takvimini ve uyarıları yönetmeye başla.",
+];
+
+const integrations = [
+  "Banka & açık bankacılık",
+  "Kart/abonelik sağlayıcıları",
+  "Görev & ticket sistemleri",
+  "Kişisel bulut ve parola yöneticileri",
 ];
 
 export default function Home() {
@@ -60,11 +67,12 @@ export default function Home() {
           <div className="space-y-6 lg:max-w-xl">
             <p className="text-xs uppercase tracking-[0.35em] text-indigo-200">Kişisel finans OS</p>
             <h1 className="text-4xl font-semibold leading-tight text-white md:text-5xl">
-              Varlık, borç ve şifreli hesaplarını tek panelden yönet.
+              Kişisel CFO: varlık, borç, abonelik ve parolalarını tek panelden yönet.
             </h1>
             <p className="text-lg text-slate-300">
               Varlıklarını, yükümlülüklerini ve dijital hesap parolalarını topla; master kod ile şifrele,
-              vadeleri otomatik izle, gecikme riskini düşür.
+              vadeleri otomatik izle, gecikme riskini düşür. Hem bireysel hem kurumsal finansını aynı OS
+              üzerinden yönet.
             </p>
             <div className="flex flex-wrap gap-3">
               <Link
@@ -139,28 +147,41 @@ export default function Home() {
           ))}
         </section>
 
-        <section className="grid gap-8 lg:grid-cols-2 lg:items-center">
-          <div className="space-y-3">
-            <p className="text-xs uppercase tracking-[0.3em] text-indigo-200">3 adımda başla</p>
-            <h2 className="text-3xl font-semibold text-white">Dakikalar içinde hazır</h2>
-            <p className="text-sm text-slate-300">
-              Master kodunu belirle, kayıtlarını ekle, vadeleri otomatik takip et. Şifreli kayıtlar sadece sende,
-              veriler Supabase üzerinde.
-            </p>
+        <section className="rounded-3xl border border-white/10 bg-slate-900/70 p-8 shadow-lg shadow-black/20">
+          <div className="grid gap-8 lg:grid-cols-2 lg:items-center">
+            <div className="space-y-4">
+              <p className="text-xs uppercase tracking-[0.3em] text-indigo-200">Entegrasyon + CFO bakışı</p>
+              <h2 className="text-3xl font-semibold text-white">
+                Banka, abonelik ve görev altyapılarını bağla; finansal hayatını tepeden izle.
+              </h2>
+              <p className="text-sm text-slate-300">
+                Açık bankacılık, abonelik sağlayıcıları ve görev sistemlerinden gelen kayıtlar tek timeline’da.
+                Varlık/borç dengesi, nakit akışı ve şifreli hesaplar aynı yerde; bireysel ya da kurumsal kullanım için.
+              </p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {integrations.map((item) => (
+                  <div key={item} className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
+                    {item}
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div>
+              <ol className="space-y-3 text-sm text-slate-200">
+                {steps.map((step, index) => (
+                  <li
+                    key={step}
+                    className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3"
+                  >
+                    <span className="mt-1 flex h-7 w-7 items-center justify-center rounded-full bg-indigo-500/80 text-xs font-semibold text-white">
+                      {index + 1}
+                    </span>
+                    <span>{step}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
           </div>
-          <ol className="space-y-3 text-sm text-slate-200">
-            {steps.map((step, index) => (
-              <li
-                key={step}
-                className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3"
-              >
-                <span className="mt-1 flex h-7 w-7 items-center justify-center rounded-full bg-indigo-500/80 text-xs font-semibold text-white">
-                  {index + 1}
-                </span>
-                <span>{step}</span>
-              </li>
-            ))}
-          </ol>
         </section>
 
         <section className="rounded-3xl border border-white/10 bg-slate-900/70 p-8 text-center shadow-lg shadow-black/20">
