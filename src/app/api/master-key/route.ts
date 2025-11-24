@@ -15,8 +15,9 @@ export async function POST(request: Request) {
 
   const body = await request.json().catch(() => null);
   const code = typeof body?.masterCode === "string" ? body.masterCode : null;
+  const providedHash = typeof body?.masterKeyHash === "string" ? body.masterKeyHash : null;
 
-  if (!code) {
+  if (!code && !providedHash) {
     return NextResponse.json({ error: "Master kod gerekli" }, { status: 400 });
   }
 
@@ -32,7 +33,10 @@ export async function POST(request: Request) {
     },
   });
 
-  const hash = createHash("sha256").update(code).digest("hex");
+  const hash =
+    providedHash && /^[a-f0-9]{64}$/i.test(providedHash)
+      ? providedHash.toLowerCase()
+      : createHash("sha256").update(code as string).digest("hex");
 
   await prisma.user.update({
     where: { id: user.id },

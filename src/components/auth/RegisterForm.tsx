@@ -21,6 +21,13 @@ export function RegisterForm() {
   const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const redirectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const hashMasterCode = async (code: string) => {
+    const hashBuffer = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(code));
+    return Array.from(new Uint8Array(hashBuffer))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+  };
+
   const showToast = (message: string, tone: "success" | "error" = "success") => {
     if (toastTimeoutRef.current) {
       clearTimeout(toastTimeoutRef.current);
@@ -76,6 +83,15 @@ export function RegisterForm() {
       const message = "Kayıt isteği alındı. E-postanı doğrula, giriş sayfasına yönlendiriliyorsun.";
       setStatus(message);
       showToast(message);
+      if (signUpData.user?.id) {
+        // Session yoksa master kodu hashleyip localStorage'a bırak, ilk oturumda DB'ye yazılacak
+        try {
+          const hashed = await hashMasterCode(masterCode);
+          window.localStorage.setItem("pendingMasterKeyHash", hashed);
+        } catch (hashError) {
+          console.error("Master kod hashlenemedi", hashError);
+        }
+      }
       setLoading(false);
       redirectTimeoutRef.current = setTimeout(() => {
         router.replace("/login");

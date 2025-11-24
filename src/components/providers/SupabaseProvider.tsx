@@ -65,9 +65,24 @@ function syncAuthToServer(event: string, session: Session | null) {
     },
     body: JSON.stringify({ event, session }),
   })
-    .then(() => {
+    .then(async () => {
       // Auth cookie set; make sure Prisma.User var
-      return fetch("/api/users/sync", { method: "POST" });
+      await fetch("/api/users/sync", { method: "POST" });
+
+      // Pending master key hash? (kayıt sonrası email doğrulaması için)
+      if (typeof window !== "undefined") {
+        const pendingHash = window.localStorage.getItem("pendingMasterKeyHash");
+        if (pendingHash) {
+          await fetch("/api/master-key", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ masterKeyHash: pendingHash }),
+          }).catch((error) => {
+            console.error("Pending master key kaydedilemedi", error);
+          });
+          window.localStorage.removeItem("pendingMasterKeyHash");
+        }
+      }
     })
     .catch((error) => {
       console.error("Failed to sync auth state to server", error);
