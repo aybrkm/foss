@@ -5,6 +5,7 @@ import { getSupabaseConfig } from "@/lib/supabase/config";
 
 const PUBLIC_PATHS = [
   "/login",
+  "/register",
   "/api/auth/callback",
   "/api/cron/update-obligations",
 ];
