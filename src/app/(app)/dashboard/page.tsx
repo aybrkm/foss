@@ -306,11 +306,14 @@ function getHorizonBuckets(
   obligationItems: HorizonItem[],
   incomeItems: HorizonItem[],
 ): HorizonBuckets {
-  const buckets: HorizonBuckets = {
-    week: [],
-    month: [],
-    year: [],
-  };
+  const buckets: HorizonBuckets = { week: [], month: [], year: [] };
+  const sortBucket = (items: HorizonItem[]) =>
+    items.sort((a, b) => {
+      if (a.daysLeft !== b.daysLeft) {
+        return a.daysLeft - b.daysLeft;
+      }
+      return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+    });
 
   const assign = (item: HorizonItem) => {
     if (item.daysLeft < 0) {
@@ -329,7 +332,11 @@ function getHorizonBuckets(
   obligationItems.forEach(assign);
   incomeItems.forEach(assign);
 
-  return buckets;
+  return {
+    week: sortBucket(buckets.week),
+    month: sortBucket(buckets.month),
+    year: sortBucket(buckets.year),
+  };
 }
 
 function calculateDaysLeft(target: string, referenceMs: number) {
