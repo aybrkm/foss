@@ -121,10 +121,9 @@ const importantReminders = reminderDetails.filter(
       }
       return new Date(obligation.nextDue).getTime() > nowMs;
     })
-    .sort(
-      (a, b) =>
-        new Date(a.nextDue ?? 0).getTime() - new Date(b.nextDue ?? 0).getTime(),
-    );
+    .sort((a: ObligationRow, b: ObligationRow) => {
+      return new Date(a.nextDue ?? 0).getTime() - new Date(b.nextDue ?? 0).getTime();
+    });
 
   const summaryObligations = upcomingObligations.map((obligation: ObligationRow) => {
     const amountNumber = obligation.amount ? Number(obligation.amount) : null;

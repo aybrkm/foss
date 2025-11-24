@@ -152,7 +152,7 @@ export default async function JournalPage() {
       </form>
 
       <div className="grid gap-5 md:grid-cols-2">
-        {clientEntries.map((entry) => (
+        {clientEntries.map((entry: (typeof clientEntries)[number]) => (
           <JournalEntryCard key={entry.id} entry={entry} onUpdate={updateEntry} onDelete={deleteEntry} />
         ))}
       </div>
