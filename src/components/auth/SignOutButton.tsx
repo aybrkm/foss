@@ -12,7 +12,7 @@ export function SignOutButton() {
   const handleSignOut = () => {
     startTransition(async () => {
       await supabase.auth.signOut();
-      router.replace("/login");
+      router.replace("/");
       router.refresh();
     });
   };

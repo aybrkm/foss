@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSupabaseClient } from "@/components/providers/SupabaseProvider";
@@ -73,7 +74,9 @@ export function RegisterForm() {
       className="w-full space-y-4 rounded-3xl border border-white/10 bg-slate-900/70 p-8 shadow-2xl"
     >
       <div className="space-y-2 text-center">
-        <p className="text-xs uppercase tracking-[0.4em] text-indigo-300">FLOSS</p>
+        <Link href="/" className="block text-3xl font-semibold uppercase tracking-[0.35em] text-indigo-200 transition hover:text-white">
+          FLOSS
+        </Link>
         <h1 className="text-2xl font-semibold text-white">Kayıt Ol</h1>
         <p className="text-sm text-slate-400">
           Email/parola ile hesap aç, 6 haneli master kodunu belirle.
