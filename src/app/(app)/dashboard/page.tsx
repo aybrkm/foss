@@ -1,6 +1,6 @@
 import prisma from "@/lib/prisma";
 import { convertToTry, getExchangeRates } from "@/lib/exchange";
-import { DashboardWidgets } from "@/components/dashboard/DashboardWidgets";
+import { formatCurrency } from "@/lib/format";
 import { SummaryKpis } from "@/components/dashboard/SummaryKpis";
 import { requireUserId } from "@/lib/auth";
 
@@ -86,6 +86,41 @@ export default async function DashboardPage() {
     (obligation: ObligationRow) => !obligation.isDone,
   );
   const activeReminderRows = reminderRows.filter((reminder: ReminderRow) => !reminder.isDone);
+  const totalLiquidPercent = totalAssetValue > 0 ? (liquidAssetValue / totalAssetValue) * 100 : 0;
+  const totalIlliquidPercent = totalAssetValue > 0 ? 100 - totalLiquidPercent : 0;
+  const categoryTotals = assetsWithRates.reduce((acc: Record<string, number>, asset) => {
+    acc[asset.assetType] = (acc[asset.assetType] ?? 0) + asset.valueTry;
+    return acc;
+  }, {});
+  const topCategories = Object.entries(categoryTotals)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 4)
+    .map(([key, value]) => ({
+      name: key,
+      value,
+      percent: totalAssetValue > 0 ? (value / totalAssetValue) * 100 : 0,
+    }));
+  const breakdownByLiquidity = (isLiquid: boolean) => {
+    const totals = assetsWithRates
+      .filter((asset) => asset.isLiquid === isLiquid)
+      .reduce((acc: Record<string, number>, asset) => {
+        acc[asset.assetType] = (acc[asset.assetType] ?? 0) + asset.valueTry;
+        return acc;
+      }, {});
+    return Object.entries(totals)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([key, value]) => ({
+        name: key,
+        value,
+        percent:
+          (isLiquid ? liquidAssetValue : totalAssetValue - liquidAssetValue) > 0
+            ? (value / (isLiquid ? liquidAssetValue : totalAssetValue - liquidAssetValue)) * 100
+            : 0,
+      }));
+  };
+  const liquidSlices = breakdownByLiquidity(true);
+  const illiquidSlices = breakdownByLiquidity(false);
 
   const reminderDetails = activeReminderRows.map((reminder: ReminderRow) => ({
     id: reminder.id,
@@ -152,43 +187,6 @@ const importantReminders = reminderDetails.filter(
     valueTry: asset.valueTry,
     currency: asset.currency,
     updatedAt: asset.updatedAt.toISOString(),
-  }));
-
-  const assetsForWidgets = assetsWithRates.slice(0, 3).map((asset: AssetWithConversion) => ({
-    id: asset.id,
-    name: asset.name,
-    assetType: asset.assetType,
-    isLiquid: asset.isLiquid,
-    value: asset.numericValue,
-    valueTry: asset.valueTry,
-    currency: asset.currency,
-  }));
-
-  const obligationsForWidgets = upcomingObligations.slice(0, 2).map((obligation: ObligationRow) => {
-    const amountNumber = obligation.amount ? Number(obligation.amount) : null;
-    return {
-      id: obligation.id,
-      name: obligation.name,
-      category: obligation.category,
-      status: obligation.isActive ? "Aktif" : "Pasif",
-      amount: amountNumber,
-      amountTry: amountNumber ? convertToTry(amountNumber, obligation.currency, rates) : null,
-      currency: obligation.currency,
-      nextDue: obligation.nextDue ? obligation.nextDue.toISOString() : null,
-    };
-  });
-
-const remindersForWidgets = importantReminders.slice(0, 3).map((reminder: ReminderDetail) => ({
-  id: reminder.id,
-  title: reminder.title,
-  dueAt: reminder.dueAt,
-}));
-
-  const journalForWidgets = journalRows.slice(0, 2).map((entry: JournalRow) => ({
-    id: entry.id,
-    title: entry.title ?? "Not",
-    body: entry.body,
-    date: entry.entryDate.toISOString(),
   }));
 
   const horizonBuckets = getHorizonBuckets(
@@ -283,12 +281,97 @@ const remindersForWidgets = importantReminders.slice(0, 3).map((reminder: Remind
         </div>
       </section>
 
-      <DashboardWidgets
-        assets={assetsForWidgets}
-        obligations={obligationsForWidgets}
-        reminders={remindersForWidgets}
-        journal={journalForWidgets}
-      />
+      <section className="rounded-2xl border border-white/10 bg-slate-900/60 p-5">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Kuşbakışı Finans Radarı</p>
+            <p className="text-lg font-semibold text-white">Likit/illikit dağılımı ve varlık kompozisyonu</p>
+          </div>
+          <div className="grid grid-cols-3 gap-3 text-center text-sm">
+            <div className="rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-slate-200">
+              <p className="text-xs uppercase tracking-[0.25em] text-indigo-200">Net varlık</p>
+              <p className="text-base font-semibold text-white">{formatCurrency(totalAssetValue, "TRY")}</p>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-slate-200">
+              <p className="text-xs uppercase tracking-[0.25em] text-emerald-200">Likit</p>
+              <p className="text-base font-semibold text-white">{totalLiquidPercent.toFixed(1)}%</p>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-slate-200">
+              <p className="text-xs uppercase tracking-[0.25em] text-rose-200">İllikit</p>
+              <p className="text-base font-semibold text-white">{totalIlliquidPercent.toFixed(1)}%</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
+          <div className="space-y-3">
+            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">En büyük 4 kategori</p>
+            <div className="space-y-2">
+              {topCategories.map((cat) => (
+                <div key={cat.name} className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+                  <div className="flex items-center justify-between text-sm text-slate-200">
+                    <span>{cat.name}</span>
+                    <span className="font-semibold">{formatCurrency(cat.value, "TRY")}</span>
+                  </div>
+                  <div className="mt-2 h-2 rounded-full bg-white/10">
+                    <div
+                      className="h-2 rounded-full bg-indigo-400"
+                      style={{ width: `${Math.min(100, cat.percent)}%` }}
+                    />
+                  </div>
+                  <p className="mt-1 text-xs text-slate-400">{cat.percent.toFixed(1)}% portföy</p>
+                </div>
+              ))}
+              {topCategories.length === 0 && (
+                <p className="text-sm text-slate-500">Henüz varlık eklenmemiş.</p>
+              )}
+            </div>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2 rounded-xl border border-white/10 bg-white/5 p-4">
+              <p className="text-xs uppercase tracking-[0.3em] text-emerald-200">Likit kırılım</p>
+              {liquidSlices.length === 0 && <p className="text-sm text-slate-500">Kayıt yok.</p>}
+              {liquidSlices.map((slice) => (
+                <div key={slice.name} className="space-y-1">
+                  <div className="flex items-center justify-between text-sm text-slate-200">
+                    <span>{slice.name}</span>
+                    <span className="font-semibold">{slice.percent.toFixed(1)}%</span>
+                  </div>
+                  <div className="h-2 rounded-full bg-white/10">
+                    <div
+                      className="h-2 rounded-full bg-emerald-400"
+                      style={{ width: `${Math.min(100, slice.percent)}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="space-y-2 rounded-xl border border-white/10 bg-white/5 p-4">
+              <p className="text-xs uppercase tracking-[0.3em] text-rose-200">İllikit kırılım</p>
+              {illiquidSlices.length === 0 && <p className="text-sm text-slate-500">Kayıt yok.</p>}
+              {illiquidSlices.map((slice) => (
+                <div key={slice.name} className="space-y-1">
+                  <div className="flex items-center justify-between text-sm text-slate-200">
+                    <span>{slice.name}</span>
+                    <span className="font-semibold">{slice.percent.toFixed(1)}%</span>
+                  </div>
+                  <div className="h-2 rounded-full bg-white/10">
+                    <div
+                      className="h-2 rounded-full bg-rose-400"
+                      style={{ width: `${Math.min(100, slice.percent)}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <p className="mt-4 text-xs text-slate-400">
+          İleride: bankada/EMT’lerde, vadeli mevduatta, hisse/ETF’de ve gayrimenkulde anlık dağılım; BIST ve ABD
+          hisselerini doğrudan platformdan al/sat entegrasyonu.
+        </p>
+      </section>
     </div>
   );
 }

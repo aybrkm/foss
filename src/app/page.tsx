@@ -1,41 +1,60 @@
 import Link from "next/link";
 
 const stats = [
-  { label: "Net Varlık Takibi", value: "₺2.45M" },
-  { label: "Yaklaşan Ödeme", value: "₺18.450 • 3g" },
-  { label: "Şifreli Kayıt", value: "7 parola" },
+  { label: "Canlı net varlık", value: "₺2.45M" },
+  { label: "Bağlı banka / hesap", value: "6 hesap" },
+  { label: "Takip edilen vade", value: "23 kayıt" },
 ];
 
-const pillars = [
+const finPillars = [
   {
-    title: "Net Worth Engine",
-    body: "Tüm varlıklarını, borçlarını, aboneliklerini ve vadeli ödemelerini tek çekirdekte topla. TRY/USD/AED dönüşümleri otomatik.",
+    title: "Fin OS çekirdeği",
+    body: "Banka, yatırım hesabı ve manuel varlıklarını tek yerde topla; net varlığın her gün değil, her an güncel kalsın.",
   },
   {
-    title: "Obligation Engine",
-    body: "Kredi, taksit, abonelik ve vergi gibi tüm ödemelerin vade, tutar ve recurrence’a göre sürekli güncel kalsın.",
+    title: "Borç + vade takibi",
+    body: "Kredi, kart, kira, vergi ve diğer yükümlülüklerini vade ve tutara göre izle; gecikme riskini en baştan kes.",
   },
   {
-    title: "Encrypted Vault",
-    body: "Tüm dijital hesap parolalarını master key ile şifrele. Kasan olabildiğince sade, güvenli ve sadece senin kontrolünde.",
+    title: "Nakit akışı & gelir",
+    body: "Gelir kayıtlarını tut; entegrasyonlardan gelen hareketlerle eşleştir; nihai onayı sen ver.",
   },
   {
-    title: "Zero-Friction Automations",
-    body: "Bankalar, kartlar, abonelik sağlayıcıları ve görev kaynaklarını bağla; veriler her sabah otomatik yenilensin.",
+    title: "Yatırım görünümü",
+    body: "Yatırım hesaplarındaki bakiyeleri çek; portföyünü, riskini ve dağılımını net gör; manuel varlıklarla beraber.",
+  },
+];
+
+const lifePillars = [
+  {
+    title: "Workspace",
+    body: "Projelerini, yapılacaklarını ve finansal kararlarını aynı timeline üzerinde organize et.",
+  },
+  {
+    title: "Reminders",
+    body: "Ödeme, gelir, kontrol ve rapor tarihlerini hatırlatıcılarla bağla; kritik şeyler unutulmasın.",
+  },
+  {
+    title: "Journal",
+    body: "Yatırım notlarını, kararlarının gerekçelerini ve günlük özetlerini sakla; geriye dönüp bakabil.",
+  },
+  {
+    title: "Dijital hesaplar kasası",
+    body: "Google, Apple, bankalar ve diğer dijital hesaplarının bilgilerini master key ile şifreleyerek sakla.",
   },
 ];
 
 const steps = [
-  "Hesap oluştur ve master key belirle.",
-  "Varlık, borç, gelir ve dijital hesaplarını ekle.",
-  "Nakit akışı, vade takvimi ve hatırlatmalar otomatik oluşsun.",
+  "Hesap aç ve master key belirle.",
+  "Banka / yatırım hesaplarını bağla, manuel varlık ve yükümlülüklerini ekle.",
+  "Gelir, vade ve net varlık takibini Fin OS içinden sürekli güncel halde yönet.",
 ];
 
 const integrations = [
   "Banka & açık bankacılık",
-  "Kart & abonelik sağlayıcıları",
-  "Görev sistemleri",
-  "Life OS entegrasyonları",
+  "Yatırım hesapları",
+  "AI ile işlem sınıflandırma",
+  "Manuel varlık + Life OS",
 ];
 
 export default function Home() {
@@ -68,15 +87,19 @@ export default function Home() {
         {/* HERO */}
         <div className="mx-auto flex max-w-6xl flex-col gap-10 px-6 pb-20 lg:flex-row lg:items-center">
           <div className="space-y-6 lg:max-w-xl">
-            <p className="text-xs uppercase tracking-[0.35em] text-indigo-200">Finansal İşletim Sistemi</p>
+            <p className="text-xs uppercase tracking-[0.35em] text-indigo-200">
+              Fin OS + Life OS
+            </p>
 
             <h1 className="text-4xl font-semibold leading-tight text-white md:text-5xl">
-              Kişisel CFO: Tüm finansal gerçekliğini tek panelde yönet.
+              Fin OS: bankalar, yatırımlar ve vadeler tek panelde. Life OS sadece ek katman.
             </h1>
 
             <p className="text-lg text-slate-300">
-              Banka, kredi, abonelik, vergi, gelir, borç ve parolalar… Hepsi tek çekirdekte birleşir. 
-              Net varlığın sürekli güncellenir; vadeler otomatik işlenir; finansal hayatın hiçbir zaman karanlıkta kalmaz.
+              Amaç basit: net varlığını, borçlarını, gelirlerini ve vadelerini her an güncel görmek.
+              Banka ve yatırım entegrasyonları, AI ile işlem sınıflandırma ve manuel kayıtlar birleşip
+              sana gerçek zamanlı bir net worth ve cashflow kokpiti kurar. Workspace, Reminders,
+              Journal ve Dijital Hesaplar ise bunun etrafındaki hafif Life OS katmanıdır.
             </p>
 
             <div className="flex flex-wrap gap-3">
@@ -101,43 +124,61 @@ export default function Home() {
                   key={s.label}
                   className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm shadow-inner shadow-black/10"
                 >
-                  <p className="text-[11px] uppercase tracking-[0.28em] text-indigo-200">{s.label}</p>
+                  <p className="text-[11px] uppercase tracking-[0.28em] text-indigo-200">
+                    {s.label}
+                  </p>
                   <p className="text-lg font-semibold text-white">{s.value}</p>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Hero Visual */}
+          {/* HERO VISUAL */}
           <div className="relative w-full lg:max-w-xl">
             <div className="absolute -left-8 -top-6 h-28 w-28 rounded-full bg-indigo-500/20 blur-3xl" />
             <div className="absolute right-0 top-10 h-24 w-24 rounded-full bg-emerald-400/20 blur-3xl" />
             <div className="relative space-y-3 rounded-3xl border border-white/10 bg-slate-900/70 p-5 shadow-2xl shadow-black/40 backdrop-blur">
+              {/* Net worth card */}
               <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-[#0c1024]/80 px-4 py-3">
                 <div>
-                  <p className="text-[11px] uppercase tracking-[0.28em] text-indigo-200">Toplam Varlık</p>
-                  <p className="text-xs text-slate-300">TRY + USD toplu</p>
+                  <p className="text-[11px] uppercase tracking-[0.28em] text-indigo-200">
+                    Canlı net varlık
+                  </p>
+                  <p className="text-xs text-slate-300">Bankalar + yatırım hesapları + manuel varlıklar</p>
                 </div>
                 <p className="text-xl font-semibold text-white">₺ 2.45M</p>
               </div>
 
+              {/* Obligation / income cards */}
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <p className="text-[11px] uppercase tracking-[0.28em] text-rose-200">Yaklaşan ödeme</p>
-                <p className="text-lg font-semibold text-white">Kredi Taksiti</p>
-                <p className="text-sm text-slate-300">30 Kasım • ₺18.450</p>
+                <p className="text-[11px] uppercase tracking-[0.28em] text-rose-200">
+                  Yaklaşan yükümlülük
+                </p>
+                <p className="text-lg font-semibold text-white">Kira + Kredi Taksiti</p>
+                <p className="text-sm text-slate-300">
+                  10 Aralık • ₺32.450 toplam • Vade takviminde işaretli
+                </p>
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <p className="text-[11px] uppercase tracking-[0.28em] text-emerald-200">Gelir</p>
-                  <p className="text-base font-semibold text-white">Serbest Proje</p>
-                  <p className="text-sm text-slate-300">$2.800 • 3g kaldı</p>
+                  <p className="text-[11px] uppercase tracking-[0.28em] text-emerald-200">
+                    AI eşleşen gelir
+                  </p>
+                  <p className="text-base font-semibold text-white">Kira geliri tespit edildi</p>
+                  <p className="text-sm text-slate-300">
+                    10 Aralık • ₺25.000 • “Onayla” diyene kadar sadece öneri
+                  </p>
                 </div>
 
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <p className="text-[11px] uppercase tracking-[0.28em] text-fuchsia-200">Kasa</p>
-                  <p className="text-base font-semibold text-white">7 parola şifreli</p>
-                  <p className="text-sm text-slate-300">Master key sadece sende</p>
+                  <p className="text-[11px] uppercase tracking-[0.28em] text-fuchsia-200">
+                    Dijital hesap kasası
+                  </p>
+                  <p className="text-base font-semibold text-white">12 hesap • 7 parola</p>
+                  <p className="text-sm text-slate-300">
+                    Master key ile şifreli; Life OS katmanında durur
+                  </p>
                 </div>
               </div>
             </div>
@@ -146,64 +187,85 @@ export default function Home() {
       </header>
 
       {/* MAIN */}
-      <main className="mx-auto max-w-6xl space-y-12 px-6 py-16">
-        {/* FEATURES */}
-        <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {pillars.map((f) => (
-            <article
-              key={f.title}
-              className="rounded-2xl border border-white/10 bg-slate-900/70 p-5 shadow-lg shadow-black/20"
-            >
-              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">{f.title}</p>
-              <p className="mt-2 text-sm text-slate-200">{f.body}</p>
-            </article>
-          ))}
+      <main className="mx-auto max-w-6xl space-y-16 px-6 py-16">
+        {/* FIN OS FEATURES */}
+        <section className="space-y-6">
+          <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.3em] text-indigo-200">Fin OS</p>
+              <h2 className="text-2xl font-semibold text-white">
+                Ana ürün: varlıklar, yükümlülükler, gelirler ve net worth motoru.
+              </h2>
+            </div>
+            <p className="max-w-md text-sm text-slate-300">
+              Fin OS, FLOSS’un kalbi. Banka ve yatırım entegrasyonları + manuel kayıtlar üzerinden
+              sürekli güncel bir bilanço ve nakit akışı sağlar. Life OS sadece destek katmanıdır.
+            </p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {finPillars.map((f) => (
+              <article
+                key={f.title}
+                className="rounded-2xl border border-white/10 bg-slate-900/70 p-5 shadow-lg shadow-black/20"
+              >
+                <p className="text-xs uppercase tracking-[0.3em] text-slate-400">{f.title}</p>
+                <p className="mt-2 text-sm text-slate-200">{f.body}</p>
+              </article>
+            ))}
+          </div>
         </section>
 
-        {/* MID SECTION */}
-        <section className="grid gap-4 lg:grid-cols-3">
-          <article className="rounded-3xl border border-white/10 bg-[#0b1027] p-6 shadow-lg shadow-black/30">
-            <p className="text-xs uppercase tracking-[0.3em] text-indigo-200">Finans çekirdeği</p>
-            <h2 className="mt-2 text-2xl font-semibold text-white">Net varlık + nakit akışı</h2>
-            <p className="mt-2 text-sm text-slate-300">
-              Tüm varlık/borç dengesi, nakit giriş-çıkışı, vadeler ve kur dönüşümleri otomatik bir araya gelir.
+        {/* LIFE OS FEATURES */}
+        <section className="space-y-6">
+          <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Life OS katmanı</p>
+              <h2 className="text-2xl font-semibold text-white">
+                Workspace, Reminders, Journal ve Dijital Hesaplar.
+              </h2>
+            </div>
+            <p className="max-w-md text-sm text-slate-300">
+              Asıl odak finans sağlığı. Life OS modülleri; not, görev, hatırlatma ve parola kasası
+              gibi hafif araçlarla bu çekirdeği destekler.
             </p>
-          </article>
+          </div>
 
-          <article className="rounded-3xl border border-white/10 bg-slate-900/70 p-6 shadow-lg shadow-black/30">
-            <p className="text-xs uppercase tracking-[0.3em] text-fuchsia-200">Güvenli çekirdek</p>
-            <h2 className="mt-2 text-2xl font-semibold text-white">Master key ile şifreleme</h2>
-            <p className="mt-2 text-sm text-slate-300">
-              Dijital parolalar tek bir kasada, master key ile şifrelenmiş şekilde saklanır.
-            </p>
-          </article>
-
-          <article className="rounded-3xl border border-white/10 bg-slate-900/70 p-6 shadow-lg shadow-black/30">
-            <p className="text-xs uppercase tracking-[0.3em] text-emerald-200">Life OS ekleri</p>
-            <h2 className="mt-2 text-2xl font-semibold text-white">Not, görev, entegrasyon</h2>
-            <p className="mt-2 text-sm text-slate-300">
-              Finans ana odak. Life OS modülleri yalnızca destek katmanı olarak bulunur.
-            </p>
-          </article>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {lifePillars.map((f) => (
+              <article
+                key={f.title}
+                className="rounded-2xl border border-white/10 bg-slate-900/70 p-5 shadow-lg shadow-black/20"
+              >
+                <p className="text-xs uppercase tracking-[0.3em] text-slate-400">{f.title}</p>
+                <p className="mt-2 text-sm text-slate-200">{f.body}</p>
+              </article>
+            ))}
+          </div>
         </section>
 
-        {/* INTEGRATION + STEPS */}
+        {/* INTEGRATIONS + FLOW */}
         <section className="rounded-3xl border border-white/10 bg-slate-900/70 p-8 shadow-lg shadow-black/20">
           <div className="grid gap-8 lg:grid-cols-2 lg:items-center">
             <div className="space-y-4">
-              <p className="text-xs uppercase tracking-[0.3em] text-indigo-200">Derin entegrasyon</p>
+              <p className="text-xs uppercase tracking-[0.3em] text-indigo-200">Entegrasyon & analiz</p>
 
               <h2 className="text-3xl font-semibold text-white">
-                Bankalarını, aboneliklerini ve görev kaynaklarını bağla. Hepsi otomatik akar.
+                Bankanı bağla, hareketleri AI sınıflandırsın, son sözü yine sen söyle.
               </h2>
 
               <p className="text-sm text-slate-300">
-                Açık bankacılık, abonelik sağlayıcıları, bulut hesaplar ve görev sistemlerinden gelen veriler tek timeline’da birleşir.
+                Hesap hareketleri, planlanmış gelir ve yükümlülük kayıtlarınla otomatik eşleştirilir;
+                sistem “bu kira olabilir, bu kredi taksiti olabilir” der. Sen onaylayana kadar hiçbir
+                şey kesinleşmez ama analiz her zaman hazırdır.
               </p>
 
               <div className="grid gap-3 sm:grid-cols-2">
                 {integrations.map((i) => (
-                  <div key={i} className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
+                  <div
+                    key={i}
+                    className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200"
+                  >
                     {i}
                   </div>
                 ))}
@@ -232,7 +294,7 @@ export default function Home() {
         <section className="rounded-3xl border border-white/10 bg-slate-900/70 p-8 text-center shadow-lg shadow-black/20">
           <p className="text-xs uppercase tracking-[0.35em] text-indigo-200">Başlayalım</p>
           <h3 className="mt-2 text-2xl font-semibold text-white">
-            Finansal hayatını tek panelde yönet.
+            Finansal hayatını FinOS modüllerimiz ile kontrol altına al; bunun yanında Life OS modülleri ile de ile takibi kolaylaştır.  
           </h3>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Link
