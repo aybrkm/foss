@@ -1,10 +1,12 @@
 import { revalidatePath } from "next/cache";
 import prisma from "@/lib/prisma";
+import { getExchangeRates, convertToTry } from "@/lib/exchange";
+import { formatCurrency } from "@/lib/format";
 import { requireUserId } from "@/lib/auth";
 import { DigitalAccountForm } from "@/components/forms/DigitalAccountForm";
 import { DigitalAccountTable } from "@/components/digital-accounts/DigitalAccountTable";
 import { syncSubscriptionForAccount } from "@/lib/digital-accounts";
-import type { SubscriptionPeriod } from "@prisma/client";
+import type { SubscriptionPeriod, DigitalAccountCategory } from "@prisma/client";
 
 const categoryOptions = ["email", "cloud", "streaming", "social", "dev_tool", "other"] as const;
 const currencyOptions = ["TRY", "USD", "AED", "EUR"] as const;
@@ -46,7 +48,7 @@ async function createDigitalAccount(formData: FormData) {
     data: {
       providerName,
       accountIdentifier,
-      category: category || null,
+      category: category ? (category as DigitalAccountCategory) : null,
       loginUrl,
       passwordHint,
       passwordLastChanged: resolvedPasswordChanged,
@@ -103,18 +105,21 @@ async function deleteDigitalAccount(formData: FormData) {
 export default async function DigitalAccountsPage() {
   const userId = await requireUserId();
 
-  const accounts = await prisma.digitalAccount.findMany({
-    where: { userId },
-    include: {
-      subscription: true,
-      obligations: {
-        where: { isDone: false },
-        orderBy: { nextDue: "asc" },
-        take: 1,
+  const [accounts, rates] = await Promise.all([
+    prisma.digitalAccount.findMany({
+      where: { userId },
+      include: {
+        subscription: true,
+        obligations: {
+          where: { isDone: false },
+          orderBy: { nextDue: "asc" },
+          take: 1,
+        },
       },
-    },
-    orderBy: { updatedAt: "desc" },
-  });
+      orderBy: { updatedAt: "desc" },
+    }),
+    getExchangeRates(),
+  ]);
 
   const mappedAccounts = accounts.map((account) => {
     const nextObligation = account.obligations[0] ?? null;
@@ -145,12 +150,39 @@ export default async function DigitalAccountsPage() {
   const premiumCount = mappedAccounts.filter((account) => account.isPremium).length;
   const passwordCount = mappedAccounts.filter((account) => account.encryptedPassword).length;
   const autoPaymentCount = mappedAccounts.filter((account) => account.subscription).length;
+  const subscriptionItems = mappedAccounts.filter((account) => account.subscription);
+
+  const monthlyTotalTry = subscriptionItems.reduce((sum, account) => {
+    const sub = account.subscription;
+    if (!sub) return sum;
+    const monthly = normalizeToMonthlyTry(sub.amount, sub.currency, sub.period, rates);
+    return sum + monthly;
+  }, 0);
+
+  const subscriptionsCount = subscriptionItems.length;
+  const monthlyAverageTry =
+    subscriptionsCount > 0 ? monthlyTotalTry / subscriptionsCount : 0;
+
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1).getTime() - 1;
+  const monthlyDueTry = subscriptionItems.reduce((sum, account) => {
+    const sub = account.subscription;
+    if (!sub?.nextDue) return sum;
+    const dueTime = new Date(sub.nextDue).getTime();
+    if (dueTime >= startOfMonth && dueTime <= endOfMonth) {
+      return sum + convertToTry(sub.amount, sub.currency, rates);
+    }
+    return sum;
+  }, 0);
+
+  const annualProjectionTry = monthlyTotalTry * 12;
 
   const highlights = [
     { title: "Toplam hesap", value: `${mappedAccounts.length}`, hint: "dijital profil" },
-    { title: "Premium", value: `${premiumCount}`, hint: "otomatik ödemeli hesap" },
-    { title: "Şifre kaydı", value: `${passwordCount}`, hint: "master key ile çözülebilir" },
-    { title: "Otomatik ödeme", value: `${autoPaymentCount}`, hint: "yükümlülüğe bağlı" },
+    { title: "Normalize aylık gider", value: formatCurrency(monthlyAverageTry, "TRY"), hint: "aboneliklerin aylık eşdeğeri" },
+    { title: "Bu ay kalan ödeme", value: formatCurrency(monthlyDueTry, "TRY"), hint: "abonelik vade toplamı" },
+    { title: "Yıllık projeksiyon", value: formatCurrency(annualProjectionTry, "TRY"), hint: "aboneliklerin yıllık karşılığı" },
   ];
 
   return (
@@ -203,4 +235,26 @@ function parseSubscription(formData: FormData) {
   }
 
   return { amount, currency, period, firstDue };
+}
+
+function normalizeToMonthlyTry(
+  amount: number,
+  currency: string,
+  period: SubscriptionPeriod,
+  rates: Awaited<ReturnType<typeof getExchangeRates>>,
+) {
+  const amountTry = convertToTry(amount, currency, rates);
+  switch (period) {
+    case "monthly":
+      return amountTry;
+    case "quarterly":
+      return amountTry / 3;
+    case "semiannual":
+      return amountTry / 6;
+    case "yearly":
+      return amountTry / 12;
+    case "lifetime":
+    default:
+      return amountTry / 120; // 10 yıla yayarak aylık ortalama
+  }
 }

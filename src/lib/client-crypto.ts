@@ -46,6 +46,34 @@ export async function decryptWithMasterCode(payload: string, masterCode: string)
   return new TextDecoder().decode(decrypted);
 }
 
+export async function decryptAnyWithMasterCode(payload: string, masterCode: string) {
+  if (payload.startsWith("v1:")) {
+    return decryptWithMasterCode(payload, masterCode);
+  }
+  // Legacy format iv:authTag:cipher (hex) — try decoding with masterCode-derived key
+  const parts = payload.split(":");
+  if (parts.length !== 3) {
+    throw new Error("Geçersiz şifre formatı");
+  }
+  const [ivHex, authTagHex, dataHex] = parts;
+  const iv = fromHex(ivHex);
+  const authTag = fromHex(authTagHex);
+  const data = fromHex(dataHex);
+
+  const keyRaw = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(masterCode));
+  const key = await crypto.subtle.importKey("raw", keyRaw, { name: "AES-GCM" }, false, ["decrypt"]);
+  const combined = new Uint8Array(data.length + authTag.length);
+  combined.set(data);
+  combined.set(authTag, data.length);
+
+  const decrypted = await crypto.subtle.decrypt(
+    { name: "AES-GCM", iv },
+    key,
+    combined,
+  );
+  return new TextDecoder().decode(decrypted);
+}
+
 async function deriveKey(masterCode: string, salt: Uint8Array) {
   const baseKey = await crypto.subtle.importKey(
     "raw",
@@ -57,7 +85,7 @@ async function deriveKey(masterCode: string, salt: Uint8Array) {
   return crypto.subtle.deriveKey(
     {
       name: "PBKDF2",
-      salt,
+      salt: salt.slice().buffer,
       iterations: ITERATIONS,
       hash: "SHA-256",
     },
