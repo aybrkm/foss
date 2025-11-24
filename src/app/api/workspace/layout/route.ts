@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 
 export async function GET() {
   const columns = await prisma.workspaceColumn.findMany({
@@ -27,7 +28,7 @@ export async function POST(request: Request) {
     cards?: Array<{ id: string; title: string; notes?: string; position?: number }>;
   }>;
 
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     for (let i = 0; i < columns.length; i += 1) {
       const column = columns[i];
       const columnId = column.id;

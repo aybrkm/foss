@@ -92,8 +92,9 @@ export default async function AssetsPage() {
     orderBy: { updatedAt: "desc" },
   });
   type AssetRow = typeof assets[number];
+  type EnrichedAsset = AssetRow & { numericValue: number; valueTry: number };
   const rates = await getExchangeRates();
-  const enrichedAssets = assets.map((asset) => {
+  const enrichedAssets: EnrichedAsset[] = assets.map((asset: AssetRow) => {
     const numericValue = Number(asset.currentValue);
     return {
       ...asset,
@@ -101,8 +102,11 @@ export default async function AssetsPage() {
       valueTry: convertToTry(numericValue, asset.currency, rates),
     };
   });
-  const totalPortfolioTry = enrichedAssets.reduce((sum, asset) => sum + asset.valueTry, 0);
-  const liquidCount = enrichedAssets.filter((asset) => asset.isLiquid).length;
+  const totalPortfolioTry = enrichedAssets.reduce(
+    (sum: number, asset: EnrichedAsset) => sum + asset.valueTry,
+    0,
+  );
+  const liquidCount = enrichedAssets.filter((asset: EnrichedAsset) => asset.isLiquid).length;
   const illiquidCount = enrichedAssets.length - liquidCount;
   const assetHighlights = [
     {
@@ -167,7 +171,7 @@ export default async function AssetsPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
-            {enrichedAssets.map((asset: AssetRow & { numericValue: number; valueTry: number }) => (
+            {enrichedAssets.map((asset: EnrichedAsset) => (
               <tr key={asset.id} className="hover:bg-white/5">
                 <td className="px-5 py-4">
                   <p className="font-semibold text-white">{asset.name}</p>

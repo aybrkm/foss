@@ -57,6 +57,7 @@ export default async function DashboardPage() {
   type ReminderRow = (typeof reminderRows)[number];
   type AssetRow = (typeof assetRows)[number];
   type JournalRow = (typeof journalRows)[number];
+  type IncomeRow = (typeof incomeRows)[number];
   type AssetWithConversion = AssetRow & { valueTry: number; numericValue: number };
   const now = new Date();
   const nowMs = now.getTime();
@@ -69,16 +70,21 @@ export default async function DashboardPage() {
     };
   });
 
-  const totalAssetValue = assetsWithRates.reduce((sum: number, asset: AssetWithConversion) => sum + asset.valueTry, 0);
+  const totalAssetValue = assetsWithRates.reduce(
+    (sum: number, asset: AssetWithConversion) => sum + asset.valueTry,
+    0,
+  );
   const liquidAssetValue = assetsWithRates
-    .filter((asset) => asset.isLiquid)
-    .reduce((sum: number, asset) => sum + asset.valueTry, 0);
+    .filter((asset: AssetWithConversion) => asset.isLiquid)
+    .reduce((sum: number, asset: AssetWithConversion) => sum + asset.valueTry, 0);
 
   const obligationNameMap = new Map(
-    obligationRows.map((obligation) => [obligation.id, obligation.name]),
+    obligationRows.map((obligation: ObligationRow) => [obligation.id, obligation.name] as const),
   );
 
-  const activeObligationRows = obligationRows.filter((obligation: ObligationRow) => !obligation.isDone);
+  const activeObligationRows = obligationRows.filter(
+    (obligation: ObligationRow) => !obligation.isDone,
+  );
   const activeReminderRows = reminderRows.filter((reminder: ReminderRow) => !reminder.isDone);
 
   const reminderDetails = activeReminderRows.map((reminder: ReminderRow) => ({
@@ -99,8 +105,8 @@ const importantReminders = reminderDetails.filter(
 );
 
   const upcomingIncomes = incomeRows
-    .filter((income) => new Date(income.occurredAt).getTime() > nowMs)
-    .map((income) => ({
+    .filter((income: IncomeRow) => new Date(income.occurredAt).getTime() > nowMs)
+    .map((income: IncomeRow) => ({
       id: income.id,
       title: income.title,
       dueDate: income.occurredAt.toISOString(),

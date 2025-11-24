@@ -45,12 +45,14 @@ export default async function WorkspacePage() {
       },
     },
   });
+  type ColumnRow = (typeof columns)[number];
+  type CardRow = ColumnRow["cards"][number];
 
-  const initialColumns = columns.map((column) => ({
+  const initialColumns = columns.map((column: ColumnRow) => ({
     id: column.id,
     title: column.title,
     width: column.width ?? 1,
-    cards: column.cards.map((card) => ({
+    cards: column.cards.map((card: CardRow) => ({
       id: card.id,
       title: card.title,
       notes: card.notes ?? "",

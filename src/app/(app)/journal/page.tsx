@@ -72,10 +72,11 @@ export default async function JournalPage() {
     where: { userId },
     orderBy: { entryDate: "desc" },
   });
+  type EntryRow = (typeof entries)[number];
 
   const entryTotal = entries.length;
   const now = new Date();
-  const entriesThisMonth = entries.filter((entry) => {
+  const entriesThisMonth = entries.filter((entry: EntryRow) => {
     const date = new Date(entry.entryDate);
     return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
   }).length;
@@ -89,7 +90,7 @@ export default async function JournalPage() {
     { title: "Son guncelleme", value: lastEntryDate, hint: "en guncel not" },
   ];
 
-  const clientEntries = entries.map((entry) => ({
+  const clientEntries = entries.map((entry: EntryRow) => ({
     id: entry.id,
     title: entry.title,
     body: entry.body,

@@ -226,8 +226,9 @@ export default async function ObligationsPage() {
     ],
   });
   type ObligationRow = (typeof obligations)[number];
+  type EnrichedObligation = ObligationRow & { amountNumber: number | null; amountTry: number | null };
   const rates = await getExchangeRates();
-  const enrichedObligations = obligations.map((obligation: ObligationRow) => {
+  const enrichedObligations: EnrichedObligation[] = obligations.map((obligation: ObligationRow) => {
     const amount = obligation.amount ? Number(obligation.amount) : null;
     return {
       ...obligation,
@@ -235,10 +236,13 @@ export default async function ObligationsPage() {
       amountTry: amount ? convertToTry(amount, obligation.currency, rates) : null,
     };
   });
-  const nowMs = new Date().getTime();
+  const now = new Date();
+  const nowMs = now.getTime();
   const upcomingWindowMs = nowMs + 30 * DAY_MS;
-  const activeCount = enrichedObligations.filter((obligation) => !obligation.isDone).length;
-  const dueSoonCount = enrichedObligations.filter((obligation) => {
+  const activeCount = enrichedObligations.filter(
+    (obligation: EnrichedObligation) => !obligation.isDone,
+  ).length;
+  const dueSoonCount = enrichedObligations.filter((obligation: EnrichedObligation) => {
     if (!obligation.nextDue) {
       return false;
     }
@@ -246,22 +250,25 @@ export default async function ObligationsPage() {
     return dueMs >= nowMs && dueMs <= upcomingWindowMs && !obligation.isDone;
   }).length;
   const yearEndDeadlineMs = new Date(new Date().getFullYear(), 11, 31, 23, 59, 59, 999).getTime();
-  const yearEndAmountTry = enrichedObligations.reduce((sum, obligation) => {
-    if (obligation.isDone || !obligation.amountTry || !obligation.nextDue) {
+  const yearEndAmountTry = enrichedObligations.reduce(
+    (sum: number, obligation: EnrichedObligation) => {
+      if (obligation.isDone || !obligation.amountTry || !obligation.nextDue) {
+        return sum;
+      }
+      const dueMs = new Date(obligation.nextDue).getTime();
+      if (dueMs >= nowMs && dueMs <= yearEndDeadlineMs) {
+        return sum + obligation.amountTry;
+      }
       return sum;
-    }
-    const dueMs = new Date(obligation.nextDue).getTime();
-    if (dueMs >= nowMs && dueMs <= yearEndDeadlineMs) {
-      return sum + obligation.amountTry;
-    }
-    return sum;
-  }, 0);
+    },
+    0,
+  );
   const sortedObligations = [...enrichedObligations].sort((a, b) => {
     const aDue = a.nextDue ? new Date(a.nextDue).getTime() : Number.MAX_SAFE_INTEGER;
     const bDue = b.nextDue ? new Date(b.nextDue).getTime() : Number.MAX_SAFE_INTEGER;
     return aDue - bDue;
   });
-  const tableObligations = sortedObligations.map((obligation) => ({
+  const tableObligations = sortedObligations.map((obligation: EnrichedObligation) => ({
     id: obligation.id,
     name: obligation.name,
     category: obligation.category,
