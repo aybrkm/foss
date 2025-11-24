@@ -6,10 +6,10 @@ import { createRouteHandlerSupabaseClient } from "@/lib/supabase/route-handler-c
 export async function POST(request: Request) {
   const supabase = await createRouteHandlerSupabaseClient();
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  if (!session?.user) {
+  if (!user) {
     return NextResponse.json({ error: "Oturum bulunamadı" }, { status: 401 });
   }
 
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
   const hash = createHash("sha256").update(code).digest("hex");
 
   await prisma.user.update({
-    where: { id: session.user.id },
+    where: { id: user.id },
     data: { masterKeyHash: hash },
   });
 

@@ -6,10 +6,10 @@ import { RegisterForm } from "@/components/auth/RegisterForm";
 export default async function RegisterPage() {
   const supabase = await createServerComponentClient();
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  if (session) {
+  if (user) {
     redirect("/dashboard");
   }
 

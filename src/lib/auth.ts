@@ -4,14 +4,15 @@ import { createServerComponentClient } from "@/lib/supabase/server-component-cli
 export async function requireUser(): Promise<User> {
   const supabase = await createServerComponentClient();
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
 
-  if (!session?.user) {
+  if (error || !user) {
     throw new Error("Oturum bulunamadı");
   }
 
-  return session.user;
+  return user;
 }
 
 export async function requireUserId(): Promise<string> {

@@ -8,10 +8,10 @@ import { createRouteHandlerSupabaseClient } from "@/lib/supabase/route-handler-c
 export async function POST(request: Request) {
   const supabase = await createRouteHandlerSupabaseClient();
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  if (!session?.user) {
+  if (!user) {
     return NextResponse.json({ error: "Oturum bulunamadı" }, { status: 401 });
   }
 
@@ -24,9 +24,9 @@ export async function POST(request: Request) {
   }
 
   const [user, account] = await Promise.all([
-    prisma.user.findUnique({ where: { id: session.user.id }, select: { masterKeyHash: true } }),
+    prisma.user.findUnique({ where: { id: user.id }, select: { masterKeyHash: true } }),
     prisma.digitalAccount.findFirst({
-      where: { id, userId: session.user.id },
+      where: { id, userId: user.id },
       select: { encryptedPassword: true },
     }),
   ]);
