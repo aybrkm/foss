@@ -60,10 +60,17 @@ export async function POST(request: Request) {
         id: user.id,
         email: user.email,
         name: user.user_metadata?.name ?? null,
+        masterKeyHash:
+          typeof user.user_metadata?.masterKeyHash === "string" && /^[a-f0-9]{64}$/i.test(user.user_metadata.masterKeyHash)
+            ? user.user_metadata.masterKeyHash.toLowerCase()
+            : null,
       },
       update: {
         email: user.email,
         name: user.user_metadata?.name ?? null,
+        ...(typeof user.user_metadata?.masterKeyHash === "string" && /^[a-f0-9]{64}$/i.test(user.user_metadata.masterKeyHash)
+          ? { masterKeyHash: user.user_metadata.masterKeyHash.toLowerCase() }
+          : {}),
       },
     });
   } else {
@@ -78,10 +85,17 @@ export async function POST(request: Request) {
           id: user.id,
           email: user.email,
           name: user.user_metadata?.name ?? null,
+          masterKeyHash:
+            typeof user.user_metadata?.masterKeyHash === "string" && /^[a-f0-9]{64}$/i.test(user.user_metadata.masterKeyHash)
+              ? user.user_metadata.masterKeyHash.toLowerCase()
+              : null,
         },
         update: {
           email: user.email,
           name: user.user_metadata?.name ?? null,
+          ...(typeof user.user_metadata?.masterKeyHash === "string" && /^[a-f0-9]{64}$/i.test(user.user_metadata.masterKeyHash)
+            ? { masterKeyHash: user.user_metadata.masterKeyHash.toLowerCase() }
+            : {}),
         },
       });
     }

@@ -55,6 +55,13 @@ export function RegisterForm() {
 
     setLoading(true);
 
+    let masterKeyHash = "";
+    try {
+      masterKeyHash = await hashMasterCode(masterCode);
+    } catch (hashError) {
+      console.error("Master kod hashlenemedi", hashError);
+    }
+
     const redirectBaseEnv = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
     const redirectBase =
       redirectBaseEnv || (typeof window !== "undefined" ? window.location.origin.replace(/\/$/, "") : "");
@@ -68,7 +75,7 @@ export function RegisterForm() {
     } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo },
+      options: { emailRedirectTo, data: masterKeyHash ? { masterKeyHash } : undefined },
     });
 
     if (signUpError) {
@@ -85,11 +92,8 @@ export function RegisterForm() {
       showToast(message);
       if (signUpData.user?.id) {
         // Session yoksa master kodu hashleyip localStorage'a bırak, ilk oturumda DB'ye yazılacak
-        try {
-          const hashed = await hashMasterCode(masterCode);
-          window.localStorage.setItem("pendingMasterKeyHash", hashed);
-        } catch (hashError) {
-          console.error("Master kod hashlenemedi", hashError);
+        if (masterKeyHash) {
+          window.localStorage.setItem("pendingMasterKeyHash", masterKeyHash);
         }
       }
       setLoading(false);
