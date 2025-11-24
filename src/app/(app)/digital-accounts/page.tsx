@@ -5,6 +5,7 @@ import { formatCurrency } from "@/lib/format";
 import { requireUserId } from "@/lib/auth";
 import { DigitalAccountForm } from "@/components/forms/DigitalAccountForm";
 import { DigitalAccountTable } from "@/components/digital-accounts/DigitalAccountTable";
+import { MasterKeyGate } from "@/components/digital-accounts/MasterKeyGate";
 import { syncSubscriptionForAccount } from "@/lib/digital-accounts";
 import type { SubscriptionPeriod, DigitalAccountCategory } from "@prisma/client";
 
@@ -105,7 +106,11 @@ async function deleteDigitalAccount(formData: FormData) {
 export default async function DigitalAccountsPage() {
   const userId = await requireUserId();
 
-  const [accounts, rates] = await Promise.all([
+  const [user, accounts, rates] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: userId },
+      select: { masterKeyHash: true },
+    }),
     prisma.digitalAccount.findMany({
       where: { userId },
       include: {
@@ -147,9 +152,6 @@ export default async function DigitalAccountsPage() {
     };
   });
 
-  const premiumCount = mappedAccounts.filter((account) => account.isPremium).length;
-  const passwordCount = mappedAccounts.filter((account) => account.encryptedPassword).length;
-  const autoPaymentCount = mappedAccounts.filter((account) => account.subscription).length;
   const subscriptionItems = mappedAccounts.filter((account) => account.subscription);
 
   const monthlyTotalTry = subscriptionItems.reduce((sum, account) => {
@@ -218,6 +220,8 @@ export default async function DigitalAccountsPage() {
       />
 
       <DigitalAccountTable accounts={mappedAccounts} deleteAction={deleteDigitalAccount} />
+
+      <MasterKeyGate hasMasterKey={Boolean(user?.masterKeyHash)} />
     </div>
   );
 }
