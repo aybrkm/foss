@@ -12,6 +12,14 @@ const finPillars = [
     body: "Banka, yatırım hesabı ve manuel varlıklarını tek yerde topla; net varlığın her gün değil, her an güncel kalsın.",
   },
   {
+    title: "AI değerleme motoru",
+    body: "Dönen/duran varlıkların tahmini piyasa değerini AI ajanları internetten (Sahibinden vb.) tarayarak aralık bazlı günceller; sinyalleri kontrol edersin.",
+  },
+  {
+    title: "Personal Valuables",
+    body: "Drone, VR gözlük, koleksiyon parçası gibi değerli eşyalarını ekle; net worth’a katkısını ve tahmini piyasa değerini takip et.",
+  },
+  {
     title: "Borç + vade takibi",
     body: "Kredi, kart, kira, vergi ve diğer yükümlülüklerini vade ve tutara göre izle; gecikme riskini en baştan kes.",
   },
@@ -52,7 +60,7 @@ const steps = [
 
 const integrations = [
   "Banka & açık bankacılık",
-  "Yatırım hesapları",
+  "Yatırım hesapları (Plaid/IBKR)",
   "AI ile işlem sınıflandırma",
   "Manuel varlık + Life OS",
 ];
@@ -92,7 +100,7 @@ export default function Home() {
             </p>
 
             <h1 className="text-4xl font-semibold leading-tight text-white md:text-5xl">
-              Fin OS: bankalar, yatırımlar ve vadeler tek panelde. Life OS sadece ek katman.
+              Gerçek zamanlı tam entegre finansal hayat yönetim sistemi
             </h1>
 
             <p className="text-lg text-slate-300">
@@ -194,12 +202,13 @@ export default function Home() {
             <div>
               <p className="text-xs uppercase tracking-[0.3em] text-indigo-200">Fin OS</p>
               <h2 className="text-2xl font-semibold text-white">
-                Ana ürün: varlıklar, yükümlülükler, gelirler ve net worth motoru.
+                Ana ürün: varlıklar, yükümlülükler, gelirler ve AI destekli net worth motoru.
               </h2>
             </div>
             <p className="max-w-md text-sm text-slate-300">
               Fin OS, FLOSS’un kalbi. Banka ve yatırım entegrasyonları + manuel kayıtlar üzerinden
-              sürekli güncel bir bilanço ve nakit akışı sağlar. Life OS sadece destek katmanıdır.
+              sürekli güncel bir bilanço ve nakit akışı sağlar. AI worth engine dönen/duran varlıkları tarayıp
+              tahmini piyasa değerini günceller. Life OS sadece destek katmanıdır.
             </p>
           </div>
 
@@ -257,7 +266,8 @@ export default function Home() {
               <p className="text-sm text-slate-300">
                 Hesap hareketleri, planlanmış gelir ve yükümlülük kayıtlarınla otomatik eşleştirilir;
                 sistem “bu kira olabilir, bu kredi taksiti olabilir” der. Sen onaylayana kadar hiçbir
-                şey kesinleşmez ama analiz her zaman hazırdır.
+                şey kesinleşmez ama analiz her zaman hazırdır. Yükümlülük ve gelir kayıtlarına tekrar (recurrence)
+                tanımladığında, tamamlanan görevler vadesine göre otomatik yeni kayda kopyalanır ve sıradaki tarihe taşınır.
               </p>
 
               <div className="grid gap-3 sm:grid-cols-2">

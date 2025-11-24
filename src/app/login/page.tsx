@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createServerComponentClient } from "@/lib/supabase/server-component-client";
 import { LoginForm } from "@/components/auth/LoginForm";
@@ -23,7 +24,17 @@ export default async function LoginPage({ searchParams }: Props) {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4">
-      <LoginForm redirectTo={redirectTo} />
+      <div className="w-full max-w-md space-y-6">
+        <div className="flex justify-center">
+          <Link
+            href="/"
+            className="inline-block translate-x-1 text-4xl font-semibold uppercase tracking-[0.3em] text-indigo-200 transition hover:text-white"
+          >
+            FLOSS
+          </Link>
+        </div>
+        <LoginForm redirectTo={redirectTo} />
+      </div>
     </div>
   );
 }

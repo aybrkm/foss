@@ -16,10 +16,21 @@ export default async function RegisterPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4">
       <div className="w-full max-w-md space-y-6">
+        <div className="flex justify-center">
+          <Link
+            href="/"
+            className="inline-block translate-x-1 text-4xl font-semibold uppercase tracking-[0.3em] text-indigo-200 transition hover:text-white"
+          >
+            FLOSS
+          </Link>
+        </div>
         <RegisterForm />
         <div className="text-center text-sm text-slate-400">
           Zaten hesabın var mı?{" "}
-          <Link href="/login" className="text-indigo-300 underline decoration-dotted underline-offset-4">
+          <Link
+            href="/login"
+            className="text-indigo-300 underline decoration-dotted underline-offset-4"
+          >
             Giriş yap
           </Link>
         </div>

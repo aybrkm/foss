@@ -57,7 +57,7 @@ function AssetFormFields({ action, currencies, isLiquid }: FieldsProps) {
       />
       <input
         name="assetType"
-        placeholder="Tip (ornek: Eurobond, Kiralik ev)"
+        placeholder="Tip (ör: Eurobond, Kiralık ev, Personal Valuables)"
         className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white placeholder:text-slate-500"
         required
       />

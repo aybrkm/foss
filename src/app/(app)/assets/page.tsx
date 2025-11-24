@@ -85,7 +85,7 @@ const assetIntegrations: Integration[] = [
   },
 ];
 
-export default async function AssetsPage() {
+export default async function AssetsPage({ searchParams }: { searchParams?: { valuables?: string } }) {
   const userId = await requireUserId();
   const assets = await prisma.asset.findMany({
     where: { userId },
@@ -108,6 +108,10 @@ export default async function AssetsPage() {
   );
   const liquidCount = enrichedAssets.filter((asset: EnrichedAsset) => asset.isLiquid).length;
   const illiquidCount = enrichedAssets.length - liquidCount;
+  const showValuablesOnly = searchParams?.valuables === "1";
+  const visibleAssets = showValuablesOnly
+    ? enrichedAssets.filter((asset) => asset.assetType.toLowerCase().includes("personal valuable"))
+    : enrichedAssets;
   const assetHighlights = [
     {
       title: "Toplam portföy",
@@ -158,6 +162,23 @@ export default async function AssetsPage() {
 
       <AssetForm action={createAsset} currencies={currencyOptions} />
 
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-slate-900/50 px-4 py-3 text-sm text-slate-200">
+        <div>
+          <p className="text-xs uppercase tracking-[0.3em] text-indigo-200">Personal Valuables</p>
+          <p className="text-xs text-slate-400">Drone, VR, koleksiyon eşyaları gibi değerli eşyalar için özel görünüm.</p>
+        </div>
+        <Link
+          href={showValuablesOnly ? "/assets" : "/assets?valuables=1"}
+          className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
+            showValuablesOnly
+              ? "border border-emerald-300/60 bg-emerald-500/20 text-emerald-100"
+              : "border border-white/20 bg-black/30 text-white hover:border-white/50"
+          }`}
+        >
+          {showValuablesOnly ? "Tüm varlıklar" : "Sadece Personal Valuables"}
+        </Link>
+      </div>
+
       <div className="overflow-hidden rounded-3xl border border-white/10 bg-slate-900/60">
         <table className="min-w-full divide-y divide-white/10 text-left text-sm">
           <thead className="bg-white/5 text-xs uppercase tracking-widest text-slate-400">
@@ -171,7 +192,7 @@ export default async function AssetsPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
-            {enrichedAssets.map((asset: EnrichedAsset) => (
+            {visibleAssets.map((asset: EnrichedAsset) => (
               <tr key={asset.id} className="hover:bg-white/5">
                 <td className="px-5 py-4">
                   <p className="font-semibold text-white">{asset.name}</p>
