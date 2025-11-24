@@ -32,10 +32,10 @@ const steps = [
 ];
 
 const integrations = [
-  "Banka & açık bankacılık",
+  "Açık bankacılık ile banka bağlantısı",
   "Kart/abonelik sağlayıcıları",
+  "Broker & yatırım platformları (Plaid/IBKR)",
   "Görev & ticket sistemleri",
-  "Kişisel bulut ve parola yöneticileri",
 ];
 
 const benefits = [
@@ -70,11 +70,11 @@ const integrationLogos = [
 
 const tourSections = [
   { title: "Dashboard", body: "Toplam varlık, borç, net worth trendi, yaklaşan ödemeler, gelir kutuları." },
-  { title: "Varlıklar", body: "Banka, yatırım, emlak, kripto ve şirket varlıkları tek listede." },
+  { title: "Varlıklar", body: "Banka, yatırım, emlak, kripto ve şirket varlıkları tek listede; Plaid/Codat ile otomatik değerler." },
   { title: "Yükümlülükler", body: "Krediler, faturalar, vergiler, dijital abonelik ödemeleri; vade ve kurla birlikte." },
   { title: "Dijital Hesaplar", body: "Platform giriş bilgileri + otomatik abonelik yönetimi, master kodla şifreli." },
-  { title: "Nakit Akışı", body: "Gelir yönetimi, geçmiş + geleceğe dönük tahmin ve uyarılar." },
-  { title: "Yatırımlar", body: "Pozisyonlar, performans, dağılım ve para birimi bazlı görünüm." },
+  { title: "Nakit Akışı", body: "Gelir yönetimi, geçmiş + geleceğe dönük tahmin ve uyarılar; AI destekli eşleştirme." },
+  { title: "Yatırımlar", body: "Pozisyonlar, performans, dağılım; Plaid/IBKR ile gerçek zamanlı net worth’a yansır." },
   { title: "Workspace", body: "Görevler, notlar, hatırlatmalar; finansal timeline’ı destekleyen ek katman." },
 ];
 
@@ -84,7 +84,7 @@ const testimonials = [
     name: "Ebru • Girişimci",
   },
   {
-    quote: "“Abonelikler ve ödemeler otomatik akıyor, yatırım değerlerim anında TRY’ye çevriliyor.”",
+    quote: "“Abonelikler ve ödemeler otomatik akıyor, yatırım değerlerim Plaid ile anında TRY’ye çevriliyor.”",
     name: "Kerem • CTO",
   },
   {
@@ -257,8 +257,11 @@ export default function Home() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-indigo-200">Entegrasyonlar</p>
-                <h3 className="text-2xl font-semibold text-white">Tek tıklamayla bağlanır, saniyeler içinde içeri aktarılır.</h3>
-                <p className="text-sm text-slate-300">ABD: Plaid, Codat, IBKR. Türkiye: açık bankacılık aggregator’ları, broker ve muhasebe bağlantıları.</p>
+                <h3 className="text-2xl font-semibold text-white">Tek tıklamayla bağlanır, saniyeler içinde içeri akar.</h3>
+                <p className="text-sm text-slate-300">
+                  ABD: Plaid, Codat, IBKR; TR: açık bankacılık aggregator’ları, broker ve muhasebe bağlantıları. Yapay zeka,
+                  gerçek zamanlı banka hareketlerini yükümlülük/gelirlerle eşleştirip sana CFO gibi bildirim atar.
+                </p>
               </div>
               <Link
                 href="/register"
@@ -297,8 +300,10 @@ export default function Home() {
                 Banka, abonelik ve görev altyapılarını bağla; finansal hayatını tepeden izle.
               </h2>
               <p className="text-sm text-slate-300">
-                Açık bankacılık, abonelik sağlayıcıları ve görev sistemlerinden gelen kayıtlar tek timeline’da.
-                Varlık/borç dengesi, nakit akışı ve şifreli hesaplar aynı yerde; bireysel ya da kurumsal kullanım için.
+                Açık bankacılık ile banka hareketlerini bağlayıp yapay zeka destekli gelir-gider analizi ve
+                kategorilendirme yapıyoruz; CFO tarzı gerçek zamanlı harcama uyarıları gönderiyoruz. Plaid/Codat
+                üzerinden broker ve yatırım platformlarını ekleyerek net worth modülüne anlık yansıtıyoruz. Hareketler
+                yükümlülük ve gelirlerle otomatik eşleşir; sistem izler, sen sadece gerektiğinde müdahale edersin.
               </p>
               <div className="grid gap-3 sm:grid-cols-2">
                 {integrations.map((item) => (
