@@ -3,15 +3,11 @@ import type { NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { getSupabaseConfig } from "@/lib/supabase/config";
 
-const PUBLIC_PATHS = [
-  "/login",
-  "/register",
-  "/api/auth/callback",
-  "/api/cron/update-obligations",
-];
+const PUBLIC_PATHS = ["/login", "/register", "/api/auth/callback", "/api/cron/update-obligations"];
 
 function isPublicPath(pathname: string) {
   return (
+    pathname === "/" ||
     PUBLIC_PATHS.some((path) => pathname.startsWith(path)) ||
     pathname.startsWith("/_next") ||
     pathname === "/favicon.ico"
@@ -35,20 +31,20 @@ export async function middleware(req: NextRequest) {
     },
   });
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const pathname = req.nextUrl.pathname;
   const isPublic = isPublicPath(pathname);
 
-  if (!session && !isPublic) {
+  if (!user && !isPublic) {
     const redirectUrl = req.nextUrl.clone();
     redirectUrl.pathname = "/login";
     redirectUrl.searchParams.set("redirectedFrom", pathname);
     return NextResponse.redirect(redirectUrl);
   }
 
-  if (session && pathname === "/login") {
+  if (user && (pathname === "/login" || pathname === "/")) {
     const dashboardUrl = new URL("/dashboard", req.url);
     return NextResponse.redirect(dashboardUrl);
   }
