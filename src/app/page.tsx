@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 const stats = [
-  { label: "Canlı net varlık", value: "₺2.45M" },
+  { label: "Toplam Servet", value: "₺2.45M" },
   { label: "Bağlı banka / hesap", value: "6 hesap" },
   { label: "Takip edilen vade", value: "23 kayıt" },
 ];
@@ -21,11 +21,11 @@ const finPillars = [
   },
   {
     title: "Borç + vade takibi",
-    body: "Kredi, kart, kira, vergi ve diğer yükümlülüklerini vade ve tutara göre izle; gecikme riskini en baştan kes.",
+    body: "Kredi, kart, kira, vergi ve diğer yükümlülüklerini vade ve tutara göre izle; SMS/email uyarıları tanımla, gecikme riskini en baştan kes.",
   },
   {
     title: "Nakit akışı & gelir",
-    body: "Gelir kayıtlarını tut; entegrasyonlardan gelen hareketlerle eşleştir; nihai onayı sen ver.",
+    body: "Gelir kayıtlarını tut; entegrasyonlardan gelen hareketlerle eşleştir; SMS/email tetikleyicileriyle net nakit akışını koru.",
   },
   {
     title: "Yatırım görünümü",
@@ -36,19 +36,19 @@ const finPillars = [
 const lifePillars = [
   {
     title: "Workspace",
-    body: "Projelerini, yapılacaklarını ve finansal kararlarını aynı timeline üzerinde organize et.",
-  },
-  {
-    title: "Reminders",
-    body: "Ödeme, gelir, kontrol ve rapor tarihlerini hatırlatıcılarla bağla; kritik şeyler unutulmasın.",
-  },
-  {
-    title: "Journal",
-    body: "Yatırım notlarını, kararlarının gerekçelerini ve günlük özetlerini sakla; geriye dönüp bakabil.",
+    body: "Projelerini, yapılacaklarını ve finansal kararlarını aynı timeline üzerinde organize et; kritik kartlar için SMS/email uyarıları kur.",
   },
   {
     title: "Dijital hesaplar kasası",
     body: "Google, Apple, bankalar ve diğer dijital hesaplarının bilgilerini master key ile şifreleyerek sakla.",
+  },
+  {
+    title: "Reminders",
+    body: "Ödeme, gelir, kontrol ve rapor tarihlerini hatırlatıcılarla bağla; SMS/email ile kritik şeyler unutulmasın.",
+  },
+  {
+    title: "Journal",
+    body: "Yatırım notlarını, kararlarının gerekçelerini ve günlük özetlerini sakla; geriye dönüp bakabil.",
   },
 ];
 
@@ -71,8 +71,8 @@ export default function Home() {
       {/* HEADER */}
       <header className="border-b border-white/5 bg-linear-to-br from-[#0a0f2d] via-[#050816] to-[#04060d]">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.35em] text-indigo-200">
-            <span className="h-2 w-2 rounded-full bg-indigo-400" />
+          <div className="flex items-center gap-2 text-xl font-semibold uppercase tracking-[0.35em] text-indigo-200 md:text-2xl">
+            <span className="h-3 w-3 rounded-full bg-indigo-400" />
             FLOSS
           </div>
 
@@ -95,10 +95,6 @@ export default function Home() {
         {/* HERO */}
         <div className="mx-auto flex max-w-6xl flex-col gap-10 px-6 pb-20 lg:flex-row lg:items-center">
           <div className="space-y-6 lg:max-w-xl">
-            <p className="text-xs uppercase tracking-[0.35em] text-indigo-200">
-              Fin OS + Life OS
-            </p>
-
             <h1 className="text-4xl font-semibold leading-tight text-white md:text-5xl">
               Gerçek zamanlı tam entegre finansal hayat yönetim sistemi
             </h1>
@@ -200,13 +196,13 @@ export default function Home() {
         <section className="space-y-6">
           <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
             <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-indigo-200">Fin OS</p>
+              <p className="text-xs uppercase tracking-[0.3em] text-indigo-200">FinOS</p>
               <h2 className="text-2xl font-semibold text-white">
                 Ana ürün: varlıklar, yükümlülükler, gelirler ve AI destekli net worth motoru.
               </h2>
             </div>
             <p className="max-w-md text-sm text-slate-300">
-              Fin OS, FLOSS’un kalbi. Banka ve yatırım entegrasyonları + manuel kayıtlar üzerinden
+              FinOS, FLOSS’un kalbi. Banka ve yatırım entegrasyonları + manuel kayıtlar üzerinden
               sürekli güncel bir bilanço ve nakit akışı sağlar. AI worth engine dönen/duran varlıkları tarayıp
               tahmini piyasa değerini günceller. Life OS sadece destek katmanıdır.
             </p>
@@ -229,13 +225,13 @@ export default function Home() {
         <section className="space-y-6">
           <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
             <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Life OS katmanı</p>
+              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">LifOS katmanı</p>
               <h2 className="text-2xl font-semibold text-white">
                 Workspace, Reminders, Journal ve Dijital Hesaplar.
               </h2>
             </div>
             <p className="max-w-md text-sm text-slate-300">
-              Asıl odak finans sağlığı. Life OS modülleri; not, görev, hatırlatma ve parola kasası
+              Asıl odak finans sağlığı. LifOS modülleri; not, görev, hatırlatma ve parola kasası
               gibi hafif araçlarla bu çekirdeği destekler.
             </p>
           </div>
@@ -255,12 +251,12 @@ export default function Home() {
 
         {/* INTEGRATIONS + FLOW */}
         <section className="rounded-3xl border border-white/10 bg-slate-900/70 p-8 shadow-lg shadow-black/20">
-          <div className="grid gap-8 lg:grid-cols-2 lg:items-center">
+          <div className="space-y-6">
             <div className="space-y-4">
               <p className="text-xs uppercase tracking-[0.3em] text-indigo-200">Entegrasyon & analiz</p>
 
-              <h2 className="text-3xl font-semibold text-white">
-                Bankanı bağla, hareketleri AI sınıflandırsın, son sözü yine sen söyle.
+              <h2 className="text-4xl font-semibold text-white">
+                FLOSS Personal & FLOSS Business için ayrı, kapsamlı entegrasyonlar. AI destekli analizler.
               </h2>
 
               <p className="text-sm text-slate-300">
@@ -274,30 +270,44 @@ export default function Home() {
                 {integrations.map((i) => (
                   <div
                     key={i}
-                    className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200"
+                    className="rounded-xl border border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-200"
                   >
                     {i}
                   </div>
                 ))}
               </div>
+              <ul className="grid gap-2 text-sm text-slate-300">
+                <li>• Açık bankacılık: günlük/gerçek zamanlı hesap hareketleri, AI ile sınıflandırma.</li>
+                <li>• Plaid/IBKR: yatırım pozisyonlarını net worth’a anında yansıtma.</li>
+                <li>• SMS/Email kuralları: gelir, yükümlülük, hatırlatıcı ve Workspace kartları için özel bildirim.</li>
+              </ul>
             </div>
 
-            <div>
-              <ol className="space-y-3 text-sm text-slate-200">
-                {steps.map((s, idx) => (
-                  <li
-                    key={s}
-                    className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3"
-                  >
-                    <span className="mt-1 flex h-7 w-7 items-center justify-center rounded-full bg-indigo-500/80 text-xs font-semibold text-white">
-                      {idx + 1}
-                    </span>
-                    <span>{s}</span>
-                  </li>
-                ))}
-              </ol>
+            <div className="space-y-2 rounded-2xl border border-white/10 bg-white/5 p-4">
+              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">FinOS adımları</p>
+              <p className="text-sm text-slate-300">
+                Açık bankacılık ve yatırım entegrasyonları, AI sınıflandırma ve manuel kayıtlarla canlı net worth ve nakit akışı.
+              </p>
             </div>
           </div>
+        </section>
+
+        {/* Steps */}
+        <section className="rounded-3xl border border-white/10 bg-slate-900/70 p-8 shadow-lg shadow-black/20">
+          <h3 className="text-2xl font-semibold text-white">Başlarken</h3>
+          <ol className="mt-4 space-y-3 text-sm text-slate-200">
+            {steps.map((s, idx) => (
+              <li
+                key={s}
+                className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3"
+              >
+                <span className="mt-1 flex h-7 w-7 items-center justify-center rounded-full bg-indigo-500/80 text-xs font-semibold text-white">
+                  {idx + 1}
+                </span>
+                <span>{s}</span>
+              </li>
+            ))}
+          </ol>
         </section>
 
         {/* CTA */}
