@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import type { SubscriptionPeriod } from "@prisma/client";
+import type { SubscriptionPeriod, DigitalAccountCategory } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { DigitalAccountForm } from "@/components/forms/DigitalAccountForm";
 import { requireUserId } from "@/lib/auth";
@@ -84,7 +84,7 @@ export default async function EditDigitalAccountPage({ params }: Props) {
       data: {
         providerName,
         accountIdentifier,
-        category: category || null,
+        category: category ? (category as DigitalAccountCategory) : null,
         loginUrl,
         passwordHint,
         passwordLastChanged: resolvedPasswordChanged,
