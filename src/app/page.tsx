@@ -70,7 +70,7 @@ export default function Home() {
     <div className="min-h-screen bg-[#04060d] text-slate-100">
       {/* HEADER */}
       <header className="border-b border-white/5 bg-linear-to-br from-[#0a0f2d] via-[#050816] to-[#04060d]">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-8">
           <div className="flex items-center gap-2 text-xl font-semibold uppercase tracking-[0.35em] text-indigo-200 md:text-2xl">
             <span className="h-3 w-3 rounded-full bg-indigo-400" />
             FLOSS
@@ -93,7 +93,7 @@ export default function Home() {
         </div>
 
         {/* HERO */}
-        <div className="mx-auto flex max-w-6xl flex-col gap-10 px-6 pb-20 lg:flex-row lg:items-center">
+        <div className="mx-auto flex max-w-6xl flex-col gap-10 px-6 pb-20 pt-30 lg:flex-row lg:items-center">
           <div className="space-y-6 lg:max-w-xl">
             <h1 className="text-4xl font-semibold leading-tight text-white md:text-5xl">
               Gerçek zamanlı tam entegre finansal hayat yönetim sistemi
