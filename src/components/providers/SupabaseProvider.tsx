@@ -64,7 +64,12 @@ function syncAuthToServer(event: string, session: Session | null) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ event, session }),
-  }).catch((error) => {
-    console.error("Failed to sync auth state to server", error);
-  });
+  })
+    .then(() => {
+      // Auth cookie set; make sure Prisma.User var
+      return fetch("/api/users/sync", { method: "POST" });
+    })
+    .catch((error) => {
+      console.error("Failed to sync auth state to server", error);
+    });
 }

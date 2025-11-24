@@ -48,7 +48,9 @@ export function RegisterForm() {
 
     setLoading(true);
 
-    const redirectBase = process.env.NEXT_PUBLIC_SITE_URL || (typeof window !== "undefined" ? window.location.origin : "");
+    const redirectBaseEnv = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
+    const redirectBase =
+      redirectBaseEnv || (typeof window !== "undefined" ? window.location.origin.replace(/\/$/, "") : "");
     const emailRedirectTo = redirectBase
       ? `${redirectBase}/api/auth/callback?next=/dashboard`
       : undefined;
