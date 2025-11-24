@@ -29,7 +29,7 @@ export function ObligationForm({
     const nextDue = (form.elements.namedItem("nextDue") as HTMLInputElement | null)?.value;
     if (!nextDue) {
       event.preventDefault();
-      setError("Tekrar eden yukumlulukler icin baslangic tarihi secmelisin.");
+      setError("Tekrar eden yükümlülükler için başlangıç tarihi seçmelisin.");
       return;
     }
     setError(null);
@@ -43,7 +43,7 @@ export function ObligationForm({
     >
       <input
         name="name"
-        placeholder="Yukumluluk adi"
+        placeholder="Yükümlülük adı"
         className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white placeholder:text-slate-500"
         required
       />
@@ -97,7 +97,7 @@ export function ObligationForm({
           checked={isRecurring}
           onChange={(event) => setIsRecurring(event.target.checked)}
         />
-        Tekrar eden yukumluluk?
+        Tekrar eden yükümlülük?
       </label>
       <div className={`md:col-span-3 grid gap-3 md:grid-cols-2 ${showRecurrence ? "" : "hidden"}`}>
         <select
@@ -107,7 +107,7 @@ export function ObligationForm({
           disabled={!showRecurrence}
         >
           <option value="">
-            {showRecurrence ? "Birim sec (hafta/ay)" : "Birim (aktif degil)"}
+            {showRecurrence ? "Birim seç (hafta/ay)" : "Birim (aktif değil)"}
           </option>
           {recurrenceUnits.map((unit) => (
             <option key={unit} value={unit}>
@@ -120,7 +120,7 @@ export function ObligationForm({
           name="recurrenceInterval"
           min="1"
           step="1"
-          placeholder="Kac hafta/ayda bir?"
+          placeholder="Kaç hafta/ayda bir?"
           className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white placeholder:text-slate-500"
           disabled={!showRecurrence}
         />
@@ -139,7 +139,7 @@ export function ObligationForm({
         type="submit"
         className="rounded-xl bg-rose-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-rose-400 md:col-span-1"
       >
-        Yukumluluk ekle
+        Yükümlülük ekle
       </button>
     </form>
   );

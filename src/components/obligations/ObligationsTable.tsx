@@ -46,19 +46,19 @@ export function ObligationsTable({
         <table className="min-w-full divide-y divide-white/10 text-left text-sm">
           <thead className="bg-white/5 text-xs uppercase tracking-widest text-slate-400">
             <tr>
-              <th className="px-5 py-4">Yukumluluk</th>
+              <th className="px-5 py-4">Yükümlülük</th>
               <th className="px-5 py-4">Kategori</th>
               <th className="px-5 py-4">Tekrar</th>
               <th className="px-5 py-4 text-right">Tutar</th>
-              <th className="px-5 py-4 text-right">Next Due</th>
-              <th className="px-5 py-4 text-right">Duzenle</th>
+              <th className="px-5 py-4 text-right">Sonraki tarih</th>
+              <th className="px-5 py-4 text-right">Düzenle</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
             {visibleObligations.length === 0 ? (
               <tr>
                 <td colSpan={6} className="px-5 py-10 text-center text-sm text-slate-500">
-                  {showCompleted ? "Henuz tamamlanan yok." : "Aktif yukumluluk bulunmuyor."}
+                  {showCompleted ? "Henüz tamamlanan yok." : "Aktif yükümlülük bulunmuyor."}
                 </td>
               </tr>
             ) : (
@@ -123,16 +123,16 @@ export function ObligationsTable({
                           <Link
                             href={`/obligations/${obligation.id}/edit`}
                             className="inline-flex items-center justify-center rounded-full border border-white/20 px-3 py-1 text-xs text-white transition hover:border-white/60"
-                            aria-label="Yukumlulugu duzenle"
+                            aria-label="Yükümlülüğü düzenle"
                           >
-                            Duzenle
+                            Düzenle
                           </Link>
                         )}
                         {!obligation.isDone && (
                           <ConfirmDoneButton
                             action={markObligationDone}
                             id={obligation.id}
-                            description="Tamamlandi olarak isaretlenen geri alinamaz."
+                            description="Tamamlandı olarak işaretlenen geri alınamaz."
                           />
                         )}
                         <form action={deleteObligation}>
@@ -157,7 +157,7 @@ export function ObligationsTable({
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-slate-900/40 px-5 py-4">
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Tamamlananlar</p>
-          <p className="text-sm text-slate-300">Gerektiginde arsivi listeye ekle</p>
+          <p className="text-sm text-slate-300">Gerektiğinde arşivi listeye ekle</p>
         </div>
         <button
           type="button"
@@ -193,13 +193,13 @@ function getDayMeta(daysLeft: number | null) {
     return { label: "Tarih yok", className: "text-slate-500" };
   }
   if (daysLeft < 0) {
-    return { label: `${Math.abs(daysLeft)} gun gecikti`, className: "text-rose-400 font-bold animate-pulse" };
+    return { label: `${Math.abs(daysLeft)} gün gecikti`, className: "text-rose-400 font-bold animate-pulse" };
   }
   if (daysLeft === 0) {
-    return { label: "Bugun", className: "text-amber-400 font-bold animate-pulse" };
+    return { label: "Bugün", className: "text-amber-400 font-bold animate-pulse" };
   }
   if (daysLeft <= 14) {
-    return { label: `${daysLeft} gun kaldi`, className: "text-rose-300 font-bold animate-pulse" };
+    return { label: `${daysLeft} gün kaldı`, className: "text-rose-300 font-bold animate-pulse" };
   }
-  return { label: `${daysLeft} gun kaldi`, className: "text-emerald-300 font-semibold" };
+  return { label: `${daysLeft} gün kaldı`, className: "text-emerald-300 font-semibold" };
 }

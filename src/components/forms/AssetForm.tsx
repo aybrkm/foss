@@ -22,7 +22,7 @@ export function AssetForm({ action, currencies }: Props) {
               mode === option ? "bg-indigo-500 text-white" : "bg-transparent text-slate-300"
             }`}
           >
-            {option === "liquid" ? "Likit Varlik" : "Illikit Varlik"}
+            {option === "liquid" ? "Likit Varlık" : "İllikit Varlık"}
           </button>
         ))}
       </div>
@@ -51,7 +51,7 @@ function AssetFormFields({ action, currencies, isLiquid }: FieldsProps) {
       <input type="hidden" name="isLiquid" value={isLiquid ? "true" : "false"} />
       <input
         name="name"
-        placeholder={isLiquid ? "Likit varlik adi" : "Illikit varlik adi"}
+        placeholder={isLiquid ? "Likit varlık adı" : "İllikit varlık adı"}
         className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white placeholder:text-slate-500"
         required
       />
@@ -77,7 +77,7 @@ function AssetFormFields({ action, currencies, isLiquid }: FieldsProps) {
         name="value"
         min="0"
         step="0.01"
-        placeholder="Toplam deger"
+        placeholder="Toplam değer"
         className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white placeholder:text-slate-500"
         required
       />
@@ -105,7 +105,7 @@ function AssetFormFields({ action, currencies, isLiquid }: FieldsProps) {
         type="submit"
         className="rounded-xl bg-indigo-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-indigo-400 md:col-span-1"
       >
-        {isLiquid ? "Likit varlik ekle" : "Illikit varlik ekle"}
+        {isLiquid ? "Likit varlık ekle" : "İllikit varlık ekle"}
       </button>
     </form>
   );

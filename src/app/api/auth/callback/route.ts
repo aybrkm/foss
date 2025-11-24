@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
 import { createRouteHandlerSupabaseClient } from "@/lib/supabase/route-handler-client";
 
 export async function GET(request: Request) {
@@ -48,6 +49,23 @@ export async function POST(request: Request) {
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  // Uygulama veritabanında Supabase kullanıcısını oluştur/güncelle
+  if (session?.user?.id) {
+    const user = session.user;
+    await prisma.user.upsert({
+      where: { id: user.id },
+      create: {
+        id: user.id,
+        email: user.email,
+        name: user.user_metadata?.name ?? null,
+      },
+      update: {
+        email: user.email,
+        name: user.user_metadata?.name ?? null,
+      },
+    });
   }
 
   return NextResponse.json({ success: true });

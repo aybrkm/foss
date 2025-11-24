@@ -378,15 +378,15 @@ const importantReminders = reminderDetails.filter(
 
 function getDayDisplay(daysLeft: number) {
   if (daysLeft < 0) {
-    return { label: `${Math.abs(daysLeft)} gun gecikti`, className: "text-rose-400 font-bold animate-pulse" };
+    return { label: `${Math.abs(daysLeft)} gün gecikti`, className: "text-rose-400 font-bold animate-pulse" };
   }
   if (daysLeft === 0) {
-    return { label: "Bugun", className: "text-amber-400 font-bold animate-pulse" };
+    return { label: "Bugün", className: "text-amber-400 font-bold animate-pulse" };
   }
   if (daysLeft <= 14) {
-    return { label: `${daysLeft} gun kaldi`, className: "text-rose-300 font-bold animate-pulse" };
+    return { label: `${daysLeft} gün kaldı`, className: "text-rose-300 font-bold animate-pulse" };
   }
-  return { label: `${daysLeft} gun kaldi`, className: "text-emerald-300 font-semibold" };
+  return { label: `${daysLeft} gün kaldı`, className: "text-emerald-300 font-semibold" };
 }
 
 function getHorizonBuckets(

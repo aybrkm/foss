@@ -11,7 +11,7 @@ async function createEntry(formData: FormData) {
   const entryDate = formData.get("entryDate")?.toString();
 
   if (!body) {
-    throw new Error("Gunluk metni gerekli");
+    throw new Error("Günlük metni gerekli");
   }
 
   await prisma.journalEntry.create({
@@ -31,7 +31,7 @@ async function updateEntry(formData: FormData) {
   const userId = await requireUserId();
   const entryId = formData.get("entryId")?.toString();
   if (!entryId) {
-    throw new Error("Gunluk kaydi bulunamadi");
+    throw new Error("Günlük kaydı bulunamadı");
   }
 
   const title = formData.get("title")?.toString().trim() || null;
@@ -39,7 +39,7 @@ async function updateEntry(formData: FormData) {
   const entryDate = formData.get("entryDate")?.toString();
 
   if (!body) {
-    throw new Error("Gunluk metni gerekli");
+    throw new Error("Günlük metni gerekli");
   }
 
   await prisma.journalEntry.updateMany({
@@ -59,7 +59,7 @@ async function deleteEntry(formData: FormData) {
   const userId = await requireUserId();
   const entryId = formData.get("entryId")?.toString();
   if (!entryId) {
-    throw new Error("Silinecek gunluk bulunamadi");
+    throw new Error("Silinecek günlük bulunamadı");
   }
 
   await prisma.journalEntry.deleteMany({ where: { id: entryId, userId } });
@@ -82,12 +82,12 @@ export default async function JournalPage() {
   }).length;
   const lastEntryDate = entries[0]?.entryDate
     ? new Date(entries[0].entryDate).toLocaleDateString("tr-TR")
-    : "Kayit yok";
+    : "Kayıt yok";
 
   const journalHighlights = [
-    { title: "Toplam kayit", value: `${entryTotal}`, hint: "gunluk not" },
+    { title: "Toplam kayıt", value: `${entryTotal}`, hint: "günlük not" },
     { title: "Bu ay", value: `${entriesThisMonth}`, hint: "yeni girdi" },
-    { title: "Son guncelleme", value: lastEntryDate, hint: "en guncel not" },
+    { title: "Son güncelleme", value: lastEntryDate, hint: "en güncel not" },
   ];
 
   const clientEntries = entries.map((entry: EntryRow) => ({
@@ -103,10 +103,10 @@ export default async function JournalPage() {
     <div className="space-y-6">
       <section className="space-y-4">
         <div className="rounded-3xl border border-sky-400/50 bg-sky-500/10 p-6">
-          <p className="text-xs uppercase tracking-[0.4em] text-sky-200">Gunluk</p>
-          <h2 className="mt-2 text-3xl font-semibold text-white">Dusunce ve karar arsivi</h2>
+          <p className="text-xs uppercase tracking-[0.4em] text-sky-200">Günlük</p>
+          <h2 className="mt-2 text-3xl font-semibold text-white">Düşünce ve karar arşivi</h2>
           <p className="mt-2 max-w-3xl text-sm text-sky-100/80">
-            Onemli notlari tek yerde topla, yinelemeli dusunceleri tarihlendir ve ilerlemeyi izle.
+            Önemli notları tek yerde topla, yinelenen düşünceleri tarihlendir ve ilerlemeyi izle.
           </p>
         </div>
         <div className="grid gap-4 md:grid-cols-3">
@@ -128,7 +128,7 @@ export default async function JournalPage() {
       >
         <input
           name="title"
-          placeholder="Baslik (opsiyonel)"
+          placeholder="Başlık (opsiyonel)"
           className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white placeholder:text-slate-500"
         />
         <input
@@ -147,7 +147,7 @@ export default async function JournalPage() {
           type="submit"
           className="rounded-xl bg-sky-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-sky-400 md:col-span-2"
         >
-          Gunluk kaydet
+          Günlük kaydet
         </button>
       </form>
 

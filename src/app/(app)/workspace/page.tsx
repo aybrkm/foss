@@ -1,6 +1,7 @@
 import { IntegrationInfoCard } from "@/components/common/IntegrationInfoCard";
 import type { Integration } from "@/components/common/IntegrationInfoCard";
 import { WorkspaceBoard } from "@/components/workspace";
+import { requireUserId } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
 const workspaceIntegrations: Integration[] = [
@@ -37,10 +38,13 @@ const workspaceIntegrations: Integration[] = [
 ];
 
 export default async function WorkspacePage() {
+  const userId = await requireUserId();
   const columns = await prisma.workspaceColumn.findMany({
+    where: { userId },
     orderBy: { position: "asc" },
     include: {
       cards: {
+        where: { userId },
         orderBy: { position: "asc" },
       },
     },

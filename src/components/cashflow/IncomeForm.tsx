@@ -13,6 +13,7 @@ type Props = {
   action: (formData: FormData) => void;
   categories: readonly string[];
   currencies: readonly string[];
+  categoryLabels: Record<string, string>;
   defaultValues?: IncomeDefaults;
   submitLabel: string;
 };
@@ -21,6 +22,7 @@ export function IncomeForm({
   action,
   categories,
   currencies,
+  categoryLabels,
   defaultValues,
   submitLabel,
 }: Props) {
@@ -47,7 +49,7 @@ export function IncomeForm({
         </option>
         {categories.map((category) => (
           <option key={category} value={category}>
-            {category}
+            {categoryLabels[category] ?? category}
           </option>
         ))}
       </select>

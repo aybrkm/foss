@@ -21,10 +21,10 @@ export function SignOutButton() {
     <button
       type="button"
       onClick={handleSignOut}
-        className="rounded-full border border-white/20 px-4 py-2 text-sm text-white transition hover:border-white/60 disabled:opacity-60"
+      className="rounded-full border border-white/20 px-4 py-2 text-sm text-white transition hover:border-white/60 disabled:opacity-60"
       disabled={pending}
     >
-      {pending ? "Cikiliyor..." : "Cikis Yap"}
+      {pending ? "Çıkılıyor..." : "Çıkış Yap"}
     </button>
   );
 }

@@ -20,6 +20,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Master kod gerekli" }, { status: 400 });
   }
 
+  // Kullanıcı kaydı Prisma tarafında yoksa oluştur
+  await prisma.user.upsert({
+    where: { id: user.id },
+    create: {
+      id: user.id,
+      email: user.email,
+    },
+    update: {
+      email: user.email,
+    },
+  });
+
   const hash = createHash("sha256").update(code).digest("hex");
 
   await prisma.user.update({

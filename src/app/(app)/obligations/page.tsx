@@ -96,7 +96,7 @@ async function createObligation(formData: FormData) {
   const baseDate = adjustDateInput(nextDueRaw);
 
   if (!name || !category) {
-    throw new Error("Eksik yukumluluk bilgisi");
+    throw new Error("Eksik yükümlülük bilgisi");
   }
 
   const requiresInterval = isRecurring;
@@ -107,10 +107,10 @@ async function createObligation(formData: FormData) {
       Number.isNaN(recurrenceInterval) ||
       recurrenceInterval <= 0
     ) {
-      throw new Error("Tekrar eden yukumluluk icin aralik ve birim belirtmelisin");
+      throw new Error("Tekrar eden yükümlülük için aralık ve birim belirtmelisin");
     }
     if (!baseDate) {
-      throw new Error("Tekrar eden yukumluluklerde bir baslangic tarihi girilmelidir");
+      throw new Error("Tekrar eden yükümlülüklerde bir başlangıç tarihi girilmelidir");
     }
   }
 

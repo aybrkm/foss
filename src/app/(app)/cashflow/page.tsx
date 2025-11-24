@@ -8,6 +8,13 @@ import { requireUserId } from "@/lib/auth";
 
 const currencyOptions = ["TRY", "USD", "AED", "EUR"] as const;
 const incomeCategories = ["maas", "freelance", "yatirim", "kira", "diger"] as const;
+const incomeCategoryLabels: Record<(typeof incomeCategories)[number], string> = {
+  maas: "Maaş",
+  freelance: "Freelance",
+  yatirim: "Yatırım",
+  kira: "Kira",
+  diger: "Diğer",
+};
 
 async function createIncome(formData: FormData) {
   "use server";
@@ -135,10 +142,11 @@ export default async function CashflowPage() {
         action={createIncome}
         categories={incomeCategories}
         currencies={currencyOptions}
+        categoryLabels={incomeCategoryLabels}
         submitLabel="Gelir ekle"
       />
 
-      <IncomeTable incomes={tableRows} deleteAction={deleteIncome} />
+      <IncomeTable incomes={tableRows} deleteAction={deleteIncome} categoryLabels={incomeCategoryLabels} />
     </div>
   );
 }

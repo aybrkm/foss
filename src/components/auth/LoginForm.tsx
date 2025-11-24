@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSupabaseClient } from "@/components/providers/SupabaseProvider";
 
@@ -44,8 +43,8 @@ export function LoginForm({ redirectTo }: Props) {
       className="w-full space-y-4 rounded-3xl border border-white/10 bg-slate-900/70 p-6 shadow-2xl"
     >
       <div className="space-y-1 text-center">
-        <h1 className="text-xl font-semibold text-white">Giris Yap</h1>
-        <p className="text-sm text-slate-400">Supabase hesabinizla oturum acin.</p>
+        <h1 className="text-xl font-semibold text-white">Giriş Yap</h1>
+        <p className="text-sm text-slate-400">Supabase hesabınızla oturum açın.</p>
       </div>
 
       <label className="block text-sm text-slate-300">
@@ -60,7 +59,7 @@ export function LoginForm({ redirectTo }: Props) {
       </label>
 
       <label className="block text-sm text-slate-300">
-        Sifre
+        Şifre
         <input
           type="password"
           value={password}
@@ -77,7 +76,7 @@ export function LoginForm({ redirectTo }: Props) {
         disabled={loading}
         className="w-full rounded-xl bg-indigo-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {loading ? "Giris yapiliyor..." : "Giris yap"}
+        {loading ? "Giriş yapılıyor..." : "Giriş yap"}
       </button>
 
       <p className="text-center text-sm text-slate-400">

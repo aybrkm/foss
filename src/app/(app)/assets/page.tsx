@@ -32,7 +32,7 @@ async function createAsset(formData: FormData) {
   const acquisitionDateRaw = formData.get("acquisitionDate")?.toString();
 
   if (!name || !assetType || Number.isNaN(value)) {
-    throw new Error("Eksik varlik bilgisi");
+    throw new Error("Eksik varlık bilgisi");
   }
 
   await prisma.asset.create({
@@ -183,11 +183,11 @@ export default async function AssetsPage({ searchParams }: { searchParams?: { va
         <table className="min-w-full divide-y divide-white/10 text-left text-sm">
           <thead className="bg-white/5 text-xs uppercase tracking-widest text-slate-400">
             <tr>
-              <th className="px-5 py-4">Varlik</th>
+              <th className="px-5 py-4">Varlık</th>
               <th className="px-5 py-4">Tip</th>
               <th className="px-5 py-4">Likidite</th>
-              <th className="px-5 py-4 text-right">Deger</th>
-              <th className="px-5 py-4 text-right">Guncelleme</th>
+              <th className="px-5 py-4 text-right">Değer</th>
+              <th className="px-5 py-4 text-right">Güncelleme</th>
               <th className="px-5 py-4 text-right">Düzenle</th>
             </tr>
           </thead>
@@ -200,7 +200,7 @@ export default async function AssetsPage({ searchParams }: { searchParams?: { va
                 </td>
                 <td className="px-5 py-4 text-slate-300">{asset.assetType}</td>
                 <td className="px-5 py-4 text-slate-300">
-                  {asset.isLiquid ? "Likit" : "Illikit"}
+                  {asset.isLiquid ? "Likit" : "İllikit"}
                 </td>
                 <td className="px-5 py-4 text-right font-semibold text-white">
                   <span>{formatCurrency(asset.numericValue, asset.currency)}</span>

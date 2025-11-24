@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { formatCurrency } from "@/lib/format";
+import { ConfirmDoneButton } from "@/components/forms/ConfirmDoneButton";
 
 export type IncomeRow = {
   id: string;
@@ -14,9 +17,10 @@ export type IncomeRow = {
 type Props = {
   incomes: IncomeRow[];
   deleteAction: (formData: FormData) => Promise<void> | void;
+  categoryLabels: Record<string, string>;
 };
 
-export function IncomeTable({ incomes, deleteAction }: Props) {
+export function IncomeTable({ incomes, deleteAction, categoryLabels }: Props) {
   return (
     <div className="overflow-hidden rounded-3xl border border-white/10 bg-slate-900/60">
       <table className="min-w-full divide-y divide-white/10 text-left text-sm">
@@ -46,7 +50,9 @@ export function IncomeTable({ incomes, deleteAction }: Props) {
                   <p className="font-semibold text-white">{income.title}</p>
                   <p className="text-xs text-slate-400">{income.notes || "Not yok"}</p>
                 </td>
-                <td className="px-5 py-4 text-slate-300 capitalize">{income.category}</td>
+                <td className="px-5 py-4 text-slate-300 capitalize">
+                  {categoryLabels[income.category] ?? income.category}
+                </td>
                 <td className="px-5 py-4 text-right font-semibold text-white">
                   {formatCurrency(income.amount, income.currency)}
                 </td>
@@ -58,15 +64,12 @@ export function IncomeTable({ incomes, deleteAction }: Props) {
                     >
                       Düzenle
                     </Link>
-                    <form action={deleteAction}>
-                      <input type="hidden" name="id" value={income.id} />
-                      <button
-                        type="submit"
-                        className="inline-flex items-center justify-center rounded-full border border-rose-400/40 px-3 py-1 text-xs text-rose-200 transition hover:border-rose-300 hover:text-white"
-                      >
-                        Sil
-                      </button>
-                    </form>
+                    <ConfirmDoneButton
+                      action={deleteAction}
+                      id={income.id}
+                      label="Sil"
+                      description="Bu geliri silmek istediğine emin misin?"
+                    />
                   </div>
                 </td>
               </tr>

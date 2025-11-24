@@ -1,12 +1,28 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
+import { createRouteHandlerSupabaseClient } from "@/lib/supabase/route-handler-client";
+
+async function getUserId() {
+  const supabase = await createRouteHandlerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return user?.id ?? null;
+}
 
 export async function GET() {
+  const userId = await getUserId();
+  if (!userId) {
+    return NextResponse.json({ error: "Oturum bulunamadı" }, { status: 401 });
+  }
+
   const columns = await prisma.workspaceColumn.findMany({
+    where: { userId },
     orderBy: { position: "asc" },
     include: {
       cards: {
+        where: { userId },
         orderBy: { position: "asc" },
       },
     },
@@ -15,6 +31,11 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const userId = await getUserId();
+  if (!userId) {
+    return NextResponse.json({ error: "Oturum bulunamadı" }, { status: 401 });
+  }
+
   const body = await request.json();
   if (!body || !Array.isArray(body.columns)) {
     return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
@@ -36,11 +57,13 @@ export async function POST(request: Request) {
         where: { id: columnId },
         create: {
           id: columnId,
+          userId,
           title: column.title ?? `Alan ${i + 1}`,
           width: column.width ?? 1,
           position: i,
         },
         update: {
+          userId,
           title: column.title ?? `Alan ${i + 1}`,
           width: column.width ?? 1,
           position: i,
@@ -48,7 +71,7 @@ export async function POST(request: Request) {
       });
 
       await tx.workspaceCard.deleteMany({
-        where: { columnId },
+        where: { columnId, userId },
       });
 
       const cards = column.cards ?? [];
@@ -57,6 +80,7 @@ export async function POST(request: Request) {
           data: cards.map((card, index) => ({
             id: card.id,
             columnId,
+            userId,
             title: card.title,
             notes: card.notes ?? "",
             position: index,
@@ -68,7 +92,16 @@ export async function POST(request: Request) {
     const incomingIds = columns.map((column) => column.id);
     await tx.workspaceColumn.deleteMany({
       where: {
+        userId,
         id: {
+          notIn: incomingIds,
+        },
+      },
+    });
+    await tx.workspaceCard.deleteMany({
+      where: {
+        userId,
+        columnId: {
           notIn: incomingIds,
         },
       },

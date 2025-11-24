@@ -7,6 +7,13 @@ import { requireUserId } from "@/lib/auth";
 
 const currencyOptions = ["TRY", "USD", "AED", "EUR"] as const;
 const incomeCategories = ["maas", "freelance", "yatirim", "kira", "diger"] as const;
+const incomeCategoryLabels: Record<(typeof incomeCategories)[number], string> = {
+  maas: "Maaş",
+  freelance: "Freelance",
+  yatirim: "Yatırım",
+  kira: "Kira",
+  diger: "Diğer",
+};
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -87,6 +94,7 @@ export default async function EditIncomePage({ params }: Props) {
         action={updateIncome}
         categories={incomeCategories}
         currencies={currencyOptions}
+        categoryLabels={incomeCategoryLabels}
         defaultValues={defaultValues}
         submitLabel="Geliri güncelle"
       />
