@@ -83,7 +83,7 @@ export function RegisterForm() {
       >
         <div className="space-y-1 text-center">
           <h1 className="text-xl font-semibold text-white">Kayıt Ol</h1>
-          <p className="text-sm text-slate-400">Email/parola ile hesap aç, 6 haneli master kodunu belirle.</p>
+          <p className="text-sm text-slate-400">Hesap detayları ilk girişten sonra alınacaktır.</p>
         </div>
 
         <label className="block text-sm text-slate-300">
@@ -110,7 +110,7 @@ export function RegisterForm() {
             <button
               type="button"
               onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute inset-y-1 right-2 rounded-lg px-3 text-xs font-semibold text-slate-200 transition hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400"
+              className="absolute inset-y-1 right-2 rounded-lg px-3 text-xs font-semibold text-slate-200 transition hover:bg-white/10 focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-indigo-400"
               aria-pressed={showPassword}
             >
               {showPassword ? "Gizle" : "Göster"}
