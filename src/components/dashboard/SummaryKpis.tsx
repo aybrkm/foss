@@ -67,6 +67,7 @@ export function SummaryKpis({
   );
   const [modal, setModal] = useState<ModalType>(null);
   const close = () => setModal(null);
+  const stableAssetValue = Math.max(totalAssetValue - liquidAssetValue, 0);
 
   const renderModalContent = () => {
     if (modal === "assets") {
@@ -208,20 +209,27 @@ export function SummaryKpis({
         <div className="mt-3 grid gap-3 md:grid-cols-3">
           <button
             type="button"
-            onClick={() => setModal("assets")}
-            className="rounded-2xl border border-white/10 bg-white/5 p-3 text-left transition hover:border-indigo-200/60 hover:bg-white/10"
-          >
-            <p className="text-[11px] uppercase tracking-[0.3em] text-indigo-200">
-              Toplam Varlık (TRY)
-            </p>
-            <p className="text-2xl font-semibold text-white">
-              {formatCurrency(totalAssetValue, "TRY")}
-            </p>
-            <p className="text-xs text-slate-400">
-              Likit {formatCurrency(liquidAssetValue, "TRY")}
-            </p>
-            <p className="mt-1 text-xs text-slate-400">detay için tıkla</p>
-          </button>
+          onClick={() => setModal("assets")}
+          className="rounded-2xl border border-white/10 bg-white/5 p-3 text-left transition hover:border-indigo-200/60 hover:bg-white/10"
+        >
+          <p className="text-[11px] uppercase tracking-[0.3em] text-indigo-200">
+            Toplam Varlık (TRY)
+          </p>
+          <p className="text-2xl font-semibold text-white">
+            {formatCurrency(totalAssetValue, "TRY")}
+          </p>
+          <div className="mt-2 grid grid-cols-2 gap-3 text-sm text-white">
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.25em] text-emerald-200">Likit</p>
+              <p className="text-lg font-semibold text-white">{formatCurrency(liquidAssetValue, "TRY")}</p>
+            </div>
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.25em] text-rose-200">Sabit</p>
+              <p className="text-lg font-semibold text-white">{formatCurrency(stableAssetValue, "TRY")}</p>
+            </div>
+          </div>
+          <p className="mt-1 text-xs text-slate-400">detay için tıkla</p>
+        </button>
           <button
             type="button"
             onClick={() => setModal("obligations")}
