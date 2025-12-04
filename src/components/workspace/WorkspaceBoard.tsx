@@ -54,90 +54,131 @@ export function WorkspaceBoard({ initialColumns }: { initialColumns: ColumnData[
   const [resizingColumnId, setResizingColumnId] = useState<string | null>(null);
   const [activeCard, setActiveCard] = useState<{ columnId: string; cardId: string } | null>(null);
   const [draftNotes, setDraftNotes] = useState("");
+  const [pendingDelete, setPendingDelete] = useState<{
+    columnId: string;
+    cardId: string;
+    title: string;
+  } | null>(null);
+  const [pendingColumnDelete, setPendingColumnDelete] = useState<{ columnId: string; title: string } | null>(null);
   const [saving, setSaving] = useState(false);
+  const [savingKey, setSavingKey] = useState<string | null>(null);
+  const lastSentRef = useRef<string | null>(null);
+  const pendingSaveRef = useRef<ColumnData[] | null>(null);
+  const columnsRef = useRef<ColumnData[]>([]);
+  const pendingKeyRef = useRef<string | null>(null);
+  const [colorDrafts, setColorDrafts] = useState<Record<string, string>>({});
+  const [titleDrafts, setTitleDrafts] = useState<Record<string, string>>({});
+  const savingLabel = (key: string, defaultText: string) =>
+    saving && savingKey === key ? "Kaydediliyor..." : defaultText;
   const resizeInfo = useRef<{ columnId: string; startX: number; startWidth: number } | null>(null);
   const dragBlockRef = useRef(false);
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const canAddColumn = isEditMode && columns.length < MAX_COLUMNS;
 
-  const persistColumns = useCallback(
-    async (nextColumns: ColumnData[]) => {
-      setSaving(true);
-      try {
-        await fetch("/api/workspace/layout", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            columns: nextColumns.map((column, position) => ({
-              id: column.id,
-              title: column.title,
-              width: column.width,
-              position,
-              cards: column.cards.map((card, cardPosition) => ({
-                id: card.id,
-                title: card.title,
-                notes: card.notes,
-                position: cardPosition,
-              })),
-            })),
-          }),
-        });
-      } catch (error) {
-        console.warn("Workspace layout save failed", error);
-      } finally {
-        setSaving(false);
-      }
-    },
-    [],
-  );
+  const persistColumns = useCallback(async () => {
+    const payload = pendingSaveRef.current;
+    if (!payload) return;
+    const columnsPayload = payload.map((column, position) => ({
+      id: column.id,
+      title: column.title,
+      color: column.color ?? null,
+      width: column.width,
+      position,
+      cards: column.cards.map((card, cardPosition) => ({
+        id: card.id,
+        title: card.title,
+        notes: card.notes,
+        position: cardPosition,
+      })),
+    }));
+    const serialized = JSON.stringify({ columns: columnsPayload });
+    if (serialized === lastSentRef.current) {
+      pendingSaveRef.current = null;
+      return;
+    }
 
-  const schedulePersist = useCallback(
-    (nextColumns: ColumnData[]) => {
-      if (saveTimerRef.current) {
-        clearTimeout(saveTimerRef.current);
+    setSaving(true);
+    setSavingKey(pendingKeyRef.current ?? null);
+    try {
+      await fetch("/api/workspace/layout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: serialized,
+      });
+      lastSentRef.current = serialized;
+    } catch (error) {
+      console.warn("Workspace layout save failed", error);
+    } finally {
+      setSaving(false);
+      setSavingKey(null);
+      if (
+        pendingSaveRef.current &&
+        JSON.stringify({ columns: pendingSaveRef.current.map((c, idx) => ({ ...c, position: idx })) }) !== lastSentRef.current
+      ) {
+        setSavingKey(pendingKeyRef.current ?? null);
+        void persistColumns();
+      } else {
+        pendingSaveRef.current = null;
+        pendingKeyRef.current = null;
       }
-      saveTimerRef.current = setTimeout(() => {
-        persistColumns(nextColumns);
-      }, 800);
+    }
+  }, []);
+
+  const queueSave = useCallback(
+    (nextColumns: ColumnData[], key?: string) => {
+      pendingSaveRef.current = nextColumns;
+      pendingKeyRef.current = key ?? null;
+      if (!saving) {
+        setSavingKey(pendingKeyRef.current ?? null);
+        void persistColumns();
+      }
     },
-    [persistColumns],
+    [persistColumns, saving],
   );
 
   useEffect(() => {
     return () => {
-      if (saveTimerRef.current) {
-        clearTimeout(saveTimerRef.current);
-      }
+      pendingSaveRef.current = null;
     };
   }, []);
 
+  useEffect(() => {
+    columnsRef.current = columns;
+    // Keep pending payload in sync so queueSave has freshest data
+    if (pendingSaveRef.current) {
+      pendingSaveRef.current = columns;
+    }
+  }, [columns, queueSave]);
+
   const updateColumns = useCallback(
-    (updater: (prev: ColumnData[]) => ColumnData[]) => {
+    (updater: (prev: ColumnData[]) => ColumnData[], saveKey?: string) => {
       setColumns((prev) => {
         const next = updater(prev);
-        schedulePersist(next);
+        columnsRef.current = next;
+        if (saveKey) {
+          queueSave(next, saveKey);
+        }
         return next;
       });
     },
-    [schedulePersist],
+    [queueSave],
   );
 
   const handleAddCard = useCallback(
     (columnId: string) => {
-      if (!isEditMode) {
+      if (!isEditMode || saving) {
         return;
       }
       const title = newCardTitle[columnId]?.trim();
       if (!title) {
         return;
       }
-      updateColumns((prev) =>
-        prev.map((column) =>
-          column.id === columnId
-            ? { ...column, cards: [...column.cards, { id: createId(), title, notes: "" }] }
-            : column,
-        ),
+      updateColumns(
+        (prev) =>
+          prev.map((column) =>
+            column.id === columnId ? { ...column, cards: [...column.cards, { id: createId(), title, notes: "" }] } : column,
+          ),
+        `add-card-${columnId}`,
       );
       setNewCardTitle((prev) => ({ ...prev, [columnId]: "" }));
     },
@@ -145,6 +186,10 @@ export function WorkspaceBoard({ initialColumns }: { initialColumns: ColumnData[
   );
 
   const handlePointerDownCapture = (event: React.PointerEvent<HTMLElement>) => {
+    if (saving) {
+      dragBlockRef.current = true;
+      return;
+    }
     dragBlockRef.current = isInteractiveElement(event.target);
   };
 
@@ -152,33 +197,47 @@ export function WorkspaceBoard({ initialColumns }: { initialColumns: ColumnData[
     dragBlockRef.current = false;
   };
 
-  const handleCardDragStart = (event: React.DragEvent<HTMLDivElement>, cardId: string, sourceId: string) => {
-    if (dragBlockRef.current) {
-      event.preventDefault();
-      dragBlockRef.current = false;
-      return;
-    }
-    event.dataTransfer.setData("text/plain", JSON.stringify({ type: "card", cardId, sourceId }));
-    event.dataTransfer.effectAllowed = "move";
-    setDraggingCardId(cardId);
-  };
+  const handleCardDragStart = useCallback(
+    (event: React.DragEvent<HTMLDivElement>, cardId: string, sourceId: string) => {
+      if (saving) return;
+      if (dragBlockRef.current) {
+        event.preventDefault();
+        dragBlockRef.current = false;
+        return;
+      }
+      event.dataTransfer.setData("text/plain", JSON.stringify({ type: "card", cardId, sourceId }));
+      event.dataTransfer.effectAllowed = "move";
+      setDraggingCardId(cardId);
+    },
+    [saving],
+  );
 
   const moveCard = (columnId: string, cardId: string, direction: "up" | "down") => {
-    updateColumns((prev) =>
-      prev.map((column) => {
-        if (column.id !== columnId) return column;
-        const idx = column.cards.findIndex((c) => c.id === cardId);
-        if (idx === -1) return column;
-        const swapTo = direction === "up" ? idx - 1 : idx + 1;
-        if (swapTo < 0 || swapTo >= column.cards.length) return column;
-        const nextCards = [...column.cards];
-        [nextCards[idx], nextCards[swapTo]] = [nextCards[swapTo], nextCards[idx]];
-        return { ...column, cards: nextCards };
-      }),
+    if (saving) return;
+    updateColumns(
+      (prev) =>
+        prev.map((column) => {
+          if (column.id !== columnId) return column;
+          const idx = column.cards.findIndex((c) => c.id === cardId);
+          if (idx === -1) return column;
+          const swapTo = direction === "up" ? idx - 1 : idx + 1;
+          if (swapTo < 0 || swapTo >= column.cards.length) return column;
+          const nextCards = [...column.cards];
+          [nextCards[idx], nextCards[swapTo]] = [nextCards[swapTo], nextCards[idx]];
+          return { ...column, cards: nextCards };
+        }),
+      `move-card-${cardId}`,
     );
   };
 
   const handleDrop = (event: React.DragEvent<HTMLDivElement>, targetColumnId: string | null) => {
+    if (saving) {
+      event.preventDefault();
+      setDraggingCardId(null);
+      setDraggingColumnId(null);
+      setDragOverColumnId(null);
+      return;
+    }
     event.preventDefault();
     const payload = event.dataTransfer.getData("text/plain");
     if (!payload) {
@@ -191,31 +250,34 @@ export function WorkspaceBoard({ initialColumns }: { initialColumns: ColumnData[
     const parsed = JSON.parse(payload) as { type: "card" | "column"; cardId?: string; sourceId?: string; columnId?: string };
 
     if (parsed.type === "card" && parsed.cardId && parsed.sourceId) {
-      updateColumns((prev) => {
-        let movingCard: CardData | null = null;
-        const stripped = prev.map((column) => {
-          if (column.id === parsed.sourceId) {
-            const remaining = column.cards.filter((card) => {
-              if (card.id === parsed.cardId) {
-                movingCard = card;
-                return false;
-              }
-              return true;
-            });
-            return { ...column, cards: remaining };
-          }
-          return column;
-        });
-        if (!movingCard) {
-          return stripped;
-        }
-        if (!targetColumnId) {
-          return stripped;
-        }
-        return stripped.map((column) =>
-          column.id === targetColumnId ? { ...column, cards: [...column.cards, movingCard as CardData] } : column,
-        );
-      });
+      updateColumns(
+        (prev) => {
+          let movingCard: CardData | null = null;
+          const stripped = prev.map((column) => {
+            if (column.id === parsed.sourceId) {
+              const remaining = column.cards.filter((card) => {
+                if (card.id === parsed.cardId) {
+                  movingCard = card;
+                  return false;
+                }
+                return true;
+              });
+              return { ...column, cards: remaining };
+            }
+            return column;
+          });
+          if (!movingCard) {
+        return stripped;
+      }
+      if (!targetColumnId) {
+        return stripped;
+      }
+      return stripped.map((column) =>
+        column.id === targetColumnId ? { ...column, cards: [...column.cards, movingCard as CardData] } : column,
+      );
+    },
+    parsed.cardId ? `drop-card-${parsed.cardId}` : "drop-card",
+      );
     } else if (parsed.type === "column" && parsed.columnId) {
       if (!isEditMode) {
         setDraggingCardId(null);
@@ -223,30 +285,33 @@ export function WorkspaceBoard({ initialColumns }: { initialColumns: ColumnData[
         setDragOverColumnId(null);
         return;
       }
-      updateColumns((prev) => {
-        const currentIndex = prev.findIndex((column) => column.id === parsed.columnId);
-        if (currentIndex === -1) {
-          return prev;
-        }
-        const targetOriginalIndex = targetColumnId
-          ? prev.findIndex((column) => column.id === targetColumnId)
-          : prev.length - 1;
+      updateColumns(
+        (prev) => {
+          const currentIndex = prev.findIndex((column) => column.id === parsed.columnId);
+          if (currentIndex === -1) {
+            return prev;
+          }
+          const targetOriginalIndex = targetColumnId
+            ? prev.findIndex((column) => column.id === targetColumnId)
+            : prev.length - 1;
 
-        const next = [...prev];
+          const next = [...prev];
         const [movingColumn] = next.splice(currentIndex, 1);
         if (!targetColumnId) {
           next.push(movingColumn);
           return next;
         }
-        const targetIndex = next.findIndex((column) => column.id === targetColumnId);
-        if (targetIndex === -1) {
-          next.push(movingColumn);
-          return next;
+          const targetIndex = next.findIndex((column) => column.id === targetColumnId);
+          if (targetIndex === -1) {
+            next.push(movingColumn);
+            return next;
         }
         const insertIndex = currentIndex < targetOriginalIndex ? targetIndex + 1 : targetIndex;
         next.splice(insertIndex, 0, movingColumn);
         return next;
-      });
+      },
+      `move-column-${parsed.columnId}`,
+      );
     }
 
     setDraggingCardId(null);
@@ -254,29 +319,33 @@ export function WorkspaceBoard({ initialColumns }: { initialColumns: ColumnData[
   };
 
   const handleAddColumn = () => {
-    if (!isEditMode || columns.length >= MAX_COLUMNS) {
+    if (!isEditMode || columns.length >= MAX_COLUMNS || saving) {
       return;
     }
-    updateColumns((prev) => [
-      ...prev,
-      {
-        id: createId(),
-        title: `Alan ${prev.length + 1}`,
-        width: 1,
-        cards: [],
-      },
-    ]);
+    updateColumns(
+      (prev) => [
+        ...prev,
+        {
+          id: createId(),
+          title: `Alan ${prev.length + 1}`,
+          width: 1,
+          cards: [],
+        },
+      ],
+      "add-column",
+    );
   };
 
   const handleRemoveColumn = (columnId: string) => {
-    if (!isEditMode) {
+    if (!isEditMode || saving) {
       return;
     }
-    updateColumns((prev) => prev.filter((column) => column.id !== columnId));
+    const col = columns.find((c) => c.id === columnId);
+    setPendingColumnDelete({ columnId, title: col?.title ?? "Sütun" });
   };
 
   const handleColumnDragStart = (event: React.DragEvent<HTMLDivElement>, columnId: string) => {
-    if (!isEditMode || dragBlockRef.current) {
+    if (!isEditMode || dragBlockRef.current || saving) {
       event.preventDefault();
       dragBlockRef.current = false;
       return;
@@ -287,7 +356,9 @@ export function WorkspaceBoard({ initialColumns }: { initialColumns: ColumnData[
   };
 
   const handleDragEnter = (columnId: string) => {
-    setDragOverColumnId(columnId);
+    if (!saving) {
+      setDragOverColumnId(columnId);
+    }
   };
 
   const allowDrop = (event: React.DragEvent<HTMLDivElement>) => {
@@ -295,7 +366,7 @@ export function WorkspaceBoard({ initialColumns }: { initialColumns: ColumnData[
   };
 
   const handleResizeStart = (event: React.PointerEvent<HTMLDivElement>, columnId: string) => {
-    if (!isEditMode) {
+    if (!isEditMode || saving) {
       return;
     }
     const column = columns.find((col) => col.id === columnId);
@@ -336,6 +407,7 @@ export function WorkspaceBoard({ initialColumns }: { initialColumns: ColumnData[
     const handlePointerUp = () => {
       resizeInfo.current = null;
       setResizingColumnId(null);
+      queueSave(columnsRef.current, "resize");
     };
     window.addEventListener("pointermove", handlePointerMove);
     window.addEventListener("pointerup", handlePointerUp);
@@ -346,72 +418,109 @@ export function WorkspaceBoard({ initialColumns }: { initialColumns: ColumnData[
   }, [resizingColumnId, updateColumns]);
 
   const handleEditCard = (columnId: string, cardId: string, notes: string) => {
+    if (saving) return;
     setActiveCard({ columnId, cardId });
     setDraftNotes(notes);
+  };
+
+  const saveColumnTitle = (columnId: string) => {
+    const nextTitle = titleDrafts[columnId]?.trim();
+    const column = columnsRef.current.find((col) => col.id === columnId);
+    const resolvedTitle = nextTitle || column?.title;
+    if (!resolvedTitle) {
+      return;
+    }
+    const nextColor = colorDrafts[columnId] ?? column?.color ?? null;
+    setTitleDrafts((prev) => {
+      const clone = { ...prev };
+      delete clone[columnId];
+      return clone;
+    });
+    setColorDrafts((prev) => {
+      const clone = { ...prev };
+      delete clone[columnId];
+      return clone;
+    });
+    updateColumns(
+      (prev) =>
+        prev.map((col) => (col.id === columnId ? { ...col, title: resolvedTitle, color: nextColor ?? col.color ?? null } : col)),
+      `save-column-${columnId}`,
+    );
   };
 
   const handleSaveNotes = () => {
     if (!activeCard) {
       return;
     }
-    updateColumns((prev) =>
-      prev.map((column) =>
-        column.id === activeCard.columnId
-          ? {
-              ...column,
-              cards: column.cards.map((card) =>
-                card.id === activeCard.cardId ? { ...card, notes: draftNotes } : card,
-              ),
-            }
-          : column,
-      ),
+    updateColumns(
+      (prev) =>
+        prev.map((column) =>
+          column.id === activeCard.columnId
+            ? {
+                ...column,
+                cards: column.cards.map((card) =>
+                  card.id === activeCard.cardId ? { ...card, notes: draftNotes } : card,
+                ),
+              }
+            : column,
+        ),
+      `save-notes-${activeCard.cardId}`,
     );
     setActiveCard(null);
+  };
+
+  const requestDeleteCard = (columnId: string, cardId: string, title: string) => {
+    if (!isEditMode) return;
+    setPendingDelete({ columnId, cardId, title });
   };
 
   const handleDeleteCard = (columnId: string, cardId: string) => {
     if (!isEditMode) {
       return;
     }
-    updateColumns((prev) =>
-      prev.map((column) =>
-        column.id === columnId ? { ...column, cards: column.cards.filter((card) => card.id !== cardId) } : column,
-      ),
+    updateColumns(
+      (prev) =>
+        prev.map((column) =>
+          column.id === columnId ? { ...column, cards: column.cards.filter((card) => card.id !== cardId) } : column,
+        ),
+      `delete-card-${cardId}`,
     );
     if (activeCard && activeCard.cardId === cardId && activeCard.columnId === columnId) {
       setActiveCard(null);
     }
+    setPendingDelete(null);
   };
 
   return (
-    <div className="space-y-6">
-      <section className="flex items-center justify-end gap-3 rounded-3xl border border-white/10 bg-slate-950/80 p-4 text-white shadow-[0_10px_40px_rgba(15,23,42,0.35)]">
-        <button
-          type="button"
-          onClick={handleAddColumn}
-          disabled={!canAddColumn}
-          className={`rounded-2xl border px-4 py-2 text-sm font-semibold text-white transition ${
-            isEditMode
-              ? "border-white/20 bg-white/10 opacity-100 hover:border-fuchsia-300 hover:bg-fuchsia-500/20"
-              : "border-white/10 bg-white/5 opacity-0 pointer-events-none"
-          }`}
-        >
-          Sutun ekle
-        </button>
+    <div className="relative">
+      <div
+        className="sticky top-4 z-50 mb-3 flex items-center justify-center gap-2"
+        aria-busy={saving}
+      >
         <button
           type="button"
           data-drag-stop
           onClick={() => setIsEditMode((prev) => !prev)}
-          className={`rounded-2xl border px-4 py-2 text-sm font-semibold text-white transition ${
+          className={`rounded-full px-3 py-1.5 text-xs font-semibold text-white shadow transition ${
             isEditMode
-              ? "border-emerald-300 bg-emerald-500/20 hover:border-emerald-200 hover:bg-emerald-500/25"
-              : "border-white/20 bg-white/10 hover:border-white/40 hover:bg-white/20"
+              ? "border border-emerald-300 bg-emerald-500/30 hover:bg-emerald-500/40"
+              : "border border-white/20 bg-slate-900/80 hover:border-white/40 hover:bg-slate-900"
           }`}
         >
-          Edit
+          {isEditMode ? "Edit: Açık (✔)" : "Edit: Kapalı (✎)"}
         </button>
-        <p className="text-xs tracking-[0.3em] text-slate-400">{saving ? "Kaydediliyor..." : "Kaydedildi"}</p>
-      </section>
+        {isEditMode && (
+          <button
+            type="button"
+            onClick={handleAddColumn}
+            disabled={!canAddColumn || saving}
+            className="rounded-full border border-fuchsia-300/60 bg-fuchsia-500/20 px-3 py-1.5 text-xs font-semibold text-white shadow transition hover:border-fuchsia-200 hover:bg-fuchsia-500/30 disabled:opacity-50"
+          >
+            {savingLabel("add-column", "Sütun ekle")}
+          </button>
+        )}
+        <span className="text-[10px] tracking-[0.18em] text-slate-300">{saving ? "Kaydediliyor..." : "Kaydedildi"}</span>
+      </div>
 
       <section className="grid auto-rows-min grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         {columns.map((column) => (
@@ -436,32 +545,45 @@ export function WorkspaceBoard({ initialColumns }: { initialColumns: ColumnData[
               <div className="-mx-5 mb-3 rounded-t-2xl px-4 py-3">
                 <div
                   className="flex items-center justify-between gap-2 rounded-t-2xl px-3 py-2 shadow-sm"
-                  style={{ background: column.color ? hexToGradient(column.color) : fallbackGradient }}
+                  style={{
+                    background: column.color || colorDrafts[column.id]
+                      ? hexToGradient(colorDrafts[column.id] ?? column.color)
+                      : fallbackGradient,
+                  }}
                 >
                   {isEditMode ? (
                     <>
                       <input
-                        value={column.title}
+                        value={titleDrafts[column.id] ?? column.title}
                         onChange={(event) =>
-                          updateColumns((prev) =>
-                            prev.map((col) => (col.id === column.id ? { ...col, title: event.target.value } : col)),
-                          )
+                          setTitleDrafts((prev) => ({ ...prev, [column.id]: event.target.value }))
                         }
                         className="w-full rounded-md border border-transparent bg-transparent px-2 py-1 text-lg font-semibold uppercase tracking-wide text-white focus:outline-none"
                       />
                       <input
                         type="color"
-                        value={column.color ?? "#0ea5e9"}
+                        value={colorDrafts[column.id] ?? column.color ?? "#0ea5e9"}
                         onChange={(event) =>
-                          updateColumns((prev) =>
-                            prev.map((col) =>
-                              col.id === column.id ? { ...col, color: event.target.value } : col,
-                            ),
-                          )
+                          setColorDrafts((prev) => ({ ...prev, [column.id]: event.target.value }))
                         }
                         className="h-9 w-9 cursor-pointer rounded-lg border border-white/40 bg-transparent p-1"
                         aria-label="Sütun rengini seç"
                       />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (saving) return;
+                          saveColumnTitle(column.id);
+                        }}
+                        disabled={saving}
+                        className={`rounded-lg border px-3 py-2 text-xs font-semibold text-white transition ${
+                          saving
+                            ? "border-white/20 bg-white/10 opacity-60 cursor-not-allowed"
+                            : "border-emerald-200/60 bg-emerald-500/20 hover:border-emerald-200 hover:bg-emerald-500/30"
+                        }`}
+                      >
+                        {savingLabel(`save-column-${column.id}`, "Kaydet")}
+                      </button>
                     </>
                   ) : (
                     <p className="w-full text-lg font-semibold uppercase tracking-wide text-white">{column.title}</p>
@@ -471,11 +593,11 @@ export function WorkspaceBoard({ initialColumns }: { initialColumns: ColumnData[
                       type="button"
                       aria-label="Sutunu sil"
                       onClick={() => handleRemoveColumn(column.id)}
-                      className="ml-2 rounded-full border border-white/20 bg-white/10 px-2 text-xs font-bold text-white transition"
-                    >
-                      x
-                    </button>
-                  )}
+                className="ml-2 rounded-full border border-white/20 bg-white/10 px-2 text-xs font-bold text-white transition"
+              >
+                x
+              </button>
+            )}
                 </div>
               </div>
               {isEditMode && (
@@ -542,16 +664,16 @@ export function WorkspaceBoard({ initialColumns }: { initialColumns: ColumnData[
                           >
                             ▼
                           </button>
-                          <button
-                            type="button"
-                            aria-label="Karti sil"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              handleDeleteCard(column.id, card.id);
-                            }}
-                            className="rounded-full border border-white/10 px-2 py-1 text-xs text-slate-400 hover:border-rose-300 hover:text-rose-200"
-                          >
-                            Sil
+                      <button
+                        type="button"
+                        aria-label="Karti sil"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          requestDeleteCard(column.id, card.id, card.title);
+                        }}
+                        className="rounded-full border border-white/10 px-2 py-1 text-xs text-slate-400 hover:border-rose-300 hover:text-rose-200"
+                      >
+                        Sil
                           </button>
                         </>
                       )}
@@ -609,10 +731,14 @@ export function WorkspaceBoard({ initialColumns }: { initialColumns: ColumnData[
             <div className="mt-4 flex gap-3 text-sm">
               <button
                 type="button"
-                onClick={handleSaveNotes}
-                className="rounded-2xl border border-fuchsia-300 bg-fuchsia-500/20 px-4 py-2 font-semibold text-white hover:bg-fuchsia-500/30"
+                onClick={() => {
+                  if (saving) return;
+                  handleSaveNotes();
+                }}
+                disabled={saving}
+                className="rounded-2xl border border-fuchsia-300 bg-fuchsia-500/20 px-4 py-2 font-semibold text-white transition hover:bg-fuchsia-500/30 disabled:opacity-60"
               >
-                Kaydet
+                {savingLabel(activeCard ? `save-notes-${activeCard.cardId}` : "save-notes", "Kaydet")}
               </button>
               <button
                 type="button"
@@ -620,6 +746,101 @@ export function WorkspaceBoard({ initialColumns }: { initialColumns: ColumnData[
                 className="rounded-2xl border border-white/20 bg-white/10 px-4 py-2 text-white hover:border-white/40"
               >
                 Vazgec
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {pendingDelete && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6"
+          onClick={() => setPendingDelete(null)}
+        >
+          <div
+            className="w-full max-w-md space-y-4 rounded-3xl border border-rose-400/40 bg-slate-950/95 p-6 text-white shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-center gap-3">
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-rose-500/20 text-2xl font-bold text-rose-200">
+                !
+              </span>
+              <div>
+                <p className="text-sm uppercase tracking-[0.3em] text-rose-200">Silme onayı</p>
+                <p className="text-lg font-semibold">Kartı silmek istediğine emin misin?</p>
+              </div>
+            </div>
+            <p className="text-sm text-slate-300">
+              &ldquo;{pendingDelete.title}&rdquo; kartı kalıcı olarak silinecek.
+            </p>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => handleDeleteCard(pendingDelete.columnId, pendingDelete.cardId)}
+                className="flex-1 rounded-xl bg-rose-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-400"
+              >
+                Evet, sil
+              </button>
+              <button
+                type="button"
+                onClick={() => setPendingDelete(null)}
+                className="flex-1 rounded-xl border border-white/20 px-4 py-2 text-sm text-white transition hover:border-white/40"
+              >
+                Vazgeç
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {pendingColumnDelete && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6"
+          onClick={() => setPendingColumnDelete(null)}
+        >
+          <div
+            className="w-full max-w-md space-y-4 rounded-3xl border border-rose-400/40 bg-slate-950/95 p-6 text-white shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-center gap-3">
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-rose-500/20 text-2xl font-bold text-rose-200">
+                !
+              </span>
+              <div>
+                <p className="text-sm uppercase tracking-[0.3em] text-rose-200">Sütun silme onayı</p>
+                <p className="text-lg font-semibold">
+                  &ldquo;{pendingColumnDelete.title}&rdquo; silinsin mi?
+                </p>
+              </div>
+            </div>
+                <p className="text-sm text-slate-300">
+                  Sütun ve içindeki kartlar kalıcı olarak silinecek. Geri alınamaz.
+                </p>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  if (saving) return;
+                  updateColumns(
+                    (prev) => prev.filter((column) => column.id !== pendingColumnDelete.columnId),
+                    `remove-column-${pendingColumnDelete.columnId}`,
+                  );
+                  setPendingColumnDelete(null);
+                }}
+                disabled={saving}
+                className="flex-1 rounded-xl bg-rose-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-400 disabled:opacity-60"
+              >
+                {savingLabel(
+                  pendingColumnDelete ? `remove-column-${pendingColumnDelete.columnId}` : "remove-column",
+                  "Evet, sil",
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setPendingColumnDelete(null)}
+                className="flex-1 rounded-xl border border-white/20 px-4 py-2 text-sm text-white transition hover:border-white/40"
+              >
+                Vazgeç
               </button>
             </div>
           </div>

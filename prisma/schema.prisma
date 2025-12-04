@@ -167,6 +167,7 @@ model WorkspaceColumn {
   id        String   @id @default(uuid())
   userId    String?
   title     String
+  color     String?
   width     Int      @default(1)
   position  Int      @default(0)
   createdAt DateTime @default(now())

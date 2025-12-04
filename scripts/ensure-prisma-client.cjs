@@ -14,17 +14,6 @@ const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 
 const CLIENT_INDEX = path.join(__dirname, "..", "node_modules", ".prisma", "client", "index.js");
-const REQUIRED_SIGNATURES = ["workspaceColumn", "workspaceCard", "digitalSubscription", "assetKind"];
-
-function hasRequiredSignatures() {
-  try {
-    const contents = fs.readFileSync(CLIENT_INDEX, "utf8");
-    return REQUIRED_SIGNATURES.every((signature) => contents.includes(signature));
-  } catch {
-    // Missing file or unreadable => need to (re)generate.
-    return false;
-  }
-}
 
 function runPrismaGenerate() {
   const bin = process.platform === "win32" ? "npx.cmd" : "npx";
@@ -47,11 +36,7 @@ function runPrismaGenerate() {
 }
 
 function main() {
-  if (hasRequiredSignatures()) {
-    return 0;
-  }
-
-  console.log("[ensure-prisma-client] Prisma client missing required signatures. Running `prisma generate`...");
+  console.log("[ensure-prisma-client] Running `prisma generate` to sync schema changes...");
   return runPrismaGenerate();
 }
 

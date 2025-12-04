@@ -20,6 +20,7 @@ export default async function WorkspacePage() {
   const initialColumns = columns.map((column: ColumnRow) => ({
     id: column.id,
     title: column.title,
+    color: column.color ?? undefined,
     width: column.width ?? 1,
     cards: column.cards.map((card: CardRow) => ({
       id: card.id,
