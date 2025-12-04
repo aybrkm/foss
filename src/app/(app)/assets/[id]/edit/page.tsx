@@ -43,7 +43,13 @@ export default async function EditAssetPage({ params }: Props) {
     const assetType = formData.get("assetType")?.toString().trim();
     const currency = formData.get("currency")?.toString() || "TRY";
     const valueRaw = formData.get("value")?.toString();
-    const isLiquid = formData.get("isLiquid")?.toString() === "true";
+    const assetKindRaw = formData.get("assetKind")?.toString();
+    const assetKind = (["liquid", "stable", "personal_valuable"] as const).includes(assetKindRaw as any)
+      ? (assetKindRaw as "liquid" | "stable" | "personal_valuable")
+      : asset.isLiquid
+        ? "liquid"
+        : "stable";
+    const isLiquid = assetKind === "liquid";
     const notes = formData.get("notes")?.toString().trim() || null;
     const acquisitionDateRaw = formData.get("acquisitionDate")?.toString();
 
@@ -58,6 +64,7 @@ export default async function EditAssetPage({ params }: Props) {
       data: {
         name,
         assetType,
+        assetKind,
         isLiquid,
         currentValue: value,
         currency,
@@ -126,12 +133,13 @@ export default async function EditAssetPage({ params }: Props) {
           required
         />
         <select
-          name="isLiquid"
+          name="assetKind"
           className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white"
-          defaultValue={asset.isLiquid ? "true" : "false"}
+          defaultValue={asset.assetKind ?? (asset.isLiquid ? "liquid" : "stable")}
         >
-          <option value="true">Likit</option>
-          <option value="false">İllikit</option>
+          <option value="liquid">Likit</option>
+          <option value="stable">Sabit</option>
+          <option value="personal_valuable">Personal Valuable</option>
         </select>
         <input
           type="date" min="1000-01-01" max="5000-12-31"

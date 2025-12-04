@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { formatCurrency, daysUntil } from "@/lib/format";
 
 type AssetDetail = {
@@ -8,6 +8,7 @@ type AssetDetail = {
   name: string;
   assetType: string;
   isLiquid: boolean;
+  assetKind: string | null;
   value: number;
   valueTry: number;
   currency: string;
@@ -54,6 +55,16 @@ export function SummaryKpis({
   upcomingObligations,
   importantReminders,
 }: Props) {
+  const dateFormatter = useMemo(
+    () =>
+      new Intl.DateTimeFormat("tr-TR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        timeZone: "UTC",
+      }),
+    [],
+  );
   const [modal, setModal] = useState<ModalType>(null);
   const close = () => setModal(null);
 
@@ -73,7 +84,7 @@ export function SummaryKpis({
                 <div>
                   <p className="text-base font-semibold text-white">{asset.name}</p>
                   <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
-                    {asset.assetType} - {asset.isLiquid ? "Likit" : "İllikit"}
+                    {asset.assetType} - {formatKind(asset.assetKind, asset.isLiquid)}
                   </p>
                 </div>
                 <p className="text-sm font-semibold text-white">
@@ -84,7 +95,7 @@ export function SummaryKpis({
                 </p>
               </div>
               <p className="text-xs text-slate-400">
-                Güncellendi: {new Date(asset.updatedAt).toLocaleDateString("tr-TR")}
+                Güncellendi: {dateFormatter.format(new Date(asset.updatedAt))}
               </p>
             </article>
           ))}
@@ -277,4 +288,11 @@ function formatObligationRecurrence(obligation: ObligationDetail) {
   }
   const unitLabel = obligation.recurrenceUnit === "week" ? "hafta" : "ay";
   return `${obligation.recurrenceInterval} ${unitLabel}`;
+}
+
+function formatKind(assetKind: string | null, isLiquid: boolean) {
+  if (assetKind === "personal_valuable") return "Personal Valuable";
+  if (assetKind === "stable") return "Sabit";
+  if (assetKind === "liquid") return "Likit";
+  return isLiquid ? "Likit" : "Sabit";
 }

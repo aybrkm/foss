@@ -39,7 +39,7 @@ const lifePillars = [
     body: "Projelerini, yapılacaklarını ve finansal kararlarını aynı timeline üzerinde organize et; kritik kartlar için SMS/email uyarıları kur.",
   },
   {
-    title: "Dijital hesaplar kasası",
+    title: "Dijivault kasası",
     body: "Google, Apple, bankalar ve diğer dijital hesaplarının bilgilerini master key ile şifreleyerek sakla.",
   },
   {
@@ -103,7 +103,7 @@ export default function Home() {
               Amaç basit: net varlığını, borçlarını, gelirlerini ve vadelerini her an güncel görmek.
               Banka ve yatırım entegrasyonları, AI ile işlem sınıflandırma ve manuel kayıtlar birleşip
               sana gerçek zamanlı bir net worth ve cashflow kokpiti kurar. Workspace, Reminders,
-              Journal ve Dijital Hesaplar ise bunun etrafındaki hafif Life OS katmanıdır.
+              Journal ve Dijivault ise bunun etrafındaki hafif Life OS katmanıdır.
             </p>
 
             <div className="flex flex-wrap gap-3">
@@ -177,7 +177,7 @@ export default function Home() {
 
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
                   <p className="text-[11px] uppercase tracking-[0.28em] text-fuchsia-200">
-                    Dijital hesap kasası
+                    Dijivault kasası
                   </p>
                   <p className="text-base font-semibold text-white">12 hesap • 7 parola</p>
                   <p className="text-sm text-slate-300">
@@ -227,7 +227,7 @@ export default function Home() {
             <div>
               <p className="text-xs uppercase tracking-[0.3em] text-slate-400">LifOS katmanı</p>
               <h2 className="text-2xl font-semibold text-white">
-                Workspace, Reminders, Journal ve Dijital Hesaplar.
+                Workspace, Reminders, Journal ve Dijivault.
               </h2>
             </div>
             <p className="max-w-md text-sm text-slate-300">

@@ -13,6 +13,7 @@ type AssetCard = {
   name: string;
   assetType: string;
   isLiquid: boolean;
+  assetKind?: string | null;
   value: number;
   valueTry: number;
   currency: string;
@@ -104,7 +105,7 @@ export function DashboardWidgets({
             <div>
             <p className="text-sm font-semibold text-white">{asset.name}</p>
             <p className="text-[11px] uppercase tracking-[0.2em] text-slate-400">
-              {asset.isLiquid ? "Likit" : "İllikit"} - {asset.assetType}
+              {formatKind(asset.assetKind, asset.isLiquid)} - {asset.assetType}
             </p>
           </div>
           <div className="text-right">
@@ -255,4 +256,11 @@ export function DashboardWidgets({
       ))}
     </div>
   );
+}
+
+function formatKind(assetKind: string | null | undefined, isLiquid: boolean) {
+  if (assetKind === "personal_valuable") return "Personal Valuable";
+  if (assetKind === "stable") return "Sabit";
+  if (assetKind === "liquid") return "Likit";
+  return isLiquid ? "Likit" : "Sabit";
 }

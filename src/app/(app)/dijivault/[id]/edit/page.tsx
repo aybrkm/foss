@@ -21,7 +21,7 @@ type Props = {
   params: Promise<{ id: string }>;
 };
 
-export default async function EditDigitalAccountPage({ params }: Props) {
+export default async function EditDijivaultPage({ params }: Props) {
   const { id } = await params;
   const userId = await requireUserId();
 
@@ -110,22 +110,22 @@ export default async function EditDigitalAccountPage({ params }: Props) {
       await removeSubscriptionForAccount(account.id, userId);
     }
 
-    revalidatePath("/digital-accounts");
+    revalidatePath("/dijivault");
     revalidatePath("/obligations");
     revalidatePath("/dashboard");
-    redirect("/digital-accounts");
+    redirect("/dijivault");
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm uppercase tracking-[0.4em] text-fuchsia-300">Dijital Hesaplar</p>
-          <h1 className="text-3xl font-semibold text-white">Hesabı düzenle</h1>
+          <p className="text-sm uppercase tracking-[0.4em] text-fuchsia-300">Dijivault</p>
+          <h1 className="text-3xl font-semibold text-white">Kaydı düzenle</h1>
           <p className="text-slate-300">{account.providerName}</p>
         </div>
         <Link
-          href="/digital-accounts"
+          href="/dijivault"
           className="rounded-full border border-white/20 px-4 py-2 text-sm text-white transition hover:border-white/60"
         >
           &larr; Listeye dön

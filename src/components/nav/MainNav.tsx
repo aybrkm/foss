@@ -8,7 +8,7 @@ const links = [
   { label: "Workspace", href: "/workspace" },
   { label: "Varlıklar", href: "/assets" },
   { label: "Yükümlülükler", href: "/obligations" },
-  { label: "Dijital Hesaplar", href: "/digital-accounts" },
+  { label: "Dijivault", href: "/dijivault" },
   { label: "Nakit Akış", href: "/cashflow" },
   { label: "Yatırımlar", href: "/investments" },
   { label: "Hatırlatmalar", href: "/reminders" },
@@ -24,7 +24,7 @@ const accentStyles: Record<string, string> = {
     "border border-emerald-400/60 text-emerald-100 bg-emerald-900/30 shadow-[0_0_12px_rgba(52,211,153,0.2)] hover:border-emerald-300",
   "/obligations":
     "border border-rose-400/60 text-rose-100 bg-rose-900/25 shadow-[0_0_12px_rgba(244,114,182,0.2)] hover:border-rose-200",
-  "/digital-accounts":
+  "/dijivault":
     "border border-fuchsia-300/60 text-fuchsia-100 bg-fuchsia-900/25 shadow-[0_0_12px_rgba(217,70,239,0.2)] hover:border-fuchsia-200",
   "/cashflow":
     "border border-amber-300/50 text-amber-100 bg-amber-900/20 hover:border-amber-200",

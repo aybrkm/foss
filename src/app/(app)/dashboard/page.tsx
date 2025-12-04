@@ -58,7 +58,7 @@ export default async function DashboardPage() {
   type AssetRow = (typeof assetRows)[number];
   type JournalRow = (typeof journalRows)[number];
   type IncomeRow = (typeof incomeRows)[number];
-  type AssetWithConversion = AssetRow & { valueTry: number; numericValue: number };
+  type AssetWithConversion = AssetRow & { valueTry: number; numericValue: number; isLiquidComputed: boolean };
   const now = new Date();
   const nowMs = now.getTime();
   const assetsWithRates: AssetWithConversion[] = assetRows.map((asset: AssetRow) => {
@@ -67,6 +67,7 @@ export default async function DashboardPage() {
       ...asset,
       numericValue,
       valueTry: convertToTry(numericValue, asset.currency, rates),
+      isLiquidComputed: asset.assetKind ? asset.assetKind === "liquid" : asset.isLiquid,
     };
   });
 
@@ -75,7 +76,7 @@ export default async function DashboardPage() {
     0,
   );
   const liquidAssetValue = assetsWithRates
-    .filter((asset: AssetWithConversion) => asset.isLiquid)
+    .filter((asset: AssetWithConversion) => asset.isLiquidComputed)
     .reduce((sum: number, asset: AssetWithConversion) => sum + asset.valueTry, 0);
 
   const obligationNameMap = new Map(
@@ -102,7 +103,7 @@ export default async function DashboardPage() {
     }));
   const breakdownByLiquidity = (isLiquid: boolean) => {
     const totals = assetsWithRates
-      .filter((asset) => asset.isLiquid === isLiquid)
+      .filter((asset) => asset.isLiquidComputed === isLiquid)
       .reduce((acc: Record<string, number>, asset) => {
         acc[asset.assetType] = (acc[asset.assetType] ?? 0) + asset.valueTry;
         return acc;
@@ -182,7 +183,8 @@ const importantReminders = reminderDetails.filter(
     id: asset.id,
     name: asset.name,
     assetType: asset.assetType,
-    isLiquid: asset.isLiquid,
+    isLiquid: asset.isLiquidComputed,
+    assetKind: asset.assetKind ?? null,
     value: asset.numericValue,
     valueTry: asset.valueTry,
     currency: asset.currency,
@@ -285,7 +287,7 @@ const importantReminders = reminderDetails.filter(
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Kuşbakışı Finans Radarı</p>
-            <p className="text-lg font-semibold text-white">Likit/illikit dağılımı ve varlık kompozisyonu</p>
+            <p className="text-lg font-semibold text-white">Likit/Sabit dağılımı ve varlık kompozisyonu</p>
           </div>
           <div className="grid grid-cols-3 gap-3 text-center text-sm">
             <div className="rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-slate-200">
@@ -297,7 +299,7 @@ const importantReminders = reminderDetails.filter(
               <p className="text-base font-semibold text-white">{totalLiquidPercent.toFixed(1)}%</p>
             </div>
             <div className="rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-slate-200">
-              <p className="text-xs uppercase tracking-[0.25em] text-rose-200">İllikit</p>
+              <p className="text-xs uppercase tracking-[0.25em] text-rose-200">Sabit</p>
               <p className="text-base font-semibold text-white">{totalIlliquidPercent.toFixed(1)}%</p>
             </div>
           </div>
@@ -347,7 +349,7 @@ const importantReminders = reminderDetails.filter(
               ))}
             </div>
             <div className="space-y-2 rounded-xl border border-white/10 bg-white/5 p-4">
-              <p className="text-xs uppercase tracking-[0.3em] text-rose-200">İllikit kırılım</p>
+              <p className="text-xs uppercase tracking-[0.3em] text-rose-200">Sabit kırılım</p>
               {illiquidSlices.length === 0 && <p className="text-sm text-slate-500">Kayıt yok.</p>}
               {illiquidSlices.map((slice) => (
                 <div key={slice.name} className="space-y-1">

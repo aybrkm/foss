@@ -8,29 +8,33 @@ type Props = {
 };
 
 export function AssetForm({ action, currencies }: Props) {
-  const [mode, setMode] = useState<"liquid" | "illiquid">("liquid");
+  const [mode, setMode] = useState<"liquid" | "stable" | "personal_valuable">("liquid");
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-2 rounded-2xl border border-white/10 bg-black/30 p-2 text-sm text-white">
-        {(["liquid", "illiquid"] as const).map((option) => (
-          <button
-            key={option}
-            type="button"
-            onClick={() => setMode(option)}
-            className={`flex-1 rounded-xl px-4 py-2 transition ${
-              mode === option ? "bg-indigo-500 text-white" : "bg-transparent text-slate-300"
-            }`}
-          >
-            {option === "liquid" ? "Likit Varlık" : "İllikit Varlık"}
-          </button>
-        ))}
+      <div className="grid grid-cols-3 gap-2 rounded-2xl border border-white/10 bg-black/30 p-2 text-sm text-white">
+        {(["liquid", "stable", "personal_valuable"] as const).map((option) => {
+          const label =
+            option === "liquid" ? "Likit Varlık" : option === "stable" ? "Sabit Varlık" : "Personal Valuable";
+          return (
+            <button
+              key={option}
+              type="button"
+              onClick={() => setMode(option)}
+              className={`rounded-xl px-4 py-2 transition ${
+                mode === option ? "bg-indigo-500 text-white" : "bg-transparent text-slate-300"
+              }`}
+            >
+              {label}
+            </button>
+          );
+        })}
       </div>
       <AssetFormFields
         key={mode}
         action={action}
         currencies={currencies}
-        isLiquid={mode === "liquid"}
+        assetKind={mode}
       />
     </div>
   );
@@ -39,19 +43,23 @@ export function AssetForm({ action, currencies }: Props) {
 type FieldsProps = {
   action: (formData: FormData) => void;
   currencies: readonly string[];
-  isLiquid: boolean;
+  assetKind: "liquid" | "stable" | "personal_valuable";
 };
 
-function AssetFormFields({ action, currencies, isLiquid }: FieldsProps) {
+function AssetFormFields({ action, currencies, assetKind }: FieldsProps) {
+  const isLiquid = assetKind === "liquid";
+  const isPersonal = assetKind === "personal_valuable";
   return (
     <form
       action={action}
       className="grid gap-3 rounded-3xl border border-white/10 bg-slate-900/60 p-5 md:grid-cols-3"
     >
-      <input type="hidden" name="isLiquid" value={isLiquid ? "true" : "false"} />
+      <input type="hidden" name="assetKind" value={assetKind} />
       <input
         name="name"
-        placeholder={isLiquid ? "Likit varlık adı" : "İllikit varlık adı"}
+        placeholder={
+          isLiquid ? "Likit varlık adı" : isPersonal ? "Personal valuable adı" : "Sabit varlık adı"
+        }
         className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white placeholder:text-slate-500"
         required
       />
@@ -96,7 +104,7 @@ function AssetFormFields({ action, currencies, isLiquid }: FieldsProps) {
           />
           <input
             name="notes"
-            placeholder="Not (opsiyonel)"
+            placeholder={isPersonal ? "Personal valuable notu (opsiyonel)" : "Not (opsiyonel)"}
             className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white placeholder:text-slate-500"
           />
         </>
@@ -105,7 +113,7 @@ function AssetFormFields({ action, currencies, isLiquid }: FieldsProps) {
         type="submit"
         className="rounded-xl bg-indigo-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-indigo-400 md:col-span-1"
       >
-        {isLiquid ? "Likit varlık ekle" : "İllikit varlık ekle"}
+        {isLiquid ? "Likit varlık ekle" : isPersonal ? "Personal valuable ekle" : "Sabit varlık ekle"}
       </button>
     </form>
   );

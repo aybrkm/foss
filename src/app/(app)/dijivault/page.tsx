@@ -74,7 +74,7 @@ async function createDigitalAccount(formData: FormData) {
     });
   }
 
-  revalidatePath("/digital-accounts");
+  revalidatePath("/dijivault");
   revalidatePath("/obligations");
   revalidatePath("/dashboard");
 }
@@ -98,12 +98,12 @@ async function deleteDigitalAccount(formData: FormData) {
     prisma.digitalAccount.delete({ where: { id } }),
   ]);
 
-  revalidatePath("/digital-accounts");
+  revalidatePath("/dijivault");
   revalidatePath("/obligations");
   revalidatePath("/dashboard");
 }
 
-export default async function DigitalAccountsPage() {
+export default async function DijivaultPage() {
   const userId = await requireUserId();
 
   const [user, accounts, rates] = await Promise.all([
@@ -191,10 +191,10 @@ export default async function DigitalAccountsPage() {
     <div className="space-y-8">
       <section className="space-y-4">
         <div className="rounded-3xl border border-fuchsia-400/50 bg-fuchsia-500/10 p-6">
-          <p className="text-xs uppercase tracking-[0.4em] text-fuchsia-200">Dijital Hesaplar</p>
+          <p className="text-xs uppercase tracking-[0.4em] text-fuchsia-200">Dijivault</p>
           <h1 className="mt-2 text-3xl font-semibold text-white">Abonelik ve giriş bilgilerini topla</h1>
           <p className="mt-2 max-w-4xl text-sm text-fuchsia-100/80">
-            Hesap kimliklerini, premium durumunu ve şifrelerini tek panelde şifreli şekilde tut. Premium hesaplar için otomatik ödeme yükümlülüğü oluşur, kapatıldığında temizlik yapılır.
+            Dijivault, hesap kimliklerini, premium durumunu ve şifrelerini tek panelde şifreli şekilde tutar. Premium hesaplar için otomatik ödeme yükümlülüğü oluşur, kapatıldığında temizlik yapılır.
           </p>
         </div>
         <div className="grid gap-4 md:grid-cols-4">
@@ -216,7 +216,7 @@ export default async function DigitalAccountsPage() {
         categories={categoryOptions}
         currencies={currencyOptions}
         periods={periodOptions}
-        submitLabel="Dijital hesap ekle"
+        submitLabel="Dijivault kaydı ekle"
       />
 
       <DigitalAccountTable accounts={mappedAccounts} deleteAction={deleteDigitalAccount} />

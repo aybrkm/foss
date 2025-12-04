@@ -117,7 +117,7 @@ export function DigitalAccountTable({ accounts, deleteAction }: Props) {
                 <td className="px-4 py-3 text-right">
                   <div className="flex items-center justify-end gap-2">
                     <Link
-                      href={`/digital-accounts/${account.id}/edit`}
+                      href={`/dijivault/${account.id}/edit`}
                       className="inline-flex items-center justify-center rounded-full border border-white/20 px-3 py-1 text-[11px] text-white transition hover:border-white/60"
                     >
                       Düzenle
