@@ -7,6 +7,7 @@ type ColumnData = {
   id: string;
   title: string;
   width: number;
+  color?: string;
   cards: CardData[];
 };
 
@@ -25,6 +26,15 @@ const isInteractiveElement = (target: EventTarget | null) => {
     return false;
   }
   return Boolean(target.closest("input, textarea, button, select, [data-drag-stop]"));
+};
+
+const fallbackGradient = "linear-gradient(90deg,#0ea5e9aa 0%,#6366f1aa 100%)";
+const hexToGradient = (hex: string | undefined) => {
+  if (!hex) return fallbackGradient;
+  if (!/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(hex)) {
+    return fallbackGradient;
+  }
+  return `linear-gradient(90deg, ${hex}cc 0%, ${hex}88 100%)`;
 };
 
 export function WorkspaceBoard({ initialColumns }: { initialColumns: ColumnData[] }) {
@@ -375,46 +385,32 @@ export function WorkspaceBoard({ initialColumns }: { initialColumns: ColumnData[
 
   return (
     <div className="space-y-6">
-      <section className="rounded-3xl border border-white/10 bg-linear-to-br from-indigo-600/15 via-slate-950 to-slate-950 p-6 text-white shadow-[0_10px_40px_rgba(15,23,42,0.35)]">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-[0.5em] text-fuchsia-200">Workspace</p>
-            <h1 className="mt-2 text-3xl font-semibold">Alanlarini kendin kur</h1>
-            <p className="mt-1 text-sm text-fuchsia-100/80">
-              Istedigin kadar sutun ekle, kartlarini surukle, sutunlari kosesinden tutarak buyutup kucult. Grid ekran
-              genisligine gore otomatik dagilir.
-            </p>
-          </div>
-          <div className="flex flex-col items-end gap-2">
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={handleAddColumn}
-                disabled={!canAddColumn}
-                className={`rounded-2xl border px-4 py-2 text-sm font-semibold text-white transition ${
-                  isEditMode
-                    ? "border-white/20 bg-white/10 opacity-100 hover:border-fuchsia-300 hover:bg-fuchsia-500/20"
-                    : "border-white/10 bg-white/5 opacity-0 pointer-events-none"
-                }`}
-              >
-                Sutun ekle
-              </button>
-              <button
-                type="button"
-                data-drag-stop
-                onClick={() => setIsEditMode((prev) => !prev)}
-                className={`rounded-2xl border px-4 py-2 text-sm font-semibold text-white transition ${
-                  isEditMode
-                    ? "border-emerald-300 bg-emerald-500/20 hover:border-emerald-200 hover:bg-emerald-500/25"
-                    : "border-white/20 bg-white/10 hover:border-white/40 hover:bg-white/20"
-                }`}
-              >
-                Edit
-              </button>
-            </div>
-            <p className="text-xs tracking-[0.3em] text-slate-400">{saving ? "Kaydediliyor..." : "Kaydedildi"}</p>
-          </div>
-        </div>
+      <section className="flex items-center justify-end gap-3 rounded-3xl border border-white/10 bg-slate-950/80 p-4 text-white shadow-[0_10px_40px_rgba(15,23,42,0.35)]">
+        <button
+          type="button"
+          onClick={handleAddColumn}
+          disabled={!canAddColumn}
+          className={`rounded-2xl border px-4 py-2 text-sm font-semibold text-white transition ${
+            isEditMode
+              ? "border-white/20 bg-white/10 opacity-100 hover:border-fuchsia-300 hover:bg-fuchsia-500/20"
+              : "border-white/10 bg-white/5 opacity-0 pointer-events-none"
+          }`}
+        >
+          Sutun ekle
+        </button>
+        <button
+          type="button"
+          data-drag-stop
+          onClick={() => setIsEditMode((prev) => !prev)}
+          className={`rounded-2xl border px-4 py-2 text-sm font-semibold text-white transition ${
+            isEditMode
+              ? "border-emerald-300 bg-emerald-500/20 hover:border-emerald-200 hover:bg-emerald-500/25"
+              : "border-white/20 bg-white/10 hover:border-white/40 hover:bg-white/20"
+          }`}
+        >
+          Edit
+        </button>
+        <p className="text-xs tracking-[0.3em] text-slate-400">{saving ? "Kaydediliyor..." : "Kaydedildi"}</p>
       </section>
 
       <section className="grid auto-rows-min grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -438,18 +434,35 @@ export function WorkspaceBoard({ initialColumns }: { initialColumns: ColumnData[
           >
             <div className="space-y-2">
               <div className="-mx-5 mb-3 rounded-t-2xl px-4 py-3">
-                <div className="flex items-center justify-between gap-2 rounded-t-2xl px-3 py-2 shadow-sm"
-                  style={{ background: 'linear-gradient(90deg,#0ea5e9aa 0%,#6366f1aa 100%)' }}>
+                <div
+                  className="flex items-center justify-between gap-2 rounded-t-2xl px-3 py-2 shadow-sm"
+                  style={{ background: column.color ? hexToGradient(column.color) : fallbackGradient }}
+                >
                   {isEditMode ? (
-                    <input
-                      value={column.title}
-                      onChange={(event) =>
-                        updateColumns((prev) =>
-                          prev.map((col) => (col.id === column.id ? { ...col, title: event.target.value } : col)),
-                        )
-                      }
-                      className="w-full rounded-md border border-transparent bg-transparent px-2 py-1 text-lg font-semibold uppercase tracking-wide text-white focus:outline-none"
-                    />
+                    <>
+                      <input
+                        value={column.title}
+                        onChange={(event) =>
+                          updateColumns((prev) =>
+                            prev.map((col) => (col.id === column.id ? { ...col, title: event.target.value } : col)),
+                          )
+                        }
+                        className="w-full rounded-md border border-transparent bg-transparent px-2 py-1 text-lg font-semibold uppercase tracking-wide text-white focus:outline-none"
+                      />
+                      <input
+                        type="color"
+                        value={column.color ?? "#0ea5e9"}
+                        onChange={(event) =>
+                          updateColumns((prev) =>
+                            prev.map((col) =>
+                              col.id === column.id ? { ...col, color: event.target.value } : col,
+                            ),
+                          )
+                        }
+                        className="h-9 w-9 cursor-pointer rounded-lg border border-white/40 bg-transparent p-1"
+                        aria-label="Sütun rengini seç"
+                      />
+                    </>
                   ) : (
                     <p className="w-full text-lg font-semibold uppercase tracking-wide text-white">{column.title}</p>
                   )}
