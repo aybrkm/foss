@@ -92,6 +92,7 @@ model Obligation {
   name               String
   category           ObligationCategory
   amount             Decimal?            @db.Decimal(18, 2)
+  isBelli            Boolean             @default(false)
   currency           String?             @db.Char(3)
   frequency          ObligationFrequency @default(once)
   isRecurring        Boolean             @default(false)

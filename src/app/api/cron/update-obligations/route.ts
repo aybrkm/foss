@@ -10,6 +10,7 @@ export async function GET() {
       nextDue: { lt: now },
       recurrenceInterval: { not: null },
       recurrenceUnit: { not: null },
+      endDate: null,
     },
   });
 
@@ -27,6 +28,9 @@ export async function GET() {
       });
 
       if (!nextDue) {
+        return;
+      }
+      if (obligation.endDate && nextDue.getTime() > obligation.endDate.getTime()) {
         return;
       }
 

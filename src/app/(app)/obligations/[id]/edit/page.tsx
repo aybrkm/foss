@@ -4,12 +4,17 @@ import { revalidatePath } from "next/cache";
 import prisma from "@/lib/prisma";
 import { computeNextDue } from "@/lib/recurrence";
 import { requireUserId } from "@/lib/auth";
+import { ObligationAmountFields } from "@/components/forms/ObligationAmountFields";
+
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 const adjustDateInput = (value?: string | null) => {
   if (!value) {
     return null;
   }
-  return new Date(value);
+  const date = new Date(value);
+  date.setTime(date.getTime() + DAY_MS);
+  return date;
 };
 
 const categories = ["payment", "legal", "other"] as const;
@@ -39,6 +44,7 @@ export default async function EditObligationPage({ params }: Props) {
     const name = formData.get("name")?.toString().trim();
     const category = formData.get("category")?.toString() as (typeof categories)[number] | undefined;
     const amountRaw = formData.get("amount")?.toString();
+    const amountUnknown = formData.get("amountUnknown") === "on";
     const currency = formData.get("currency")?.toString() || currencyOptions[0];
     const nextDueRaw = formData.get("nextDue")?.toString();
     const notes = formData.get("notes")?.toString().trim() || null;
@@ -77,6 +83,8 @@ export default async function EditObligationPage({ params }: Props) {
       recurrenceUnit: requiresInterval ? recurrenceUnit ?? null : null,
       recurrenceInterval: requiresInterval ? recurrenceInterval ?? null : null,
     });
+    const parsedAmount = amountRaw && amountRaw.length > 0 ? Number(amountRaw) : null;
+    const amount = amountUnknown ? null : parsedAmount && parsedAmount > 0 ? parsedAmount : null;
 
     await prisma.obligation.update({
       where: { id: obligation.id },
@@ -84,8 +92,9 @@ export default async function EditObligationPage({ params }: Props) {
         name,
         category,
         frequency: "custom",
-        amount: amountRaw ? Number(amountRaw) : null,
-        currency: amountRaw ? currency : null,
+        amount,
+        currency: amount !== null ? currency : null,
+        isBelli: !amountUnknown,
         nextDue,
         isRecurring: requiresInterval,
         recurrenceUnit: requiresInterval ? recurrenceUnit : null,
@@ -138,26 +147,12 @@ export default async function EditObligationPage({ params }: Props) {
             </option>
           ))}
         </select>
-        <input
-          type="number"
-          name="amount"
-          min="0"
-          step="0.01"
-          defaultValue={obligation.amount ? obligation.amount.toString() : ""}
-          placeholder="Tutar"
-          className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white placeholder:text-slate-500"
+        <ObligationAmountFields
+          currencyOptions={currencyOptions}
+          defaultAmount={obligation.amount !== null ? Number(obligation.amount) : null}
+          defaultCurrency={obligation.currency}
+          defaultUnknown={obligation.isBelli}
         />
-        <select
-          name="currency"
-          className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white"
-          defaultValue={obligation.currency ?? currencyOptions[0]}
-        >
-          {currencyOptions.map((currency) => (
-            <option key={currency} value={currency}>
-              {currency}
-            </option>
-          ))}
-        </select>
         <input
           type="date" min="1000-01-01" max="5000-12-31"
           name="nextDue"

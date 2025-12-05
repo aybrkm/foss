@@ -17,6 +17,14 @@ type CardData = {
   notes: string;
 };
 
+type SaveMeta = {
+  key?: string;
+  changedColumnIds?: string[];
+  deletedColumnIds?: string[];
+  prune?: boolean;
+  includeCards?: boolean;
+};
+
 const MAX_COLUMNS = 8;
 const createId = () =>
   typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
@@ -68,6 +76,12 @@ export function WorkspaceBoard({ initialColumns }: { initialColumns: ColumnData[
   const pendingKeyRef = useRef<string | null>(null);
   const [colorDrafts, setColorDrafts] = useState<Record<string, string>>({});
   const [titleDrafts, setTitleDrafts] = useState<Record<string, string>>({});
+  const savingRef = useRef(false);
+  const saveTimerRef = useRef<number | null>(null);
+  const pendingChangedColumnsRef = useRef<string[] | null>(null);
+  const pendingDeletedColumnsRef = useRef<string[] | null>(null);
+  const pendingPruneRef = useRef<boolean | null>(null);
+  const pendingIncludeCardsRef = useRef<boolean | null>(null);
   const savingLabel = (key: string, defaultText: string) =>
     saving && savingKey === key ? "Kaydediliyor..." : defaultText;
   const resizeInfo = useRef<{ columnId: string; startX: number; startWidth: number } | null>(null);
@@ -75,28 +89,66 @@ export function WorkspaceBoard({ initialColumns }: { initialColumns: ColumnData[
 
   const canAddColumn = isEditMode && columns.length < MAX_COLUMNS;
 
+  const buildPayload = useCallback(() => {
+    const snapshot = pendingSaveRef.current ?? columnsRef.current;
+    if (!snapshot) return null;
+    const changedIds = pendingChangedColumnsRef.current;
+    const deletedIds = pendingDeletedColumnsRef.current ?? [];
+    const prune =
+      pendingPruneRef.current ??
+      (!changedIds || changedIds.length === 0 || deletedIds.length > 0);
+    const includeCards = pendingIncludeCardsRef.current ?? true;
+
+    const baseColumns = snapshot;
+    const columnsToSend =
+      changedIds && changedIds.length > 0
+        ? baseColumns.filter((column) => changedIds.includes(column.id))
+        : baseColumns;
+
+    const columnsPayload = columnsToSend.map((column) => {
+      const position = baseColumns.findIndex((col) => col.id === column.id);
+      const payload: {
+        id: string;
+        title: string;
+        color: string | null;
+        width: number;
+        position: number;
+        cards?: Array<{ id: string; title: string; notes: string; position: number }>;
+      } = {
+        id: column.id,
+        title: column.title,
+        color: column.color ?? null,
+        width: column.width,
+        position: position === -1 ? 0 : position,
+      };
+      if (includeCards) {
+        payload.cards = column.cards.map((card, cardPosition) => ({
+          id: card.id,
+          title: card.title,
+          notes: card.notes,
+          position: cardPosition,
+        }));
+      }
+      return payload;
+    });
+
+    const payload = { columns: columnsPayload, deletedColumnIds: deletedIds, prune };
+    return { payload, serialized: JSON.stringify(payload) };
+  }, []);
+
   const persistColumns = useCallback(async () => {
-    const payload = pendingSaveRef.current;
-    if (!payload) return;
-    const columnsPayload = payload.map((column, position) => ({
-      id: column.id,
-      title: column.title,
-      color: column.color ?? null,
-      width: column.width,
-      position,
-      cards: column.cards.map((card, cardPosition) => ({
-        id: card.id,
-        title: card.title,
-        notes: card.notes,
-        position: cardPosition,
-      })),
-    }));
-    const serialized = JSON.stringify({ columns: columnsPayload });
+    const built = buildPayload();
+    if (!built) return;
+    const { payload, serialized } = built;
     if (serialized === lastSentRef.current) {
       pendingSaveRef.current = null;
+      pendingChangedColumnsRef.current = null;
+      pendingDeletedColumnsRef.current = null;
+      pendingPruneRef.current = null;
       return;
     }
 
+    savingRef.current = true;
     setSaving(true);
     setSavingKey(pendingKeyRef.current ?? null);
     try {
@@ -109,38 +161,101 @@ export function WorkspaceBoard({ initialColumns }: { initialColumns: ColumnData[
     } catch (error) {
       console.warn("Workspace layout save failed", error);
     } finally {
+      savingRef.current = false;
       setSaving(false);
       setSavingKey(null);
-      if (
-        pendingSaveRef.current &&
-        JSON.stringify({ columns: pendingSaveRef.current.map((c, idx) => ({ ...c, position: idx })) }) !== lastSentRef.current
-      ) {
+      const nextPayload = buildPayload();
+      if (pendingSaveRef.current && nextPayload?.serialized !== lastSentRef.current) {
         setSavingKey(pendingKeyRef.current ?? null);
         void persistColumns();
       } else {
         pendingSaveRef.current = null;
         pendingKeyRef.current = null;
+        pendingChangedColumnsRef.current = null;
+        pendingDeletedColumnsRef.current = null;
+        pendingPruneRef.current = null;
+        pendingIncludeCardsRef.current = null;
       }
     }
-  }, []);
+  }, [buildPayload]);
+
+  const triggerPersist = useCallback(() => {
+    if (!pendingSaveRef.current) {
+      saveTimerRef.current = null;
+      return;
+    }
+    if (savingRef.current) {
+      saveTimerRef.current = window.setTimeout(triggerPersist, 120);
+      return;
+    }
+    setSavingKey(pendingKeyRef.current ?? null);
+    void persistColumns();
+    saveTimerRef.current = null;
+  }, [persistColumns]);
 
   const queueSave = useCallback(
-    (nextColumns: ColumnData[], key?: string) => {
+    (nextColumns: ColumnData[], meta?: SaveMeta) => {
+      const incomingChanged = meta?.changedColumnIds ?? null;
+      const incomingDeleted = meta?.deletedColumnIds ?? null;
+
       pendingSaveRef.current = nextColumns;
-      pendingKeyRef.current = key ?? null;
-      if (!saving) {
-        setSavingKey(pendingKeyRef.current ?? null);
-        void persistColumns();
+      pendingKeyRef.current = meta?.key ?? null;
+
+      if (incomingChanged && incomingChanged.length > 0) {
+        if (pendingChangedColumnsRef.current === null) {
+          pendingChangedColumnsRef.current = [...incomingChanged];
+        } else {
+          pendingChangedColumnsRef.current = Array.from(
+            new Set([...(pendingChangedColumnsRef.current ?? []), ...incomingChanged]),
+          );
+        }
+      } else {
+        pendingChangedColumnsRef.current = null;
       }
+
+      if (incomingDeleted && incomingDeleted.length > 0) {
+        pendingDeletedColumnsRef.current = Array.from(
+          new Set([...(pendingDeletedColumnsRef.current ?? []), ...incomingDeleted]),
+        );
+      } else {
+        pendingDeletedColumnsRef.current = null;
+      }
+
+      const nextChanged = pendingChangedColumnsRef.current;
+      const nextDeleted = pendingDeletedColumnsRef.current;
+      pendingPruneRef.current =
+        meta?.prune ?? (!nextChanged || nextChanged.length === 0 || Boolean(nextDeleted?.length));
+      const includeCards = meta?.includeCards;
+      if (includeCards === true) {
+        pendingIncludeCardsRef.current = true;
+      } else if (includeCards === false && pendingIncludeCardsRef.current !== true) {
+        pendingIncludeCardsRef.current = false;
+      }
+
+      if (saveTimerRef.current) {
+        window.clearTimeout(saveTimerRef.current);
+      }
+      saveTimerRef.current = window.setTimeout(triggerPersist, 220);
     },
-    [persistColumns, saving],
+    [triggerPersist],
   );
 
   useEffect(() => {
     return () => {
       pendingSaveRef.current = null;
+      if (saveTimerRef.current) {
+        window.clearTimeout(saveTimerRef.current);
+      }
+      pendingChangedColumnsRef.current = null;
+      pendingDeletedColumnsRef.current = null;
+      pendingPruneRef.current = null;
+      pendingIncludeCardsRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    savingRef.current = saving;
+  }, [saving]);
 
   useEffect(() => {
     columnsRef.current = columns;
@@ -151,12 +266,12 @@ export function WorkspaceBoard({ initialColumns }: { initialColumns: ColumnData[
   }, [columns, queueSave]);
 
   const updateColumns = useCallback(
-    (updater: (prev: ColumnData[]) => ColumnData[], saveKey?: string) => {
+    (updater: (prev: ColumnData[]) => ColumnData[], meta?: SaveMeta) => {
       setColumns((prev) => {
         const next = updater(prev);
         columnsRef.current = next;
-        if (saveKey) {
-          queueSave(next, saveKey);
+        if (meta) {
+          queueSave(next, meta);
         }
         return next;
       });
@@ -178,7 +293,7 @@ export function WorkspaceBoard({ initialColumns }: { initialColumns: ColumnData[
           prev.map((column) =>
             column.id === columnId ? { ...column, cards: [...column.cards, { id: createId(), title, notes: "" }] } : column,
           ),
-        `add-card-${columnId}`,
+        { key: `add-card-${columnId}`, changedColumnIds: [columnId] },
       );
       setNewCardTitle((prev) => ({ ...prev, [columnId]: "" }));
     },
@@ -226,7 +341,7 @@ export function WorkspaceBoard({ initialColumns }: { initialColumns: ColumnData[
           [nextCards[idx], nextCards[swapTo]] = [nextCards[swapTo], nextCards[idx]];
           return { ...column, cards: nextCards };
         }),
-      `move-card-${cardId}`,
+      { key: `move-card-${cardId}`, changedColumnIds: [columnId] },
     );
   };
 
@@ -250,6 +365,9 @@ export function WorkspaceBoard({ initialColumns }: { initialColumns: ColumnData[
     const parsed = JSON.parse(payload) as { type: "card" | "column"; cardId?: string; sourceId?: string; columnId?: string };
 
     if (parsed.type === "card" && parsed.cardId && parsed.sourceId) {
+      const changedColumns = Array.from(
+        new Set([parsed.sourceId, targetColumnId].filter((id): id is string => Boolean(id))),
+      );
       updateColumns(
         (prev) => {
           let movingCard: CardData | null = null;
@@ -267,16 +385,16 @@ export function WorkspaceBoard({ initialColumns }: { initialColumns: ColumnData[
             return column;
           });
           if (!movingCard) {
-        return stripped;
-      }
-      if (!targetColumnId) {
-        return stripped;
-      }
-      return stripped.map((column) =>
-        column.id === targetColumnId ? { ...column, cards: [...column.cards, movingCard as CardData] } : column,
-      );
-    },
-    parsed.cardId ? `drop-card-${parsed.cardId}` : "drop-card",
+            return stripped;
+          }
+          if (!targetColumnId) {
+            return stripped;
+          }
+          return stripped.map((column) =>
+            column.id === targetColumnId ? { ...column, cards: [...column.cards, movingCard as CardData] } : column,
+          );
+        },
+        { key: parsed.cardId ? `drop-card-${parsed.cardId}` : "drop-card", changedColumnIds: changedColumns },
       );
     } else if (parsed.type === "column" && parsed.columnId) {
       if (!isEditMode) {
@@ -296,21 +414,21 @@ export function WorkspaceBoard({ initialColumns }: { initialColumns: ColumnData[
             : prev.length - 1;
 
           const next = [...prev];
-        const [movingColumn] = next.splice(currentIndex, 1);
-        if (!targetColumnId) {
-          next.push(movingColumn);
-          return next;
-        }
+          const [movingColumn] = next.splice(currentIndex, 1);
+          if (!targetColumnId) {
+            next.push(movingColumn);
+            return next;
+          }
           const targetIndex = next.findIndex((column) => column.id === targetColumnId);
           if (targetIndex === -1) {
             next.push(movingColumn);
             return next;
-        }
-        const insertIndex = currentIndex < targetOriginalIndex ? targetIndex + 1 : targetIndex;
-        next.splice(insertIndex, 0, movingColumn);
-        return next;
-      },
-      `move-column-${parsed.columnId}`,
+          }
+          const insertIndex = currentIndex < targetOriginalIndex ? targetIndex + 1 : targetIndex;
+          next.splice(insertIndex, 0, movingColumn);
+          return next;
+        },
+        { key: `move-column-${parsed.columnId}`, includeCards: false, prune: false },
       );
     }
 
@@ -322,17 +440,18 @@ export function WorkspaceBoard({ initialColumns }: { initialColumns: ColumnData[
     if (!isEditMode || columns.length >= MAX_COLUMNS || saving) {
       return;
     }
+    const newId = createId();
     updateColumns(
       (prev) => [
         ...prev,
         {
-          id: createId(),
+          id: newId,
           title: `Alan ${prev.length + 1}`,
           width: 1,
           cards: [],
         },
       ],
-      "add-column",
+      { key: "add-column", changedColumnIds: [newId] },
     );
   };
 
@@ -405,9 +524,13 @@ export function WorkspaceBoard({ initialColumns }: { initialColumns: ColumnData[
       );
     };
     const handlePointerUp = () => {
+      const resizedId = resizeInfo.current?.columnId ?? resizingColumnId ?? null;
       resizeInfo.current = null;
       setResizingColumnId(null);
-      queueSave(columnsRef.current, "resize");
+      queueSave(columnsRef.current, {
+        key: "resize",
+        changedColumnIds: resizedId ? [resizedId] : undefined,
+      });
     };
     window.addEventListener("pointermove", handlePointerMove);
     window.addEventListener("pointerup", handlePointerUp);
@@ -444,7 +567,7 @@ export function WorkspaceBoard({ initialColumns }: { initialColumns: ColumnData[
     updateColumns(
       (prev) =>
         prev.map((col) => (col.id === columnId ? { ...col, title: resolvedTitle, color: nextColor ?? col.color ?? null } : col)),
-      `save-column-${columnId}`,
+      { key: `save-column-${columnId}`, changedColumnIds: [columnId] },
     );
   };
 
@@ -464,7 +587,7 @@ export function WorkspaceBoard({ initialColumns }: { initialColumns: ColumnData[
               }
             : column,
         ),
-      `save-notes-${activeCard.cardId}`,
+      { key: `save-notes-${activeCard.cardId}`, changedColumnIds: [activeCard.columnId] },
     );
     setActiveCard(null);
   };
@@ -483,7 +606,7 @@ export function WorkspaceBoard({ initialColumns }: { initialColumns: ColumnData[
         prev.map((column) =>
           column.id === columnId ? { ...column, cards: column.cards.filter((card) => card.id !== cardId) } : column,
         ),
-      `delete-card-${cardId}`,
+      { key: `delete-card-${cardId}`, changedColumnIds: [columnId] },
     );
     if (activeCard && activeCard.cardId === cardId && activeCard.columnId === columnId) {
       setActiveCard(null);
@@ -821,9 +944,16 @@ export function WorkspaceBoard({ initialColumns }: { initialColumns: ColumnData[
                 type="button"
                 onClick={() => {
                   if (saving) return;
+                  const deleteId = pendingColumnDelete?.columnId;
+                  const remainingIds = columns.filter((column) => column.id !== deleteId).map((column) => column.id);
                   updateColumns(
                     (prev) => prev.filter((column) => column.id !== pendingColumnDelete.columnId),
-                    `remove-column-${pendingColumnDelete.columnId}`,
+                    {
+                      key: pendingColumnDelete ? `remove-column-${pendingColumnDelete.columnId}` : "remove-column",
+                      changedColumnIds: remainingIds,
+                      deletedColumnIds: deleteId ? [deleteId] : [],
+                      prune: true,
+                    },
                   );
                   setPendingColumnDelete(null);
                 }}

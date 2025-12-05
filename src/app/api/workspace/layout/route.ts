@@ -49,71 +49,111 @@ export async function POST(request: Request) {
     position?: number;
     cards?: Array<{ id: string; title: string; notes?: string; position?: number }>;
   }>;
+  const deletedColumnIds = Array.isArray(body.deletedColumnIds)
+    ? (body.deletedColumnIds as string[]).filter(Boolean)
+    : [];
+  const prune: boolean =
+    typeof body.prune === "boolean" ? body.prune : true;
+
+  const incomingIds = columns.map((column) => column.id);
+  const ops: Prisma.PrismaPromise<unknown>[] = [];
 
   for (let i = 0; i < columns.length; i += 1) {
     const column = columns[i];
     const columnId = column.id;
-    await prisma.workspaceColumn.upsert({
-      where: { id: columnId },
-      create: {
-        id: columnId,
-        title: column.title ?? `Alan ${i + 1}`,
-        color: column.color ?? null,
-        width: column.width ?? 1,
-        position: i,
-        ...(userId ? { user: { connect: { id: userId } } } : {}),
-      },
-      update: {
-        title: column.title ?? `Alan ${i + 1}`,
-        color: column.color ?? null,
-        width: column.width ?? 1,
-        position: i,
-        ...(userId ? { user: { connect: { id: userId } } } : {}),
-      },
-    });
-
-    await prisma.workspaceCard.deleteMany({
-      where: { columnId, userId },
-    });
-
-    const cards = column.cards ?? [];
-    if (cards.length > 0) {
-      await prisma.workspaceCard.deleteMany({
-        where: {
-          userId,
-          id: { in: cards.map((card) => card.id) },
+    ops.push(
+      prisma.workspaceColumn.upsert({
+        where: { id: columnId },
+        create: {
+          id: columnId,
+          title: column.title ?? `Alan ${i + 1}`,
+          color: column.color ?? null,
+          width: column.width ?? 1,
+          position: column.position ?? i,
+          ...(userId ? { user: { connect: { id: userId } } } : {}),
         },
-      });
-      await prisma.workspaceCard.createMany({
-        data: cards.map((card, index) => ({
-          id: card.id,
-          columnId,
-          userId,
-          title: card.title,
-          notes: card.notes ?? "",
-          position: index,
-        })),
-      });
+        update: {
+          title: column.title ?? `Alan ${i + 1}`,
+          color: column.color ?? null,
+          width: column.width ?? 1,
+          position: column.position ?? i,
+          ...(userId ? { user: { connect: { id: userId } } } : {}),
+        },
+      }),
+    );
+
+    const cards = column.cards;
+    if (Array.isArray(cards)) {
+      const cardIds = cards.map((card) => card.id);
+      ops.push(
+        prisma.workspaceCard.deleteMany({
+          where: {
+            columnId,
+            userId,
+            ...(cardIds.length > 0 ? { id: { notIn: cardIds } } : {}),
+          },
+        }),
+      );
+      for (let cardIndex = 0; cardIndex < cards.length; cardIndex += 1) {
+        const card = cards[cardIndex];
+        ops.push(
+          prisma.workspaceCard.upsert({
+            where: { id: card.id },
+            create: {
+              id: card.id,
+              columnId,
+              userId,
+              title: card.title,
+              notes: card.notes ?? "",
+              position: card.position ?? cardIndex,
+            },
+            update: {
+              columnId,
+              userId,
+              title: card.title,
+              notes: card.notes ?? "",
+              position: card.position ?? cardIndex,
+            },
+          }),
+        );
+      }
     }
   }
 
-  const incomingIds = columns.map((column) => column.id);
-  await prisma.workspaceColumn.deleteMany({
-    where: {
-      userId,
-      id: {
-        notIn: incomingIds,
-      },
-    },
-  });
-  await prisma.workspaceCard.deleteMany({
-    where: {
-      userId,
-      columnId: {
-        notIn: incomingIds,
-      },
-    },
-  });
+  if (deletedColumnIds.length > 0) {
+    ops.push(
+      prisma.workspaceCard.deleteMany({
+        where: { userId, columnId: { in: deletedColumnIds } },
+      }),
+    );
+    ops.push(
+      prisma.workspaceColumn.deleteMany({
+        where: { userId, id: { in: deletedColumnIds } },
+      }),
+    );
+  }
+
+  if (prune) {
+    const columnNotIn = incomingIds.length > 0 ? { notIn: incomingIds } : undefined;
+    const columnPruneWhere = columnNotIn ? { userId, columnId: columnNotIn } : { userId };
+    const columnPruneColumnsWhere = columnNotIn ? { userId, id: columnNotIn } : { userId };
+    ops.push(
+      prisma.workspaceCard.deleteMany({
+        where: {
+          ...columnPruneWhere,
+        },
+      }),
+    );
+    ops.push(
+      prisma.workspaceColumn.deleteMany({
+        where: columnPruneColumnsWhere,
+      }),
+    );
+  }
+
+  if (ops.length > 0) {
+    await prisma.$transaction(ops, { timeout: 15000 });
+  }
 
   return NextResponse.json({ success: true });
 }
