@@ -59,6 +59,22 @@ async function createAsset(formData: FormData) {
   revalidatePath("/dashboard");
 }
 
+async function deleteAsset(formData: FormData) {
+  "use server";
+  const userId = await requireUserId();
+  const id = formData.get("id")?.toString();
+  if (!id) {
+    throw new Error("Silinecek varlık bulunamadı");
+  }
+
+  await prisma.asset.deleteMany({
+    where: { id, userId },
+  });
+
+  revalidatePath("/assets");
+  revalidatePath("/dashboard");
+}
+
 const assetIntegrations: Integration[] = [
   {
     region: "Türkiye",
@@ -189,7 +205,7 @@ export default async function AssetsPage() {
 
       <AssetForm action={createAsset} currencies={currencyOptions} />
 
-      <AssetsTable assets={clientAssets} />
+      <AssetsTable assets={clientAssets} deleteAsset={deleteAsset} />
     </div>
   );
 }

@@ -23,10 +23,41 @@ type Props = {
 
 export function RemindersTable({ reminders, markReminderDone, deleteReminder }: Props) {
   const [showCompleted, setShowCompleted] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<ReminderRow | null>(null);
   const visibleReminders = showCompleted ? reminders : reminders.filter((reminder) => !reminder.isDone);
 
   return (
     <div className="space-y-4">
+      {confirmDelete && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
+          <div className="w-full max-w-md rounded-2xl border border-white/15 bg-slate-950/95 p-5 shadow-2xl shadow-black/60">
+            <h3 className="text-lg font-semibold text-white">Silme onayı</h3>
+            <p className="mt-2 text-sm text-slate-300">
+              <span className="font-semibold text-white">{confirmDelete.title}</span> hatırlatmasını silmek istediğine emin misin? Bu
+              işlem geri alınamaz.
+            </p>
+            <div className="mt-4 flex justify-end gap-3">
+              <button
+                type="button"
+                className="rounded-lg border border-white/25 px-4 py-2 text-sm text-white transition hover:border-white/50"
+                onClick={() => setConfirmDelete(null)}
+              >
+                Vazgeç
+              </button>
+              <form action={deleteReminder}>
+                <input type="hidden" name="id" value={confirmDelete.id} />
+                <button
+                  type="submit"
+                  className="rounded-lg border border-rose-400/60 bg-rose-500/20 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-500/30"
+                  onClick={() => setConfirmDelete(null)}
+                >
+                  Evet, sil
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="overflow-hidden rounded-3xl border border-white/10 bg-slate-900/60">
         <table className="min-w-full divide-y divide-white/10 text-left text-sm">
           <thead className="bg-white/5 text-xs uppercase tracking-widest text-slate-400">
@@ -92,15 +123,13 @@ export function RemindersTable({ reminders, markReminderDone, deleteReminder }: 
                             description="Hatırlatmalar için tamamlandı işlemi geri alınamaz."
                           />
                         )}
-                        <form action={deleteReminder}>
-                          <input type="hidden" name="id" value={reminder.id} />
-                          <button
-                            type="submit"
-                            className="inline-flex items-center justify-center rounded-full border border-rose-400/40 px-3 py-1 text-xs text-rose-200 transition hover:border-rose-300 hover:text-white"
-                          >
-                            Sil
-                          </button>
-                        </form>
+                        <button
+                          type="button"
+                          className="inline-flex items-center justify-center rounded-full border border-rose-400/40 px-3 py-1 text-xs text-rose-200 transition hover:border-rose-300 hover:text-white"
+                          onClick={() => setConfirmDelete(reminder)}
+                        >
+                          Sil
+                        </button>
                       </div>
                     </td>
                   </tr>

@@ -33,8 +33,40 @@ type Props = {
 };
 
 export function DigitalAccountTable({ accounts, deleteAction }: Props) {
+  const [confirmDelete, setConfirmDelete] = useState<DigitalAccountRow | null>(null);
+
   return (
-    <div className="overflow-hidden rounded-2xl border border-white/10 bg-slate-900/60">
+    <div className="overflow-hidden rounded-2xl border border-white/10 bg-slate-900/60 relative">
+      {confirmDelete && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
+          <div className="w-full max-w-md rounded-2xl border border-white/15 bg-slate-950/95 p-5 shadow-2xl shadow-black/60">
+            <h3 className="text-lg font-semibold text-white">Silme onayı</h3>
+            <p className="mt-2 text-sm text-slate-300">
+              <span className="font-semibold text-white">{confirmDelete.providerName}</span> hesabını silmek istediğine emin misin?
+              Bu işlem geri alınamaz.
+            </p>
+            <div className="mt-4 flex justify-end gap-3">
+              <button
+                type="button"
+                className="rounded-lg border border-white/25 px-4 py-2 text-sm text-white transition hover:border-white/50"
+                onClick={() => setConfirmDelete(null)}
+              >
+                Vazgeç
+              </button>
+              <form action={deleteAction}>
+                <input type="hidden" name="id" value={confirmDelete.id} />
+                <button
+                  type="submit"
+                  className="rounded-lg border border-rose-400/60 bg-rose-500/20 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-500/30"
+                  onClick={() => setConfirmDelete(null)}
+                >
+                  Evet, sil
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
       <table className="min-w-full divide-y divide-white/10 text-left text-xs">
         <thead className="bg-white/5 text-[11px] uppercase tracking-[0.25em] text-slate-400">
           <tr>
@@ -122,15 +154,13 @@ export function DigitalAccountTable({ accounts, deleteAction }: Props) {
                     >
                       Düzenle
                     </Link>
-                    <form action={deleteAction}>
-                      <input type="hidden" name="id" value={account.id} />
-                      <button
-                        type="submit"
-                        className="inline-flex items-center justify-center rounded-full border border-rose-400/40 px-3 py-1 text-[11px] text-rose-200 transition hover:border-rose-300 hover:text-white"
-                      >
-                        Sil
-                      </button>
-                    </form>
+                    <button
+                      type="button"
+                      className="inline-flex items-center justify-center rounded-full border border-rose-400/40 px-3 py-1 text-[11px] text-rose-200 transition hover:border-rose-300 hover:text-white"
+                      onClick={() => setConfirmDelete(account)}
+                    >
+                      Sil
+                    </button>
                   </div>
                 </td>
               </tr>

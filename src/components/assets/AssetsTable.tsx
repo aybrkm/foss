@@ -22,9 +22,15 @@ const kindLabels: Record<string, string> = {
   stable: "Sabit",
   personal_valuable: "Personal Valuable",
 };
-
-export function AssetsTable({ assets }: { assets: AssetRow[] }) {
+export function AssetsTable({
+  assets,
+  deleteAsset,
+}: {
+  assets: AssetRow[];
+  deleteAsset: (formData: FormData) => Promise<void> | void;
+}) {
   const [showPersonalOnly, setShowPersonalOnly] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<AssetRow | null>(null);
   const dateFormatter = useMemo(
     () =>
       new Intl.DateTimeFormat("tr-TR", {
@@ -45,6 +51,36 @@ export function AssetsTable({ assets }: { assets: AssetRow[] }) {
 
   return (
     <>
+      {confirmDelete && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
+          <div className="w-full max-w-md rounded-2xl border border-white/15 bg-slate-950/95 p-5 shadow-2xl shadow-black/60">
+            <h3 className="text-lg font-semibold text-white">Silme onayı</h3>
+            <p className="mt-2 text-sm text-slate-300">
+              <span className="font-semibold text-white">{confirmDelete.name}</span> varlığını silmek istediğine emin misin? Bu
+              işlem geri alınamaz.
+            </p>
+            <div className="mt-4 flex justify-end gap-3">
+              <button
+                type="button"
+                className="rounded-lg border border-white/25 px-4 py-2 text-sm text-white transition hover:border-white/50"
+                onClick={() => setConfirmDelete(null)}
+              >
+                Vazgeç
+              </button>
+              <form action={deleteAsset}>
+                <input type="hidden" name="id" value={confirmDelete.id} />
+                <button
+                  type="submit"
+                  className="rounded-lg border border-rose-400/60 bg-rose-500/20 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-500/30"
+                  onClick={() => setConfirmDelete(null)}
+                >
+                  Evet, sil
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-slate-900/50 px-4 py-3 text-sm text-slate-200">
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-indigo-200">Personal Valuables</p>
@@ -83,7 +119,7 @@ export function AssetsTable({ assets }: { assets: AssetRow[] }) {
               <th className="px-5 py-4">Kategori</th>
               <th className="px-5 py-4 text-right">Değer</th>
               <th className="px-5 py-4 text-right">Güncelleme</th>
-              <th className="px-5 py-4 text-right">Düzenle</th>
+              <th className="px-5 py-4 text-right">İşlem</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
@@ -114,13 +150,22 @@ export function AssetsTable({ assets }: { assets: AssetRow[] }) {
                       {dateFormatter.format(new Date(asset.updatedAt))}
                     </td>
                     <td className="px-5 py-4 text-right">
-                      <Link
-                        href={`/assets/${asset.id}/edit`}
-                        className="inline-flex items-center justify-center rounded-full border border-white/20 px-3 py-1 text-xs text-white transition hover:border-white/60"
-                        aria-label="Varlığı düzenle"
-                      >
-                        ✏️
-                      </Link>
+                      <div className="flex items-center justify-end gap-2">
+                        <Link
+                          href={`/assets/${asset.id}/edit`}
+                          className="inline-flex items-center justify-center rounded-full border border-white/20 px-3 py-1 text-xs text-white transition hover:border-white/60"
+                          aria-label="Varlığı düzenle"
+                        >
+                          ✏️
+                        </Link>
+                        <button
+                          type="button"
+                          className="inline-flex items-center justify-center rounded-full border border-rose-400/40 px-3 py-1 text-xs text-rose-200 transition hover:border-rose-300 hover:text-white"
+                          onClick={() => setConfirmDelete(asset)}
+                        >
+                          Sil
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
