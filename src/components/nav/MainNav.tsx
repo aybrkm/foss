@@ -4,15 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const links = [
+  { label: "WORKSPACE", href: "/workspace" },
   { label: "Özet", href: "/dashboard" },
-  { label: "Workspace", href: "/workspace" },
   { label: "Varlıklar", href: "/assets" },
+  { label: "Gelirler", href: "/cashflow" },
   { label: "Yükümlülükler", href: "/obligations" },
-  { label: "Dijivault", href: "/dijivault" },
-  { label: "Nakit Akış", href: "/cashflow" },
-  { label: "Yatırımlar", href: "/investments" },
   { label: "Hatırlatmalar", href: "/reminders" },
-  { label: "Günlük", href: "/journal" },
+  { label: "Yatırımlar", href: "/investments" },
+  { label: "Analiz", href: "/analysis" },
 ];
 
 const accentStyles: Record<string, string> = {
@@ -32,8 +31,8 @@ const accentStyles: Record<string, string> = {
     "border border-sky-300/50 text-sky-100 bg-sky-900/20 hover:border-sky-200",
   "/reminders":
     "border border-white/15 text-slate-300 bg-white/5 hover:border-white/30",
-  "/journal":
-    "border border-white/10 text-slate-400 bg-white/0 hover:border-white/20",
+  "/analysis":
+    "border border-teal-300/60 text-teal-100 bg-teal-900/25 shadow-[0_0_12px_rgba(45,212,191,0.2)] hover:border-teal-200",
 };
 
 const groupSize = 2;
